@@ -26,13 +26,24 @@
                 <div class="logo">
 					<img src="{{ asset('images/logo.png') }}" alt="Спонсоры Ташкент" style="height: 50px;">
 				</div>
-                <!-- Кнопки для десктопа -->
-                <div class="buttons">
-                    <a href="/services" class="btn btn-primary">Платные услуги сайта</a>
-                    <a href="/add" class="btn btn-success">+ Добавить объявление</a>
-                    <a href="/login" class="btn btn-outline">Войти</a>
-                    <a href="/register" class="btn btn-outline">Регистрация</a>
-                </div>
+				<!-- Кнопки для десктопа -->
+				<div class="buttons">
+					<a href="/services" class="btn btn-primary">Платные услуги сайта</a>
+					<a href="/add" class="btn btn-success">+ Добавить объявление</a>
+					
+					@if(session('user_id'))
+						<!-- Авторизованный пользователь -->
+						<a href="/profile" class="btn btn-outline">Мой профиль</a>
+						<form method="POST" action="{{ route('logout') }}" style="display: inline;">
+							@csrf
+							<button type="submit" class="btn btn-outline" style="cursor: pointer;">Выйти</button>
+						</form>
+					@else
+						<!-- Гость -->
+						<a href="/login" class="btn btn-outline">Войти</a>
+						<a href="/register" class="btn btn-outline">Регистрация</a>
+					@endif
+				</div>
                 
                 <!-- Бургер для мобилки -->
                 <div class="burger" onclick="toggleMenu()">
@@ -59,8 +70,19 @@
 		<div class="buttons">
 			<a href="/services" class="btn btn-primary">Платные услуги сайта</a>
 			<a href="/add" class="btn btn-success">+ Добавить объявление</a>
-			<a href="/login" class="btn btn-outline">Войти</a>
-			<a href="/register" class="btn btn-outline">Регистрация</a>
+			
+			@if(session('user_id'))
+				<!-- Авторизованный пользователь -->
+				<a href="/profile" class="btn btn-outline">Мой профиль</a>
+				<form method="POST" action="{{ route('logout') }}">
+					@csrf
+					<button type="submit" class="btn btn-outline" style="width: 100%; cursor: pointer;">Выйти</button>
+				</form>
+			@else
+				<!-- Гость -->
+				<a href="/login" class="btn btn-outline">Войти</a>
+				<a href="/register" class="btn btn-outline">Регистрация</a>
+			@endif
 		</div>
 	</div>
 
