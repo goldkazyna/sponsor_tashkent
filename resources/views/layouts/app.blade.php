@@ -4,31 +4,65 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@yield('title', 'Спонсоры и Содержанки Ташкент')</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: Arial, sans-serif; }
-        header { background: #2c3e50; color: white; padding: 20px; }
-        header h1 { font-size: 24px; }
-        nav { margin-top: 10px; }
-        nav a { color: white; margin-right: 20px; text-decoration: none; }
-        nav a:hover { text-decoration: underline; }
-        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
-        footer { background: #34495e; color: white; padding: 20px; text-align: center; margin-top: 50px; }
-    </style>
+	<link rel="stylesheet" href="{{ asset('css/style.css') }}?v={{ time() }}">
 </head>
 <body>
     <header>
-        <div class="container">
-            <h1>💎 Спонсоры и Содержанки Ташкент</h1>
-            <nav>
-                <a href="/">Главная</a>
-                <a href="/sponsors">Спонсоры</a>
-                <a href="/girls">Содержанки</a>
-                <a href="/login">Вход</a>
-                <a href="/register">Регистрация</a>
-            </nav>
+        <!-- Верхнее меню (только десктоп) -->
+        <div class="top-menu">
+            <div class="container">
+                <nav>
+                    <a href="/">Главная</a>
+                    <a href="/contact">Написать админу</a>
+                    <a href="/rules">Правила</a>
+                    <a href="/news">Нововведения</a>
+                </nav>
+            </div>
+        </div>
+        
+        <!-- Главное меню: логотип и кнопки -->
+        <div class="main-menu">
+            <div class="container">
+                <div class="logo">
+					<img src="{{ asset('images/logo.png') }}" alt="Спонсоры Ташкент" style="height: 50px;">
+				</div>
+                <!-- Кнопки для десктопа -->
+                <div class="buttons">
+                    <a href="/services" class="btn btn-primary">Платные услуги сайта</a>
+                    <a href="/add" class="btn btn-success">+ Добавить объявление</a>
+                    <a href="/login" class="btn btn-outline">Войти</a>
+                    <a href="/register" class="btn btn-outline">Регистрация</a>
+                </div>
+                
+                <!-- Бургер для мобилки -->
+                <div class="burger" onclick="toggleMenu()">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </div>
         </div>
     </header>
+
+    <!-- Мобильное меню -->
+	<div class="overlay" id="overlay" onclick="toggleMenu()"></div>
+	<div class="mobile-menu" id="mobileMenu">
+		<div class="mobile-menu-header">
+			<span class="close-menu" onclick="toggleMenu()">&times;</span>
+		</div>
+		<nav>
+			<a href="/">Главная</a>
+			<a href="/contact">Написать админу</a>
+			<a href="/rules">Правила</a>
+			<a href="/news">Нововведения</a>
+		</nav>
+		<div class="buttons">
+			<a href="/services" class="btn btn-primary">Платные услуги сайта</a>
+			<a href="/add" class="btn btn-success">+ Добавить объявление</a>
+			<a href="/login" class="btn btn-outline">Войти</a>
+			<a href="/register" class="btn btn-outline">Регистрация</a>
+		</div>
+	</div>
 
     <div class="container">
         @yield('content')
@@ -38,5 +72,14 @@
         <p>&copy; 2025 Спонсоры и Содержанки Ташкент. Все права защищены.</p>
         <p>Только для лиц старше 18 лет</p>
     </footer>
+
+    <script>
+        function toggleMenu() {
+            const mobileMenu = document.getElementById('mobileMenu');
+            const overlay = document.getElementById('overlay');
+            mobileMenu.classList.toggle('active');
+            overlay.classList.toggle('active');
+        }
+    </script>
 </body>
 </html>

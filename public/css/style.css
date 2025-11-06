@@ -1,0 +1,200 @@
+* { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; background: #f5f5f5; }
+        
+        /* Header styles */
+        header { background: #222222; color: white; }
+        
+        /* Верхнее меню */
+        .top-menu { 
+            background: #222222;
+            border-bottom: 1px solid #333;
+        }
+        .top-menu .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+        }
+        .top-menu nav {
+            display: flex;
+            gap: 30px;
+        }
+        .top-menu nav a { 
+            color: #fff;
+            text-decoration: none;
+            font-size: 14px;
+            transition: color 0.3s;
+        }
+        .top-menu nav a:hover { 
+            color: #e74c3c;
+        }
+        
+        /* Главное меню с логотипом и кнопками */
+        .main-menu {
+            background: #f8f9fa;
+            padding: 20px 0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .main-menu .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        /* Логотип */
+        .logo {
+            font-size: 28px;
+            font-weight: bold;
+            color: #e74c3c;
+        }
+        
+        /* Кнопки */
+        .buttons {
+            display: flex;
+            gap: 15px;
+        }
+        .btn {
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 5px;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s;
+            border: none;
+            cursor: pointer;
+        }
+        .btn-primary {
+            background: #e74c3c;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #c0392b;
+        }
+        .btn-success {
+            background: #27ae60;
+            color: white;
+        }
+        .btn-success:hover {
+            background: #229954;
+        }
+        .btn-outline {
+            background: transparent;
+            color: #222222;
+            border: 1px solid #222222;
+        }
+        .btn-outline:hover {
+            background: #222222;
+            color: white;
+        }
+        
+        /* Бургер меню */
+        .burger {
+            display: none;
+            flex-direction: column;
+            cursor: pointer;
+            gap: 5px;
+        }
+        .burger span {
+            width: 30px;
+            height: 3px;
+            background: #222222;
+            border-radius: 3px;
+            transition: all 0.3s;
+        }
+        
+        /* Мобильное меню */
+        .mobile-menu {
+            display: none;
+            position: fixed;
+            top: 0;
+            right: -100%;
+            width: 80%;
+            max-width: 300px;
+            height: 100vh;
+            background: white;
+            box-shadow: -2px 0 10px rgba(0,0,0,0.2);
+            transition: right 0.3s;
+            z-index: 1000;
+            overflow-y: auto;
+        }
+        .mobile-menu.active {
+            right: 0;
+        }
+        .mobile-menu-header {
+			background: #222222;
+			color: white;
+			padding: 10px;
+			display: flex;
+			justify-content: flex-end;
+			align-items: center;
+		}
+        .close-menu {
+            font-size: 30px;
+            cursor: pointer;
+            color: white;
+        }
+        .mobile-menu nav {
+            padding: 20px;
+        }
+        .mobile-menu nav a {
+            display: block;
+            padding: 15px 0;
+            color: #222222;
+            text-decoration: none;
+            border-bottom: 1px solid #eee;
+            transition: color 0.3s;
+        }
+        .mobile-menu nav a:hover {
+            color: #e74c3c;
+        }
+        .mobile-menu .buttons {
+            flex-direction: column;
+            padding: 20px;
+            gap: 10px;
+        }
+        .mobile-menu .btn {
+            text-align: center;
+            display: block;
+        }
+        
+        /* Overlay */
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
+        }
+        .overlay.active {
+            display: block;
+        }
+        
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        footer { background: #34495e; color: white; padding: 20px; text-align: center; margin-top: 50px; }
+        
+        /* Адаптив для мобильных */
+		@media (max-width: 768px) {
+			.top-menu {
+				display: none;
+			}
+			.main-menu .buttons {
+				display: none;
+			}
+			.burger {
+				display: flex;
+			}
+			.mobile-menu {
+				display: block;
+			}
+			.logo {
+				font-size: 22px;
+			}
+		}
