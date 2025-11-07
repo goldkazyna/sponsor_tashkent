@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\PostController;
 
 Route::get('/', function () {
     // Тестовые данные
@@ -69,3 +70,6 @@ Route::get('/password/reset', [AuthController::class, 'showResetRequest'])->name
 Route::post('/password/email', [AuthController::class, 'sendResetLink'])->name('password.email');
 Route::get('/password/reset/{code}', [AuthController::class, 'showResetForm'])->name('password.reset');
 Route::post('/password/update', [AuthController::class, 'resetPassword'])->name('password.update');
+
+Route::get('/add', [PostController::class, 'create'])->name('post.create');
+Route::post('/add', [PostController::class, 'store'])->name('post.store');

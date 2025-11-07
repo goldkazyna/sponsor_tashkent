@@ -1,0 +1,240 @@
+@extends('layouts.app')
+
+@section('title', 'Добавить объявление')
+
+@section('content')
+<div style="max-width: 800px; margin: 50px auto; background: white; padding: 40px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+    <h2 style="text-align: center; margin-bottom: 30px; color: #222;">Добавить объявление</h2>
+
+	<!-- Информационный блок с правилами -->
+	<div style="background: #fff3cd; border: 1px solid #ffc107; border-radius: 8px; padding: 20px; margin-bottom: 30px;">
+		<h3 style="color: #856404; margin-bottom: 15px; font-size: 18px;">📋 Важная информация</h3>
+		
+		<div style="background: #ffe69c; padding: 15px; border-radius: 5px; margin-bottom: 15px;">
+			<p style="margin: 0; color: #856404; font-weight: 500;">
+				Если вы являетесь спонсором, то вам для начала нужно купить статус проверенного спонсора для подачи объявления. 
+				Девушки могут подавать объявление бесплатно.
+			</p>
+		</div>
+		
+		<div style="font-size: 13px; color: #666; line-height: 1.8;">
+			<p style="margin-bottom: 10px;">
+				<strong>1.</strong> Указывайте верный Email. Ваш email опубликован не будет, но на него будут приходить письма с сайта. Всё конфиденциально.
+			</p>
+			<p style="margin-bottom: 10px;">
+				<strong>2.</strong> WhatsApp. Если вы хотите, чтобы вам писали в WhatsApp, то указывайте его в поле "номер телефона". Он будет опубликован на сайте.
+			</p>
+			<p style="margin-bottom: 10px;">
+				<strong>3.</strong> Чтобы удалить добавленное объявление, зарегистрируйтесь на сайте, указав email оставленного объявления. После этого вы сможете удалить объявление в личном кабинете.
+			</p>
+			<p style="margin: 0;">
+				<strong>4.</strong> Обращение к девушкам!!! Если вы хотите найти проверенного спонсора, указывайте в объявлении, что ищете спонсора со статусом проверенного спонсора на нашем сайте. Эти спонсоры прошли проверку на платёжеспособность.
+			</p>
+		</div>
+	</div>
+
+
+    
+    @if($errors->any())
+        <div style="background: #fee; border: 1px solid #fcc; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+            <ul style="list-style: none; padding: 0; margin: 0; color: #c00;">
+                @foreach($errors->all() as $error)
+                    <li style="margin-bottom: 5px;">{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
+    <form method="POST" action="{{ route('post.store') }}">
+        @csrf
+        
+        <div style="margin-bottom: 20px;">
+            <label style="display: block; margin-bottom: 8px; font-weight: 500;">Заголовок объявления: *</label>
+            <input type="text" name="title" value="{{ old('title') }}" required 
+                   placeholder="Например: Ищу партнера для серьезных отношений"
+                   style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px;">
+            <small style="color: #666;">Минимум 10 символов</small>
+        </div>
+
+        <div style="margin-bottom: 20px;">
+            <label style="display: block; margin-bottom: 8px; font-weight: 500;">ФИО или Имя: *</label>
+            <input type="text" name="fio" value="{{ old('fio', $user->fio) }}" required 
+                   placeholder="Ваше имя"
+                   style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px;">
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+            <div>
+                <label style="display: block; margin-bottom: 8px; font-weight: 500;">Телефон: *</label>
+                <input type="text" name="phone" value="{{ old('phone', $user->phone) }}" required 
+                       placeholder="+998901234567"
+                       style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px;">
+            </div>
+            <div>
+                <label style="display: block; margin-bottom: 8px; font-weight: 500;">Город: *</label>
+                <select name="city" required 
+                        style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px;">
+                    <option value="">Выберите город</option>
+                    @foreach($cities as $city)
+                        <option value="{{ $city->name }}" {{ old('city') == $city->name ? 'selected' : '' }}>
+                            {{ $city->name }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+            <div>
+                <label style="display: block; margin-bottom: 8px; font-weight: 500;">WhatsApp:</label>
+                <input type="text" name="whats" value="{{ old('whats') }}" 
+                       placeholder="+998901234567"
+                       style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px;">
+            </div>
+            <div>
+                <label style="display: block; margin-bottom: 8px; font-weight: 500;">Telegram:</label>
+                <input type="text" name="telegram" value="{{ old('telegram') }}" 
+                       placeholder="@username"
+                       style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px;">
+            </div>
+        </div>
+
+        <div style="margin-bottom: 20px;">
+            <label style="display: block; margin-bottom: 8px; font-weight: 500;">Описание: *</label>
+            <textarea name="description" rows="8" required 
+                      placeholder="Расскажите о себе и о том, кого ищете..."
+                      style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px; resize: vertical;">{{ old('description') }}</textarea>
+            <small style="color: #666;">Минимум 50 символов</small>
+        </div>
+
+        <div style="margin-bottom: 30px;">
+			<label style="display: block; margin-bottom: 12px; font-weight: 500; font-size: 16px;">Добавьте фото:</label>
+			<p style="font-size: 13px; color: #666; margin-bottom: 15px;">Вы можете добавить до 10 фотографий. Форматы: JPG, PNG</p>
+			
+			<div class="photo-gallery" id="photoGallery">
+				<!-- Слоты для фото (10 штук) -->
+				@for($i = 0; $i < 10; $i++)
+				<div class="photo-item" id="photoSlot{{ $i }}">
+					<input type="file" 
+						   id="photoInput{{ $i }}" 
+						   accept="image/jpeg,image/png,image/jpg" 
+						   onchange="handlePhotoUpload({{ $i }}, this)">
+					<label for="photoInput{{ $i }}" style="cursor: pointer; display: block; width: 100%; height: 100%;">
+						<div class="photo-upload-btn">+</div>
+					</label>
+					<button type="button" class="photo-remove" onclick="removePhoto({{ $i }})">&times;</button>
+				</div>
+				@endfor
+			</div>
+			
+			<!-- Скрытые поля для передачи base64 изображений -->
+			<div id="photoDataContainer"></div>
+		</div>
+
+		<div style="margin-bottom: 30px;">
+			<label style="display: flex; align-items: center; cursor: pointer;">
+				<input type="checkbox" name="photo_view" value="1" {{ old('photo_view') ? 'checked' : '' }} 
+					   style="margin-right: 8px; width: 18px; height: 18px;">
+				<span>Показывать фото в объявлении</span>
+			</label>
+		</div>
+
+        <div style="padding: 15px; background: #f8f9fa; border-radius: 5px; margin-bottom: 20px;">
+            <p style="margin: 0; color: #666; font-size: 14px;">
+                <strong>Вы добавляете объявление как:</strong> 
+                {{ $user->sex == 1 ? '👨 Мужчина (Спонсор)' : '👩 Женщина (Содержанка)' }}
+            </p>
+        </div>
+
+        <button type="submit" class="btn btn-success" style="width: 100%; padding: 15px; font-size: 16px;">
+            Опубликовать объявление
+        </button>
+    </form>
+</div>
+@endsection
+<script>
+let uploadedPhotos = [];
+
+function handlePhotoUpload(index, input) {
+    const file = input.files[0];
+    
+    if (!file) return;
+    
+    // Проверка типа файла
+    if (!file.type.match('image/jpeg') && !file.type.match('image/png')) {
+        alert('Пожалуйста, выберите файл формата JPG или PNG');
+        input.value = '';
+        return;
+    }
+    
+    // Проверка размера (макс 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+        alert('Размер файла не должен превышать 5MB');
+        input.value = '';
+        return;
+    }
+    
+    const reader = new FileReader();
+    
+    reader.onload = function(e) {
+        const photoSlot = document.getElementById('photoSlot' + index);
+        
+        // Создаем превью
+        const img = document.createElement('img');
+        img.src = e.target.result;
+        img.className = 'photo-preview';
+        
+        // Удаляем старое превью если есть
+        const oldPreview = photoSlot.querySelector('.photo-preview');
+        if (oldPreview) {
+            oldPreview.remove();
+        }
+        
+        // Добавляем новое превью
+        photoSlot.appendChild(img);
+        photoSlot.classList.add('has-image');
+        
+        // Сохраняем данные фото
+        uploadedPhotos[index] = {
+            file: file,
+            dataUrl: e.target.result
+        };
+        
+        // Добавляем скрытое поле с данными
+        updatePhotoDataFields();
+    };
+    
+    reader.readAsDataURL(file);
+}
+
+function removePhoto(index) {
+    const photoSlot = document.getElementById('photoSlot' + index);
+    const photoInput = document.getElementById('photoInput' + index);
+    const preview = photoSlot.querySelector('.photo-preview');
+    
+    if (preview) {
+        preview.remove();
+    }
+    
+    photoSlot.classList.remove('has-image');
+    photoInput.value = '';
+    delete uploadedPhotos[index];
+    
+    updatePhotoDataFields();
+}
+
+function updatePhotoDataFields() {
+    const container = document.getElementById('photoDataContainer');
+    container.innerHTML = '';
+    
+    uploadedPhotos.forEach((photo, index) => {
+        if (photo) {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'photos[]';
+            input.value = photo.dataUrl;
+            container.appendChild(input);
+        }
+    });
+}
+</script>
