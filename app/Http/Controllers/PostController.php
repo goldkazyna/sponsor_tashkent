@@ -37,21 +37,18 @@ class PostController extends Controller
 		}
 
 		$request->validate([
-			'title' => 'required|min:10|max:255',
+			'title' => 'required|max:255',
 			'fio' => 'required|min:2',
 			'phone' => 'required',
 			'city' => 'required',
-			'description' => 'required|min:50',
-			'photos.*' => 'nullable|string' // base64 изображения
+			'description' => 'required'
 		], [
-			'title.required' => 'Заголовок обязателен',
-			'title.min' => 'Заголовок должен быть минимум 10 символов',
+			'title.required' => 'Заголовок обязателен',	
 			'fio.required' => 'ФИО обязательно',
 			'fio.min' => 'ФИО должно быть минимум 2 символа',
 			'phone.required' => 'Телефон обязателен',
 			'city.required' => 'Город обязателен',
-			'description.required' => 'Описание обязательно',
-			'description.min' => 'Описание должно быть минимум 50 символов'
+			'description.required' => 'Описание обязательно'
 		]);
 
 		// Генерируем slug из title

@@ -3,7 +3,7 @@
 @section('title', 'Добавить объявление')
 
 @section('content')
-<div style="max-width: 800px; margin: 50px auto; background: white; padding: 40px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+<div style=" margin: 50px auto; background: white; padding: 40px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
     <h2 style="text-align: center; margin-bottom: 30px; color: #222;">Добавить объявление</h2>
 
 	<!-- Информационный блок с правилами -->
@@ -53,7 +53,7 @@
             <input type="text" name="title" value="{{ old('title') }}" required 
                    placeholder="Например: Ищу партнера для серьезных отношений"
                    style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px;">
-            <small style="color: #666;">Минимум 10 символов</small>
+            
         </div>
 
         <div style="margin-bottom: 20px;">
@@ -104,7 +104,7 @@
             <textarea name="description" rows="8" required 
                       placeholder="Расскажите о себе и о том, кого ищете..."
                       style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px; resize: vertical;">{{ old('description') }}</textarea>
-            <small style="color: #666;">Минимум 50 символов</small>
+            
         </div>
 
         <div style="margin-bottom: 30px;">
@@ -114,15 +114,14 @@
 			<div class="photo-gallery" id="photoGallery">
 				<!-- Слоты для фото (10 штук) -->
 				@for($i = 0; $i < 10; $i++)
-				<div class="photo-item" id="photoSlot{{ $i }}">
+				<div class="photo-item" id="photoSlot{{ $i }}" onclick="document.getElementById('photoInput{{ $i }}').click()">
 					<input type="file" 
 						   id="photoInput{{ $i }}" 
 						   accept="image/jpeg,image/png,image/jpg" 
-						   onchange="handlePhotoUpload({{ $i }}, this)">
-					<label for="photoInput{{ $i }}" style="cursor: pointer; display: block; width: 100%; height: 100%;">
-						<div class="photo-upload-btn">+</div>
-					</label>
-					<button type="button" class="photo-remove" onclick="removePhoto({{ $i }})">&times;</button>
+						   onchange="handlePhotoUpload({{ $i }}, this)"
+						   style="display: none;">
+					<div class="photo-upload-btn">+</div>
+					<button type="button" class="photo-remove" onclick="event.stopPropagation(); removePhoto({{ $i }})">&times;</button>
 				</div>
 				@endfor
 			</div>

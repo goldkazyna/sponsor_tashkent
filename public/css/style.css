@@ -273,10 +273,20 @@
     font-size: 16px;
     line-height: 1;
     display: none;
+    z-index: 10;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+    transition: all 0.3s;
+}
+
+.photo-remove:hover {
+    background: #c0392b;
+    transform: scale(1.1);
 }
 
 .photo-item.has-image .photo-remove {
-    display: block;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .photo-item.has-image .photo-upload-btn {

@@ -24,7 +24,7 @@
         <div class="main-menu">
             <div class="container">
                 <div class="logo">
-					<img src="{{ asset('images/logo.png') }}" alt="Спонсоры Ташкент" style="height: 50px;">
+					<a href="/"><img src="{{ asset('images/logo.png') }}" alt="Спонсоры Ташкент" style="height: 50px;"></a>
 				</div>
 				<!-- Кнопки для десктопа -->
 				<div class="buttons">
