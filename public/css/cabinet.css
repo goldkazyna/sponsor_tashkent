@@ -1,0 +1,514 @@
+/* Стили личного кабинета */
+
+.cabinet-container {
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+/* Шапка */
+.welcome-section {
+    background: white;
+    border-radius: 16px;
+    padding: 1.5rem 2rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.welcome-info {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.welcome-avatar {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: #1a202c;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    color: white;
+}
+
+.welcome-text h1 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #1a202c;
+    margin-bottom: 0.3rem;
+}
+
+.welcome-text p {
+    color: #64748b;
+    font-size: 0.85rem;
+    margin: 0;
+}
+
+.welcome-actions {
+    display: flex;
+    gap: 1rem;
+}
+
+.action-btn {
+    padding: 0.7rem 1.3rem;
+    border-radius: 10px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    border: none;
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+
+.cabinet-btn-primary {
+    background: #1a202c;
+    color: white;
+}
+
+.cabinet-btn-primary:hover {
+    background: #2d3748;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(26, 32, 44, 0.3);
+    text-decoration: none;
+    color: white;
+}
+
+.cabinet-btn-secondary {
+    background: #f8fafc;
+    color: #64748b;
+    border: 2px solid #e2e8f0;
+}
+
+.cabinet-btn-secondary:hover {
+    background: white;
+    border-color: #cbd5e1;
+    color: #1a202c;
+    text-decoration: none;
+}
+
+/* Карточки меню */
+.menu-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.2rem;
+    margin-bottom: 2rem;
+}
+
+.menu-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.3rem 1.5rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    transition: all 0.3s ease;
+    cursor: pointer;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    border: 2px solid transparent;
+}
+
+.menu-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+    border-color: #e2e8f0;
+    text-decoration: none;
+}
+
+.menu-card.active {
+    border-color: #1a202c;
+    background: #fafafa;
+}
+
+.card-icon {
+    width: 45px;
+    height: 45px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    background: #f1f5f9;
+}
+
+.card-icon svg {
+    width: 24px;
+    height: 24px;
+    fill: #1a202c;
+}
+
+.card-content {
+    flex: 1;
+}
+
+.card-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #1a202c;
+    margin-bottom: 0.2rem;
+}
+
+.card-badge {
+    display: inline-block;
+    background: #f1f5f9;
+    color: #64748b;
+    padding: 0.2rem 0.6rem;
+    border-radius: 5px;
+    font-size: 0.7rem;
+    font-weight: 600;
+}
+
+.card-badge.new {
+    background: #dcfce7;
+    color: #16a34a;
+}
+
+/* Рабочая область */
+.work-area {
+    background: white;
+    border-radius: 16px;
+    padding: 2rem;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+    min-height: 500px;
+}
+
+.work-area-header {
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 2px solid #f1f5f9;
+}
+
+.work-area-title {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #1a202c;
+}
+
+.work-area-body {
+    color: #64748b;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+}
+
+.empty-icon {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 1.5rem;
+    background: #f1f5f9;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.empty-icon svg {
+    width: 40px;
+    height: 40px;
+    fill: #94a3b8;
+}
+
+.empty-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #1a202c;
+    margin-bottom: 0.5rem;
+}
+
+.empty-description {
+    color: #64748b;
+    font-size: 0.95rem;
+    margin-bottom: 1.5rem;
+}
+
+.empty-action {
+    display: inline-block;
+    padding: 0.75rem 1.5rem;
+    background: #1a202c;
+    color: white;
+    border-radius: 10px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.empty-action:hover {
+    background: #2d3748;
+    transform: translateY(-2px);
+    text-decoration: none;
+    color: white;
+}
+
+/* Список объявлений */
+.posts-list {
+    display: grid;
+    gap: 1.5rem;
+}
+
+.post-card {
+    background: #fafafa;
+    border-radius: 12px;
+    padding: 1.5rem;
+    border: 2px solid #f1f5f9;
+    transition: all 0.3s ease;
+}
+
+.post-card:hover {
+    border-color: #e2e8f0;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+.post-card-body {
+    display: grid;
+    grid-template-columns: 120px 1fr auto;
+    gap: 1.5rem;
+    align-items: start;
+}
+
+.post-thumbnail {
+    width: 120px;
+    height: 120px;
+    border-radius: 10px;
+    overflow: hidden;
+    background: #e2e8f0;
+    flex-shrink: 0;
+}
+
+.post-thumbnail img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.post-thumbnail-empty {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #94a3b8;
+    font-size: 2.5rem;
+}
+
+.post-info {
+    flex: 1;
+}
+
+.post-title {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #1a202c;
+    margin-bottom: 0.5rem;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.post-title:hover {
+    color: #4a5568;
+    text-decoration: none;
+}
+
+.post-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 0.75rem;
+    font-size: 0.85rem;
+    color: #64748b;
+}
+
+.post-meta-item {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.post-description {
+    color: #64748b;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    margin-bottom: 0.75rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.post-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.4rem 0.8rem;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.post-status.active {
+    background: #dcfce7;
+    color: #16a34a;
+}
+
+.post-status.inactive {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.post-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    min-width: 140px;
+}
+
+.post-btn {
+    padding: 0.6rem 1rem;
+    border-radius: 8px;
+    border: none;
+    font-weight: 600;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.post-btn-edit {
+    background: #1a202c;
+    color: white;
+}
+
+.post-btn-edit:hover {
+    background: #2d3748;
+    transform: translateY(-1px);
+    text-decoration: none;
+    color: white;
+}
+
+.post-btn-top {
+    background: #f59e0b;
+    color: white;
+}
+
+.post-btn-top:hover {
+    background: #d97706;
+    transform: translateY(-1px);
+    text-decoration: none;
+    color: white;
+}
+
+.post-btn-up {
+    background: #3b82f6;
+    color: white;
+}
+
+.post-btn-up:hover {
+    background: #2563eb;
+    transform: translateY(-1px);
+    text-decoration: none;
+    color: white;
+}
+
+.post-btn-delete {
+    background: #f1f5f9;
+    color: #dc2626;
+    border: 1px solid #e2e8f0;
+}
+
+.post-btn-delete:hover {
+    background: #fee2e2;
+    border-color: #fecaca;
+    text-decoration: none;
+}
+
+/* Мобильная версия */
+@media (max-width: 768px) {
+    .welcome-section {
+        flex-direction: column;
+        gap: 1rem;
+        padding: 1.2rem;
+    }
+    
+    .welcome-info {
+        width: 100%;
+    }
+
+    .welcome-avatar {
+        width: 50px;
+        height: 50px;
+        font-size: 1.5rem;
+    }
+
+    .welcome-text h1 {
+        font-size: 1.2rem;
+    }
+    
+    .welcome-actions {
+        width: 100%;
+        flex-direction: column;
+    }
+    
+    .action-btn {
+        width: 100%;
+        text-align: center;
+    }
+    
+    .menu-cards {
+        grid-template-columns: 1fr;
+        gap: 0.8rem;
+    }
+
+    .menu-card {
+        padding: 1rem 1.2rem;
+    }
+
+    .card-icon {
+        width: 40px;
+        height: 40px;
+    }
+
+    .card-icon svg {
+        width: 20px;
+        height: 20px;
+    }
+
+    .card-title {
+        font-size: 0.9rem;
+    }
+
+    .work-area {
+        padding: 1.5rem;
+    }
+
+    .work-area-title {
+        font-size: 1.4rem;
+    }
+
+    .post-card-body {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
+    .post-thumbnail {
+        width: 100%;
+        height: 200px;
+    }
+
+    .post-actions {
+        flex-direction: row;
+        flex-wrap: wrap;
+        width: 100%;
+    }
+
+    .post-btn {
+        flex: 1;
+        min-width: calc(50% - 0.25rem);
+    }
+}

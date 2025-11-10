@@ -33,7 +33,7 @@
 					
 					@if(session('user_id'))
 						<!-- Авторизованный пользователь -->
-						<a href="/profile" class="btn btn-outline">Мой профиль</a>
+						<a href="{{ route('profile.index') }}" class="btn btn-outline">Мой профиль</a>
 						<form method="POST" action="{{ route('logout') }}" style="display: inline;">
 							@csrf
 							<button type="submit" class="btn btn-outline" style="cursor: pointer;">Выйти</button>

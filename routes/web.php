@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PostController;
+use App\Http\Controllers\ProfileController;
 
 // Главная страница со списком объявлений
 Route::get('/', [PostController::class, 'index'])->name('home');
@@ -28,3 +29,12 @@ Route::post('/password/update', [AuthController::class, 'resetPassword'])->name(
 Route::get('/add', [PostController::class, 'create'])->name('post.create');
 Route::post('/add', [PostController::class, 'store'])->name('post.store');
 Route::get('/posts/{slug}', [PostController::class, 'show'])->name('post.detail');
+
+// Личный кабинет (требует авторизации)
+Route::middleware(['web'])->group(function () {
+    Route::get('/profile', [ProfileController::class, 'index'])->name('profile.index');
+    Route::get('/profile/posts', [ProfileController::class, 'myPosts'])->name('profile.posts');
+    Route::get('/profile/messages', [ProfileController::class, 'messages'])->name('profile.messages');
+    Route::get('/profile/settings', [ProfileController::class, 'settings'])->name('profile.settings');
+    Route::get('/profile/pricing', [ProfileController::class, 'pricing'])->name('profile.pricing');
+});
