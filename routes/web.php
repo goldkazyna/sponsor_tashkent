@@ -37,4 +37,10 @@ Route::middleware(['web'])->group(function () {
     Route::get('/profile/messages', [ProfileController::class, 'messages'])->name('profile.messages');
     Route::get('/profile/settings', [ProfileController::class, 'settings'])->name('profile.settings');
     Route::get('/profile/pricing', [ProfileController::class, 'pricing'])->name('profile.pricing');
+    
+    // Управление объявлениями
+    Route::get('/profile/post/edit/{id}', [ProfileController::class, 'editPost'])->name('profile.post.edit');
+    Route::post('/profile/post/update/{id}', [ProfileController::class, 'updatePost'])->name('profile.post.update');
+    Route::post('/profile/post/delete/{id}', [ProfileController::class, 'deletePost'])->name('profile.post.delete');
+    Route::post('/profile/photo/delete/{id}', [ProfileController::class, 'deletePhoto'])->name('profile.photo.delete');
 });

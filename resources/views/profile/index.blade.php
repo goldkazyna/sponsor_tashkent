@@ -155,7 +155,7 @@
 
                                 <!-- Действия -->
                                 <div class="post-actions">
-                                    <a href="#" class="post-btn post-btn-edit">
+                                    <a href="{{ route('profile.post.edit', $post->id) }}" class="post-btn post-btn-edit">
                                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="width: 14px; height: 14px; fill: currentColor; display: inline-block; vertical-align: middle; margin-right: 4px;">
                                             <path d="M20.71,7.04C21.1,6.65 21.1,6 20.71,5.63L18.37,3.29C18,2.9 17.35,2.9 16.96,3.29L15.12,5.12L18.87,8.87M3,17.25V21H6.75L17.81,9.93L14.06,6.18L3,17.25Z"/>
                                         </svg>
@@ -173,7 +173,7 @@
                                         </svg>
                                         Поднять вверх
                                     </button>
-                                    <button class="post-btn post-btn-delete" onclick="if(confirm('Удалить объявление?')) alert('Функция в разработке')">
+                                    <button class="post-btn post-btn-delete" onclick="deletePost({{ $post->id }})">
                                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="width: 14px; height: 14px; fill: currentColor; display: inline-block; vertical-align: middle; margin-right: 4px;">
                                             <path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"/>
                                         </svg>
@@ -217,5 +217,36 @@
     </div>
     
 </div>
+
+<script>
+// Функция удаления объявления
+function deletePost(postId) {
+    if (!confirm('Вы уверены, что хотите удалить это объявление?')) {
+        return;
+    }
+
+    // Отправляем AJAX запрос
+    fetch('/profile/post/delete/' + postId, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Объявление успешно удалено');
+            location.reload();
+        } else {
+            alert('Ошибка при удалении: ' + (data.error || 'Неизвестная ошибка'));
+        }
+    })
+    .catch(error => {
+        console.error('Ошибка:', error);
+        alert('Ошибка при удалении объявления');
+    });
+}
+</script>
 
 @endsection
