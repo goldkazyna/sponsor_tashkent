@@ -43,4 +43,6 @@ Route::middleware(['web'])->group(function () {
     Route::post('/profile/post/update/{id}', [ProfileController::class, 'updatePost'])->name('profile.post.update');
     Route::post('/profile/post/delete/{id}', [ProfileController::class, 'deletePost'])->name('profile.post.delete');
     Route::post('/profile/photo/delete/{id}', [ProfileController::class, 'deletePhoto'])->name('profile.photo.delete');
+	Route::post('/profile/update', [ProfileController::class, 'updateProfile'])->name('profile.update');
+	Route::post('/profile/password/update', [ProfileController::class, 'updatePassword'])->name('profile.password.update');
 });

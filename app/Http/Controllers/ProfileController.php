@@ -64,21 +64,93 @@ class ProfileController extends Controller
     }
 
     // Настройки профиля
-    public function settings()
-    {
-        // Проверяем авторизацию
-        if (!session('user_id')) {
-            return redirect()->route('login')->with('error', 'Необходимо авторизоваться');
-        }
-
-        $user = DB::table('users')->where('id', session('user_id'))->first();
-
-        return view('profile.index', [
-            'user' => $user,
-            'activeSection' => 'settings',
-            'sectionTitle' => 'Настройки профиля'
-        ]);
+    // Настройки профиля
+public function settings()
+{
+    // Проверяем авторизацию
+    if (!session('user_id')) {
+        return redirect()->route('login')->with('error', 'Необходимо авторизоваться');
     }
+
+    $user = DB::table('users')->where('id', session('user_id'))->first();
+
+    return view('profile.settings', [
+        'user' => $user,
+        'activeSection' => 'settings',
+        'sectionTitle' => 'Настройки профиля'
+    ]);
+}
+
+	// Обновление профиля
+	public function updateProfile(Request $request)
+	{
+		// Проверяем авторизацию
+		if (!session('user_id')) {
+			return redirect()->route('login')->with('error', 'Необходимо авторизоваться');
+		}
+
+		$request->validate([
+			'fio' => 'nullable|string|max:255',
+			'phone' => 'nullable|string|max:20',
+			'telegram_username' => 'nullable|string|max:100|regex:/^[a-zA-Z0-9_]+$/'
+		], [
+			'fio.max' => 'ФИО не должно превышать 255 символов',
+			'phone.max' => 'Телефон не должен превышать 20 символов',
+			'telegram_username.max' => 'Telegram username не должен превышать 100 символов',
+			'telegram_username.regex' => 'Telegram username может содержать только буквы, цифры и подчеркивание'
+		]);
+
+		// Убираем @ если пользователь случайно добавил
+		$telegramUsername = $request->input('telegram_username');
+		if ($telegramUsername) {
+			$telegramUsername = ltrim($telegramUsername, '@');
+		}
+
+		DB::table('users')
+			->where('id', session('user_id'))
+			->update([
+				'fio' => $request->input('fio'),
+				'phone' => $request->input('phone'),
+				'telegram_username' => $telegramUsername
+			]);
+
+		return back()->with('success', 'Профиль успешно обновлён');
+	}
+
+	// Смена пароля
+	public function updatePassword(Request $request)
+	{
+		// Проверяем авторизацию
+		if (!session('user_id')) {
+			return redirect()->route('login')->with('error', 'Необходимо авторизоваться');
+		}
+
+		$request->validate([
+			'current_password' => 'required',
+			'new_password' => 'required|min:6|confirmed'
+		], [
+			'current_password.required' => 'Введите текущий пароль',
+			'new_password.required' => 'Введите новый пароль',
+			'new_password.min' => 'Новый пароль должен быть минимум 6 символов',
+			'new_password.confirmed' => 'Пароли не совпадают'
+		]);
+
+		$user = DB::table('users')->where('id', session('user_id'))->first();
+
+		// Проверяем текущий пароль
+		if (!\Illuminate\Support\Facades\Hash::check($request->input('current_password'), $user->password)) {
+			return back()->withErrors(['current_password' => 'Неверный текущий пароль']);
+		}
+
+		// Обновляем пароль
+		DB::table('users')
+			->where('id', session('user_id'))
+			->update([
+				'password' => \Illuminate\Support\Facades\Hash::make($request->input('new_password'))
+			]);
+
+		return back()->with('success', 'Пароль успешно изменён');
+	}
 
     // Расценки сайта
     public function pricing()
