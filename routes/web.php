@@ -34,7 +34,6 @@ Route::get('/posts/{slug}', [PostController::class, 'show'])->name('post.detail'
 Route::middleware(['web'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'index'])->name('profile.index');
     Route::get('/profile/posts', [ProfileController::class, 'myPosts'])->name('profile.posts');
-    Route::get('/profile/messages', [ProfileController::class, 'messages'])->name('profile.messages');
     Route::get('/profile/settings', [ProfileController::class, 'settings'])->name('profile.settings');
     Route::get('/profile/pricing', [ProfileController::class, 'pricing'])->name('profile.pricing');
     
@@ -45,4 +44,10 @@ Route::middleware(['web'])->group(function () {
     Route::post('/profile/photo/delete/{id}', [ProfileController::class, 'deletePhoto'])->name('profile.photo.delete');
 	Route::post('/profile/update', [ProfileController::class, 'updateProfile'])->name('profile.update');
 	Route::post('/profile/password/update', [ProfileController::class, 'updatePassword'])->name('profile.password.update');
+	// AJAX методы для сообщений
+	Route::get('/profile/messages', [ProfileController::class, 'messages'])->name('profile.messages');
+	Route::get('/profile/messages/chat/{id}', [ProfileController::class, 'messagesChat'])->name('profile.messages.chat');
+	Route::post('/profile/messages/send', [ProfileController::class, 'sendMessage'])->name('profile.messages.send');
+	Route::get('/profile/messages/new/{id}', [ProfileController::class, 'getNewMessages'])->name('profile.messages.new');
+	Route::get('/profile/messages/unread-count', [ProfileController::class, 'getUnreadCount'])->name('profile.messages.unread');
 });

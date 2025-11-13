@@ -46,24 +46,8 @@ class ProfileController extends Controller
         ]);
     }
 
-    // Сообщения
-    public function messages()
-    {
-        // Проверяем авторизацию
-        if (!session('user_id')) {
-            return redirect()->route('login')->with('error', 'Необходимо авторизоваться');
-        }
 
-        $user = DB::table('users')->where('id', session('user_id'))->first();
 
-        return view('profile.index', [
-            'user' => $user,
-            'activeSection' => 'messages',
-            'sectionTitle' => 'Сообщения'
-        ]);
-    }
-
-    // Настройки профиля
     // Настройки профиля
 public function settings()
 {
@@ -381,4 +365,207 @@ public function settings()
 
         return response()->json(['success' => true, 'message' => 'Фото удалено']);
     }
+	
+	
+// Найди метод messages() и замени его на:
+	public function messages()
+	{
+		if (!session('user_id')) {
+			return redirect()->route('login')->with('error', 'Необходимо авторизоваться');
+		}
+
+		$user = DB::table('users')->where('id', session('user_id'))->first();
+
+		// Получаем список уникальных собеседников
+		$conversations = DB::select("
+			SELECT 
+				CASE 
+					WHEN m.sender_id = ? THEN m.receiver_id 
+					ELSE m.sender_id 
+				END as interlocutor_id,
+				MAX(m.created_at) as last_message_time,
+				(SELECT message FROM messages 
+				 WHERE (sender_id = interlocutor_id AND receiver_id = ?) 
+					OR (sender_id = ? AND receiver_id = interlocutor_id)
+				 ORDER BY created_at DESC LIMIT 1) as last_message,
+				(SELECT COUNT(*) FROM messages 
+				 WHERE sender_id = interlocutor_id 
+				   AND receiver_id = ? 
+				   AND is_read = 0) as unread_count,
+				(SELECT post_id FROM messages 
+				 WHERE (sender_id = interlocutor_id AND receiver_id = ?) 
+					OR (sender_id = ? AND receiver_id = interlocutor_id)
+				 ORDER BY created_at DESC LIMIT 1) as post_id
+			FROM messages m
+			WHERE m.sender_id = ? OR m.receiver_id = ?
+			GROUP BY interlocutor_id
+			ORDER BY last_message_time DESC
+		", [
+			$user->id, $user->id, $user->id, 
+			$user->id, $user->id, $user->id, 
+			$user->id, $user->id
+		]);
+
+		// Получаем данные собеседников
+		foreach ($conversations as $conversation) {
+			$interlocutor = DB::table('users')
+				->where('id', $conversation->interlocutor_id)
+				->first();
+			
+			$conversation->interlocutor = $interlocutor;
+			
+			// Получаем объявление если есть
+			if ($conversation->post_id) {
+				$conversation->post = DB::table('posts')
+					->where('id', $conversation->post_id)
+					->first();
+			}
+		}
+
+		return view('profile.messages', [
+			'user' => $user,
+			'conversations' => $conversations
+		]);
+	}
+
+	// После метода messages() добавь эти новые методы:
+
+	public function messagesChat($interlocutorId)
+	{
+		if (!session('user_id')) {
+			return redirect()->route('login')->with('error', 'Необходимо авторизоваться');
+		}
+
+		$user = DB::table('users')->where('id', session('user_id'))->first();
+		
+		$interlocutor = DB::table('users')->where('id', $interlocutorId)->first();
+		
+		if (!$interlocutor) {
+			return redirect()->route('profile.messages')->with('error', 'Пользователь не найден');
+		}
+
+		$messages = DB::table('messages')
+			->where(function($query) use ($user, $interlocutorId) {
+				$query->where('sender_id', $user->id)
+					  ->where('receiver_id', $interlocutorId);
+			})
+			->orWhere(function($query) use ($user, $interlocutorId) {
+				$query->where('sender_id', $interlocutorId)
+					  ->where('receiver_id', $user->id);
+			})
+			->orderBy('created_at', 'asc')
+			->get();
+
+		DB::table('messages')
+			->where('sender_id', $interlocutorId)
+			->where('receiver_id', $user->id)
+			->where('is_read', 0)
+			->update([
+				'is_read' => 1,
+				'read_at' => now()
+			]);
+
+		$post = null;
+		if ($messages->isNotEmpty() && $messages->first()->post_id) {
+			$post = DB::table('posts')
+				->where('id', $messages->first()->post_id)
+				->first();
+		}
+
+		return view('profile.chat', [
+			'user' => $user,
+			'interlocutor' => $interlocutor,
+			'messages' => $messages,
+			'post' => $post
+		]);
+	}
+
+	public function sendMessage(Request $request)
+	{
+		if (!session('user_id')) {
+			return response()->json(['error' => 'Необходимо авторизоваться'], 401);
+		}
+
+		$request->validate([
+			'receiver_id' => 'required|exists:users,id',
+			'message' => 'required|string|max:5000',
+			'post_id' => 'nullable|exists:posts,id'
+		]);
+
+		$user = DB::table('users')->where('id', session('user_id'))->first();
+
+		if ($user->id == $request->receiver_id) {
+			return response()->json(['error' => 'Нельзя отправить сообщение самому себе'], 400);
+		}
+
+		$messageId = DB::table('messages')->insertGetId([
+			'sender_id' => $user->id,
+			'receiver_id' => $request->receiver_id,
+			'post_id' => $request->post_id,
+			'message' => $request->message,
+			'is_read' => 0,
+			'created_at' => now(),
+			'updated_at' => now()
+		]);
+
+		$message = DB::table('messages')->where('id', $messageId)->first();
+
+		return response()->json([
+			'success' => true,
+			'message' => $message
+		]);
+	}
+
+	public function getNewMessages(Request $request, $interlocutorId)
+	{
+		if (!session('user_id')) {
+			return response()->json(['error' => 'Необходимо авторизоваться'], 401);
+		}
+
+		$user = DB::table('users')->where('id', session('user_id'))->first();
+		
+		$lastMessageId = $request->input('last_message_id', 0);
+
+		$newMessages = DB::table('messages')
+			->where('sender_id', $interlocutorId)
+			->where('receiver_id', $user->id)
+			->where('id', '>', $lastMessageId)
+			->orderBy('created_at', 'asc')
+			->get();
+
+		if ($newMessages->isNotEmpty()) {
+			DB::table('messages')
+				->where('sender_id', $interlocutorId)
+				->where('receiver_id', $user->id)
+				->where('id', '>', $lastMessageId)
+				->update([
+					'is_read' => 1,
+					'read_at' => now()
+				]);
+		}
+
+		return response()->json([
+			'success' => true,
+			'messages' => $newMessages
+		]);
+	}
+
+	public function getUnreadCount()
+	{
+		if (!session('user_id')) {
+			return response()->json(['error' => 'Необходимо авторизоваться'], 401);
+		}
+
+		$user = DB::table('users')->where('id', session('user_id'))->first();
+
+		$unreadCount = DB::table('messages')
+			->where('receiver_id', $user->id)
+			->where('is_read', 0)
+			->count();
+
+		return response()->json([
+			'success' => true,
+			'unread_count' => $unreadCount
+		]);
+	}
 }
