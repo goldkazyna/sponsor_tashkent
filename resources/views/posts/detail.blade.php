@@ -443,7 +443,66 @@
                 <h2 style="font-size: 1.4rem; font-weight: 700; color: #1a202c; margin-bottom: 1rem;">Описание</h2>
                 <div class="description-text">{{ $post->description }}</div>
             </div>
+			<!-- Добавь этот код на страницу просмотра объявления (resources/views/posts/show.blade.php) -->
+			<!-- В блок с контактами или рядом с телефоном -->
+
+			@if(session('user_id'))
+				@php
+					$currentUser = DB::table('users')->where('id', session('user_id'))->first();
+					$postOwner = DB::table('users')->where('email', $post->email)->first();
+				@endphp
+				
+				@if($currentUser && $postOwner && $currentUser->id != $postOwner->id)
+					<!-- Кнопка "Написать сообщение" -->
+					<a href="{{ route('profile.messages.chat', $postOwner->id) }}" class="btn-message">
+						<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="width: 20px; height: 20px; fill: currentColor; margin-right: 8px;">
+							<path d="M20,2H4A2,2 0 0,0 2,4V22L6,18H20A2,2 0 0,0 22,16V4A2,2 0 0,0 20,2M6,9H18V11H6M14,14H6V12H14M18,8H6V6H18"/>
+						</svg>
+						Написать сообщение
+					</a>
+				@endif
+			@else
+				<!-- Для неавторизованных - кнопка ведёт на авторизацию -->
+				<a href="{{ route('login') }}" class="btn-message">
+					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="width: 20px; height: 20px; fill: currentColor; margin-right: 8px;">
+						<path d="M20,2H4A2,2 0 0,0 2,4V22L6,18H20A2,2 0 0,0 22,16V4A2,2 0 0,0 20,2M6,9H18V11H6M14,14H6V12H14M18,8H6V6H18"/>
+					</svg>
+					Написать сообщение
+				</a>
+			@endif
+
+			<style>
+			.btn-message {
+				display: inline-flex;
+				align-items: center;
+				justify-content: center;
+				padding: 0.8rem 1.5rem;
+				background: #1a202c;
+				color: white;
+				border-radius: 10px;
+				text-decoration: none;
+				font-weight: 600;
+				font-size: 0.95rem;
+				transition: all 0.3s ease;
+				margin-top: 1rem;
+			}
+
+			.btn-message:hover {
+				background: #2d3748;
+				transform: translateY(-2px);
+				box-shadow: 0 8px 20px rgba(26, 32, 44, 0.3);
+				color: white;
+				text-decoration: none;
+			}
+
+			@media (max-width: 768px) {
+				.btn-message {
+					width: 100%;
+				}
+			}
+			</style>
         </div>
+		
     </div>
 </div>
 

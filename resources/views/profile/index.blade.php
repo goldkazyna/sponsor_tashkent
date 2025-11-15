@@ -40,17 +40,27 @@
             </div>
         </a>
         
-        <a href="{{ route('profile.messages') }}" class="menu-card {{ $activeSection == 'messages' ? 'active' : '' }}">
-            <div class="card-icon">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                    <path d="M20,2H4A2,2 0 0,0 2,4V22L6,18H20A2,2 0 0,0 22,16V4A2,2 0 0,0 20,2M6,9H18V11H6M14,14H6V12H14M18,8H6V6H18"/>
-                </svg>
-            </div>
-            <div class="card-content">
-                <div class="card-title">Сообщения</div>
-                <span class="card-badge new">8 новых</span>
-            </div>
-        </a>
+		<a href="{{ route('profile.messages') }}" class="menu-card {{ $activeSection == 'messages' ? 'active' : '' }}">
+			<div class="card-icon">
+				<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+					<path d="M20,2H4A2,2 0 0,0 2,4V22L6,18H20A2,2 0 0,0 22,16V4A2,2 0 0,0 20,2M6,9H18V11H6M14,14H6V12H14M18,8H6V6H18"/>
+				</svg>
+			</div>
+			<div class="card-content">
+				<div class="card-title">Сообщения</div>
+				@php
+					$unreadCount = DB::table('messages')
+						->where('receiver_id', $user->id)
+						->where('is_read', 0)
+						->count();
+				@endphp
+				@if($unreadCount > 0)
+					<span class="card-badge new">{{ $unreadCount }} новых</span>
+				@else
+					<span class="card-badge">Нет новых</span>
+				@endif
+			</div>
+		</a>
         
         <a href="{{ route('profile.settings') }}" class="menu-card {{ $activeSection == 'settings' ? 'active' : '' }}">
             <div class="card-icon">
@@ -247,6 +257,55 @@ function deletePost(postId) {
         alert('Ошибка при удалении объявления');
     });
 }
-</script>
+// Автообновление счётчика с паузой на неактивной вкладке
+let counterInterval = null;
 
+function updateUnreadCount() {
+    fetch('{{ route("profile.messages.unread") }}')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const badge = document.querySelector('.menu-card[href="{{ route("profile.messages") }}"] .card-badge');
+                if (badge) {
+                    if (data.unread_count > 0) {
+                        badge.textContent = data.unread_count + ' новых';
+                        badge.classList.add('new');
+                    } else {
+                        badge.textContent = 'Нет новых';
+                        badge.classList.remove('new');
+                    }
+                }
+            }
+        })
+        .catch(error => console.error('Ошибка обновления счётчика:', error));
+}
+
+// 🔥 УПРАВЛЕНИЕ СЧЁТЧИКОМ ПРИ СМЕНЕ ВКЛАДКИ
+function startCounter() {
+    if (!counterInterval) {
+        counterInterval = setInterval(updateUnreadCount, 10000);
+        console.log('✅ Обновление счётчика запущено');
+    }
+}
+
+function stopCounter() {
+    if (counterInterval) {
+        clearInterval(counterInterval);
+        counterInterval = null;
+        console.log('⏸️ Обновление счётчика остановлено');
+    }
+}
+
+document.addEventListener('visibilitychange', function() {
+    if (document.hidden) {
+        stopCounter(); // Вкладка неактивна - СТОП
+    } else {
+        updateUnreadCount(); // Сразу обновляем
+        startCounter(); // Возобновляем
+    }
+});
+
+// Запускаем при загрузке
+startCounter();
+</script>
 @endsection

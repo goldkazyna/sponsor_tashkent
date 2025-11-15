@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Чат с Анной Петровой')
+@section('title', 'Чат с {{ $interlocutor->fio ?? $interlocutor->email }}')
 
 @section('content')
 
@@ -58,13 +58,15 @@
     width: 50px;
     height: 50px;
     border-radius: 50%;
-    background: #fce7f3;
-    color: #be185d;
+    background: {{ $interlocutor->sex == 1 ? '#dbeafe' : '#fce7f3' }};
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.5rem;
     flex-shrink: 0;
+}
+
+.chat-avatar svg {
+    fill: {{ $interlocutor->sex == 1 ? '#1e40af' : '#be185d' }};
 }
 
 .chat-user-details h2 {
@@ -163,19 +165,19 @@
 }
 
 .message.other .message-avatar {
-    background: #fce7f3;
+    background: {{ $interlocutor->sex == 1 ? '#dbeafe' : '#fce7f3' }};
 }
 
 .message.other .message-avatar svg {
-    fill: #be185d;
+    fill: {{ $interlocutor->sex == 1 ? '#1e40af' : '#be185d' }};
 }
 
 .message.own .message-avatar {
-    background: #dbeafe;
+    background: {{ $user->sex == 1 ? '#dbeafe' : '#fce7f3' }};
 }
 
 .message.own .message-avatar svg {
-    fill: #1e40af;
+    fill: {{ $user->sex == 1 ? '#1e40af' : '#be185d' }};
 }
 
 .message-content {
@@ -275,44 +277,10 @@
     fill: currentColor;
 }
 
-.typing-indicator {
-    display: none;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.75rem 1rem;
+.empty-messages {
+    text-align: center;
+    padding: 3rem;
     color: #94a3b8;
-    font-size: 0.85rem;
-    font-style: italic;
-}
-
-.typing-dots {
-    display: flex;
-    gap: 4px;
-}
-
-.typing-dot {
-    width: 6px;
-    height: 6px;
-    background: #94a3b8;
-    border-radius: 50%;
-    animation: typing 1.4s infinite;
-}
-
-.typing-dot:nth-child(2) {
-    animation-delay: 0.2s;
-}
-
-.typing-dot:nth-child(3) {
-    animation-delay: 0.4s;
-}
-
-@keyframes typing {
-    0%, 60%, 100% {
-        transform: translateY(0);
-    }
-    30% {
-        transform: translateY(-10px);
-    }
 }
 
 @media (max-width: 768px) {
@@ -381,202 +349,81 @@
         
         <div class="chat-user-info">
             <div class="chat-avatar">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="width: 24px; height: 24px; fill: #be185d;">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="width: 24px; height: 24px;">
                     <path d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z"/>
                 </svg>
             </div>
             <div class="chat-user-details">
-                <h2>Анна Петрова</h2>
-                <div class="chat-user-status">Была в сети 5 минут назад</div>
+                <h2>{{ $interlocutor->fio ?? $interlocutor->email }}</h2>
+                <div class="chat-user-status">{{ $interlocutor->sex == 1 ? 'Спонсор' : 'Содержанка' }}</div>
             </div>
         </div>
 
-        <a href="/posts/ischu-sponsora-v-tashkente" class="chat-post-link" target="_blank">
+        @if($post)
+        <a href="/posts/{{ $post->id }}" class="chat-post-link" target="_blank">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
                 <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2Z"/>
             </svg>
             Объявление
         </a>
+        @endif
     </div>
 
     <!-- Сообщения -->
     <div class="chat-messages" id="chatMessages">
         
-        <!-- Разделитель даты -->
-        <div class="message-date-divider">
-            <span>Сегодня, 13 ноября</span>
-        </div>
-
-        <!-- Сообщение от собеседника -->
-        <div class="message-group">
-            <div class="message other">
-                <div class="message-avatar">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                        <path d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z"/>
-                    </svg>
-                </div>
-                <div class="message-content">
-                    <div class="message-bubble">
-                        Привет! Я видела ваше объявление.
+        @if($messages->isEmpty())
+            <div class="empty-messages">
+                <p>Начните переписку - напишите первое сообщение!</p>
+            </div>
+        @else
+            @php
+                $currentDate = null;
+            @endphp
+            
+            @foreach($messages as $message)
+                @php
+                    $messageDate = \Carbon\Carbon::parse($message->created_at)->format('Y-m-d');
+                    $today = \Carbon\Carbon::today()->format('Y-m-d');
+                    $yesterday = \Carbon\Carbon::yesterday()->format('Y-m-d');
+                    
+                    if ($currentDate != $messageDate) {
+                        $currentDate = $messageDate;
+                        if ($messageDate == $today) {
+                            $dateLabel = 'Сегодня';
+                        } elseif ($messageDate == $yesterday) {
+                            $dateLabel = 'Вчера';
+                        } else {
+                            $dateLabel = \Carbon\Carbon::parse($message->created_at)->locale('ru')->isoFormat('D MMMM');
+                        }
+                    } else {
+                        $dateLabel = null;
+                    }
+                @endphp
+                
+                @if($dateLabel)
+                    <div class="message-date-divider">
+                        <span>{{ $dateLabel }}</span>
                     </div>
-                    <div class="message-time">10:15</div>
-                </div>
-            </div>
-
-            <div class="message other">
-                <div class="message-avatar">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                        <path d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z"/>
-                    </svg>
-                </div>
-                <div class="message-content">
-                    <div class="message-bubble">
-                        Можем обсудить детали? Меня интересует серьёзное знакомство.
+                @endif
+                
+                <div class="message {{ $message->sender_id == $user->id ? 'own' : 'other' }}">
+                    <div class="message-avatar">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                            <path d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z"/>
+                        </svg>
                     </div>
-                    <div class="message-time">10:16</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Моё сообщение -->
-        <div class="message-group">
-            <div class="message own">
-                <div class="message-avatar">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                        <path d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z"/>
-                    </svg>
-                </div>
-                <div class="message-content">
-                    <div class="message-bubble">
-                        Здравствуйте, Анна! Да, конечно, давайте обсудим.
+                    <div class="message-content">
+                        <div class="message-bubble">
+                            {{ $message->message }}
+                        </div>
+                        <div class="message-time">
+                            {{ \Carbon\Carbon::parse($message->created_at)->format('H:i') }}
+                        </div>
                     </div>
-                    <div class="message-time">10:20</div>
                 </div>
-            </div>
-
-            <div class="message own">
-                <div class="message-avatar">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                        <path d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z"/>
-                    </svg>
-                </div>
-                <div class="message-content">
-                    <div class="message-bubble">
-                        Что именно вас интересует? Можем встретиться на этой неделе.
-                    </div>
-                    <div class="message-time">10:21</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Сообщение от собеседника -->
-        <div class="message-group">
-            <div class="message other">
-                <div class="message-avatar">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                        <path d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z"/>
-                    </svg>
-                </div>
-                <div class="message-content">
-                    <div class="message-bubble">
-                        Отлично! Меня интересуют взаимовыгодные отношения.
-                    </div>
-                    <div class="message-time">10:25</div>
-                </div>
-            </div>
-
-            <div class="message other">
-                <div class="message-avatar">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                        <path d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z"/>
-                    </svg>
-                </div>
-                <div class="message-content">
-                    <div class="message-bubble">
-                        Я свободна в четверг или пятницу вечером. Где удобно встретиться?
-                    </div>
-                    <div class="message-time">10:26</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Разделитель даты (вчера) -->
-        <div class="message-date-divider">
-            <span>Вчера, 12 ноября</span>
-        </div>
-
-        <!-- Старые сообщения -->
-        <div class="message-group">
-            <div class="message own">
-                <div class="message-avatar">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                        <path d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z"/>
-                    </svg>
-                </div>
-                <div class="message-content">
-                    <div class="message-bubble">
-                        Добрый вечер! Рад знакомству 😊
-                    </div>
-                    <div class="message-time">19:30</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="message-group">
-            <div class="message other">
-                <div class="message-avatar">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                        <path d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z"/>
-                    </svg>
-                </div>
-                <div class="message-content">
-                    <div class="message-bubble">
-                        Взаимно! Расскажите немного о себе.
-                    </div>
-                    <div class="message-time">19:45</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="message-group">
-            <div class="message own">
-                <div class="message-avatar">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                        <path d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z"/>
-                    </svg>
-                </div>
-                <div class="message-content">
-                    <div class="message-bubble">
-                        Мне 35 лет, занимаюсь бизнесом. Ищу приятную девушку для совместного времяпрепровождения.
-                    </div>
-                    <div class="message-time">19:50</div>
-                </div>
-            </div>
-
-            <div class="message own">
-                <div class="message-avatar">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                        <path d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z"/>
-                    </svg>
-                </div>
-                <div class="message-content">
-                    <div class="message-bubble">
-                        Люблю путешествовать, хорошо проводить время.
-                    </div>
-                    <div class="message-time">19:51</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Индикатор печатания (скрыт по умолчанию) -->
-        <div class="typing-indicator" id="typingIndicator">
-            <div class="typing-dots">
-                <div class="typing-dot"></div>
-                <div class="typing-dot"></div>
-                <div class="typing-dot"></div>
-            </div>
-            <span>Анна печатает...</span>
-        </div>
+            @endforeach
+        @endif
 
     </div>
 
@@ -607,10 +454,101 @@ function scrollToBottom() {
     chatMessages.scrollTop = chatMessages.scrollHeight;
 }
 
-// Прокручиваем при загрузке
 scrollToBottom();
 
-// Обработка формы
+// Long Polling с паузой на неактивной вкладке
+let lastMessageId = {{ $messages->isNotEmpty() ? $messages->last()->id : 0 }};
+let isPolling = false;
+let pollingInterval = null;
+
+function pollNewMessages() {
+    if (isPolling) return;
+    isPolling = true;
+
+    fetch(`/profile/messages/new/{{ $interlocutor->id }}?last_message_id=${lastMessageId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.messages.length > 0) {
+                data.messages.forEach(msg => {
+                    addMessageToChat(msg);
+                    lastMessageId = msg.id;
+                });
+                scrollToBottom();
+            }
+        })
+        .catch(error => console.error('Ошибка Long Polling:', error))
+        .finally(() => {
+            isPolling = false;
+        });
+}
+
+// Добавление сообщения в чат
+function addMessageToChat(msg) {
+    const chatMessages = document.getElementById('chatMessages');
+    
+    const messageDiv = document.createElement('div');
+    messageDiv.className = 'message other';
+    
+    messageDiv.innerHTML = `
+        <div class="message-avatar">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                <path d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z"/>
+            </svg>
+        </div>
+        <div class="message-content">
+            <div class="message-bubble">
+                ${escapeHtml(msg.message)}
+            </div>
+            <div class="message-time">${formatTime(msg.created_at)}</div>
+        </div>
+    `;
+    
+    chatMessages.appendChild(messageDiv);
+}
+
+function formatTime(datetime) {
+    const date = new Date(datetime);
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    return `${hours}:${minutes}`;
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// 🔥 УПРАВЛЕНИЕ POLLING ПРИ СМЕНЕ ВКЛАДКИ
+function startPolling() {
+    if (!pollingInterval) {
+        pollingInterval = setInterval(pollNewMessages, 3000);
+        console.log('✅ Polling запущен (вкладка активна)');
+    }
+}
+
+function stopPolling() {
+    if (pollingInterval) {
+        clearInterval(pollingInterval);
+        pollingInterval = null;
+        console.log('⏸️ Polling остановлен (вкладка неактивна)');
+    }
+}
+
+// Запускаем или останавливаем polling в зависимости от видимости вкладки
+document.addEventListener('visibilitychange', function() {
+    if (document.hidden) {
+        stopPolling(); // Вкладка неактивна - СТОП
+    } else {
+        pollNewMessages(); // Сразу обновляем
+        startPolling(); // Возобновляем polling
+    }
+});
+
+// Запускаем при загрузке страницы
+startPolling();
+
+// Обработка формы отправки
 document.getElementById('messageForm').addEventListener('submit', function(e) {
     e.preventDefault();
     
@@ -618,32 +556,63 @@ document.getElementById('messageForm').addEventListener('submit', function(e) {
     const message = input.value.trim();
     
     if (message) {
-        // Здесь будет AJAX отправка сообщения
-        console.log('Отправка сообщения:', message);
-        
-        // Очищаем поле
-        input.value = '';
-        
-        // Пример: показываем индикатор печатания через 2 секунды
-        setTimeout(() => {
-            document.getElementById('typingIndicator').style.display = 'flex';
-            scrollToBottom();
-            
-            // Скрываем через 3 секунды
-            setTimeout(() => {
-                document.getElementById('typingIndicator').style.display = 'none';
-            }, 3000);
-        }, 2000);
+        fetch('{{ route("profile.messages.send") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            },
+            body: JSON.stringify({
+                receiver_id: {{ $interlocutor->id }},
+                message: message,
+                post_id: {{ $post->id ?? 'null' }}
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                addOwnMessageToChat(data.message);
+                input.value = '';
+                input.style.height = 'auto';
+                scrollToBottom();
+            }
+        })
+        .catch(error => {
+            console.error('Ошибка отправки:', error);
+            alert('Ошибка при отправке сообщения');
+        });
     }
 });
 
-// Автоматическое изменение высоты textarea
+function addOwnMessageToChat(msg) {
+    const chatMessages = document.getElementById('chatMessages');
+    
+    const messageDiv = document.createElement('div');
+    messageDiv.className = 'message own';
+    
+    messageDiv.innerHTML = `
+        <div class="message-avatar">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                <path d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z"/>
+            </svg>
+        </div>
+        <div class="message-content">
+            <div class="message-bubble">
+                ${escapeHtml(msg.message)}
+            </div>
+            <div class="message-time">${formatTime(msg.created_at)}</div>
+        </div>
+    `;
+    
+    chatMessages.appendChild(messageDiv);
+    lastMessageId = msg.id;
+}
+
 document.getElementById('messageInput').addEventListener('input', function() {
     this.style.height = 'auto';
     this.style.height = (this.scrollHeight) + 'px';
 });
 
-// Enter для отправки, Shift+Enter для новой строки
 document.getElementById('messageInput').addEventListener('keydown', function(e) {
     if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
@@ -651,5 +620,8 @@ document.getElementById('messageInput').addEventListener('keydown', function(e) 
     }
 });
 </script>
+
+
+
 
 @endsection

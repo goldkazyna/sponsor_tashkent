@@ -64,34 +64,6 @@
     fill: currentColor;
 }
 
-.filter-tabs {
-    display: flex;
-    gap: 0.5rem;
-}
-
-.filter-tab {
-    padding: 0.5rem 1rem;
-    border: 2px solid #e2e8f0;
-    background: white;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: #64748b;
-    transition: all 0.3s ease;
-}
-
-.filter-tab:hover {
-    border-color: #cbd5e1;
-    color: #1a202c;
-}
-
-.filter-tab.active {
-    background: #1a202c;
-    border-color: #1a202c;
-    color: white;
-}
-
 .conversations-list {
     background: white;
     border-radius: 16px;
@@ -278,11 +250,6 @@
         justify-content: center;
     }
 
-    .filter-tabs {
-        width: 100%;
-        justify-content: center;
-    }
-
     .conversation-item {
         padding: 1rem;
     }
@@ -290,7 +257,11 @@
     .conversation-avatar {
         width: 50px;
         height: 50px;
-        font-size: 1.5rem;
+    }
+
+    .conversation-avatar svg {
+        width: 22px;
+        height: 22px;
     }
 
     .conversation-name {
@@ -324,239 +295,123 @@
         </a>
     </div>
 
-    <div class="filter-tabs" style="margin-bottom: 1.5rem;">
-        <button class="filter-tab active">Все (8)</button>
-        <button class="filter-tab">Непрочитанные (3)</button>
-    </div>
-
-    <!-- Список диалогов -->
-    <div class="conversations-list">
-        
-        <!-- Диалог 1: Непрочитанное сообщение от женщины -->
-        <a href="{{ route('profile.messages.chat', 1) }}" class="conversation-item unread">
-            <div class="conversation-avatar female">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                    <path d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z"/>
-                </svg>
-            </div>
-            <div class="conversation-content">
-                <div class="conversation-header">
-                    <div class="conversation-name">Анна Петрова</div>
-                    <div class="conversation-time">5 мин назад</div>
-                </div>
-                <div class="conversation-message">
-                    Привет! Я видела ваше объявление. Можем обсудить детали?
-                </div>
-                <div class="conversation-meta">
-                    <div class="conversation-post">
+    @if(isset($conversations) && count($conversations) > 0)
+        <!-- Список диалогов -->
+        <div class="conversations-list">
+            @foreach($conversations as $conversation)
+                <a href="{{ route('profile.messages.chat', $conversation->interlocutor_id) }}" 
+                   class="conversation-item {{ $conversation->unread_count > 0 ? 'unread' : '' }}">
+                    <div class="conversation-avatar {{ $conversation->interlocutor->sex == 1 ? 'male' : 'female' }}">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                            <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2Z"/>
+                            <path d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z"/>
                         </svg>
-                        Ищу спонсора в Ташкенте
                     </div>
-                    <div class="unread-badge">2 новых</div>
-                </div>
-            </div>
-        </a>
-
-        <!-- Диалог 2: Непрочитанное от мужчины -->
-        <a href="{{ route('profile.messages.chat', 2) }}" class="conversation-item unread">
-            <div class="conversation-avatar male">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                    <path d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z"/>
-                </svg>
-            </div>
-            <div class="conversation-content">
-                <div class="conversation-header">
-                    <div class="conversation-name">Дмитрий Иванов</div>
-                    <div class="conversation-time">1 час назад</div>
-                </div>
-                <div class="conversation-message">
-                    Здравствуйте! Интересует серьёзное знакомство. Вы свободны сегодня вечером?
-                </div>
-                <div class="conversation-meta">
-                    <div class="conversation-post">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                            <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2Z"/>
-                        </svg>
-                        Ищу девушку для встреч
+                    <div class="conversation-content">
+                        <div class="conversation-header">
+                            <div class="conversation-name">
+                                {{ $conversation->interlocutor->fio ?? $conversation->interlocutor->email }}
+                            </div>
+                            <div class="conversation-time">
+                                {{ \Carbon\Carbon::parse($conversation->last_message_time)->diffForHumans() }}
+                            </div>
+                        </div>
+                        <div class="conversation-message">
+                            {{ Str::limit($conversation->last_message, 60) }}
+                        </div>
+                        <div class="conversation-meta">
+                            @if(isset($conversation->post))
+                                <div class="conversation-post">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                        <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2Z"/>
+                                    </svg>
+                                    {{ Str::limit($conversation->post->title, 30) }}
+                                </div>
+                            @endif
+                            @if($conversation->unread_count > 0)
+                                <div class="unread-badge">{{ $conversation->unread_count }} новых</div>
+                            @endif
+                        </div>
                     </div>
-                    <div class="unread-badge">1 новое</div>
+                </a>
+            @endforeach
+        </div>
+    @else
+        <!-- Пустое состояние -->
+        <div class="conversations-list">
+            <div class="empty-state">
+                <div class="empty-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path d="M20,2H4A2,2 0 0,0 2,4V22L6,18H20A2,2 0 0,0 22,16V4A2,2 0 0,0 20,2M6,9H18V11H6M14,14H6V12H14M18,8H6V6H18"/>
+                    </svg>
+                </div>
+                <div class="empty-title">Сообщений пока нет</div>
+                <div class="empty-description">
+                    Начните общение, написав пользователям из объявлений
                 </div>
             </div>
-        </a>
-
-        <!-- Диалог 3 -->
-        <a href="{{ route('profile.messages.chat', 3) }}" class="conversation-item">
-            <div class="conversation-avatar female">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                    <path d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z"/>
-                </svg>
-            </div>
-            <div class="conversation-content">
-                <div class="conversation-header">
-                    <div class="conversation-name">Елена Смирнова</div>
-                    <div class="conversation-time">3 часа назад</div>
-                </div>
-                <div class="conversation-message">
-                    Спасибо за быстрый ответ! Буду рада познакомиться.
-                </div>
-                <div class="conversation-meta">
-                    <div class="conversation-post">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                            <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2Z"/>
-                        </svg>
-                        Спонсор, 35 лет, Ташкент
-                    </div>
-                </div>
-            </div>
-        </a>
-
-        <!-- Диалог 4 -->
-        <a href="{{ route('profile.messages.chat', 4) }}" class="conversation-item">
-            <div class="conversation-avatar male">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                    <path d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z"/>
-                </svg>
-            </div>
-            <div class="conversation-content">
-                <div class="conversation-header">
-                    <div class="conversation-name">Алексей Козлов</div>
-                    <div class="conversation-time">Вчера в 18:30</div>
-                </div>
-                <div class="conversation-message">
-                    Договорились. Встречаемся завтра в 19:00.
-                </div>
-                <div class="conversation-meta">
-                    <div class="conversation-post">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                            <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2Z"/>
-                        </svg>
-                        Ищу девушку для отношений
-                    </div>
-                </div>
-            </div>
-        </a>
-
-        <!-- Диалог 5 -->
-        <a href="{{ route('profile.messages.chat', 5) }}" class="conversation-item unread">
-            <div class="conversation-avatar female">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                    <path d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z"/>
-                </svg>
-            </div>
-            <div class="conversation-content">
-                <div class="conversation-header">
-                    <div class="conversation-name">Мария Волкова</div>
-                    <div class="conversation-time">2 дня назад</div>
-                </div>
-                <div class="conversation-message">
-                    Добрый день! Давайте обсудим условия сотрудничества.
-                </div>
-                <div class="conversation-meta">
-                    <div class="conversation-post">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                            <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2Z"/>
-                        </svg>
-                        Ищу спонсора для путешествий
-                    </div>
-                    <div class="unread-badge">1 новое</div>
-                </div>
-            </div>
-        </a>
-
-        <!-- Диалог 6 -->
-        <a href="{{ route('profile.messages.chat', 6) }}" class="conversation-item">
-            <div class="conversation-avatar male">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                    <path d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z"/>
-                </svg>
-            </div>
-            <div class="conversation-content">
-                <div class="conversation-header">
-                    <div class="conversation-name">Сергей Новиков</div>
-                    <div class="conversation-time">3 дня назад</div>
-                </div>
-                <div class="conversation-message">
-                    Хорошо, подумаю над вашим предложением.
-                </div>
-                <div class="conversation-meta">
-                    <div class="conversation-post">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                            <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2Z"/>
-                        </svg>
-                        Проверенный спонсор, бизнесмен
-                    </div>
-                </div>
-            </div>
-        </a>
-
-        <!-- Диалог 7 -->
-        <a href="{{ route('profile.messages.chat', 7) }}" class="conversation-item">
-            <div class="conversation-avatar female">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                    <path d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z"/>
-                </svg>
-            </div>
-            <div class="conversation-content">
-                <div class="conversation-header">
-                    <div class="conversation-name">Ольга Соколова</div>
-                    <div class="conversation-time">7 дней назад</div>
-                </div>
-                <div class="conversation-message">
-                    Благодарю за приятное общение!
-                </div>
-                <div class="conversation-meta">
-                    <div class="conversation-post">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                            <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2Z"/>
-                        </svg>
-                        Ищу серьёзные отношения
-                    </div>
-                </div>
-            </div>
-        </a>
-
-        <!-- Диалог 8 -->
-        <a href="{{ route('profile.messages.chat', 8) }}" class="conversation-item">
-            <div class="conversation-avatar male">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                    <path d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z"/>
-                </svg>
-            </div>
-            <div class="conversation-content">
-                <div class="conversation-header">
-                    <div class="conversation-name">Игорь Морозов</div>
-                    <div class="conversation-time">14 окт</div>
-                </div>
-                <div class="conversation-message">
-                    К сожалению, сейчас не готов к новым знакомствам.
-                </div>
-                <div class="conversation-meta">
-                    <div class="conversation-post">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                            <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2Z"/>
-                        </svg>
-                        Спонсор в поиске
-                    </div>
-                </div>
-            </div>
-        </a>
-
-    </div>
+        </div>
+    @endif
 
 </div>
 
+@endsection
+
 <script>
-// Фильтрация диалогов
-document.querySelectorAll('.filter-tab').forEach(tab => {
-    tab.addEventListener('click', function() {
-        document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
-        this.classList.add('active');
-        const filter = this.textContent.toLowerCase();
-        console.log('Фильтр:', filter);
-    });
+// Автообновление списка диалогов с паузой на неактивной вкладке
+let isUpdating = false;
+let updateInterval = null;
+
+function updateConversationsList() {
+    if (isUpdating) return;
+    isUpdating = true;
+
+    fetch('{{ route("profile.messages") }}')
+        .then(response => response.text())
+        .then(html => {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            const newList = doc.querySelector('.conversations-list');
+            const currentList = document.querySelector('.conversations-list');
+            
+            if (newList && currentList) {
+                if (newList.innerHTML !== currentList.innerHTML) {
+                    currentList.innerHTML = newList.innerHTML;
+                }
+            }
+        })
+        .catch(error => console.error('Ошибка обновления диалогов:', error))
+        .finally(() => {
+            isUpdating = false;
+        });
+}
+
+// 🔥 УПРАВЛЕНИЕ ОБНОВЛЕНИЕМ ПРИ СМЕНЕ ВКЛАДКИ
+function startUpdating() {
+    if (!updateInterval) {
+        updateInterval = setInterval(updateConversationsList, 5000);
+        console.log('✅ Обновление диалогов запущено');
+    }
+}
+
+function stopUpdating() {
+    if (updateInterval) {
+        clearInterval(updateInterval);
+        updateInterval = null;
+        console.log('⏸️ Обновление диалогов остановлено');
+    }
+}
+
+document.addEventListener('visibilitychange', function() {
+    if (document.hidden) {
+        stopUpdating(); // Вкладка неактивна - СТОП
+    } else {
+        updateConversationsList(); // Сразу обновляем
+        startUpdating(); // Возобновляем
+    }
 });
+
+// Запускаем при загрузке
+startUpdating();
 </script>
 
-@endsection
+
