@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ContactController;
 
 // Главная страница со списком объявлений
 Route::get('/', [PostController::class, 'index'])->name('home');
@@ -51,3 +52,8 @@ Route::middleware(['web'])->group(function () {
 	Route::get('/profile/messages/new/{id}', [ProfileController::class, 'getNewMessages'])->name('profile.messages.new');
 	Route::get('/profile/messages/unread-count', [ProfileController::class, 'getUnreadCount'])->name('profile.messages.unread');
 });
+
+Route::get('/pricing', function () {return view('pricing');})->name('pricing');
+
+Route::get('/contact', [ContactController::class, 'show'])->name('contact');
+Route::post('/contact/send', [ContactController::class, 'send'])->name('contact.send');

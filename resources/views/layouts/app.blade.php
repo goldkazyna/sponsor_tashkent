@@ -28,7 +28,7 @@
 				</div>
 				<!-- Кнопки для десктопа -->
 				<div class="buttons">
-					<a href="/services" class="btn btn-primary">Платные услуги сайта</a>
+					<a href="/pricing" class="btn btn-primary">Платные услуги сайта</a>
 					<a href="/add" class="btn btn-success">+ Добавить объявление</a>
 					
 					@if(session('user_id'))
