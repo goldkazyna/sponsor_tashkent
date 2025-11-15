@@ -197,6 +197,9 @@
 			.logo {
 				font-size: 22px;
 			}
+			.container{
+				padding: 10px;
+			}
 		}
 		
 		/* Галерея загрузки фото */

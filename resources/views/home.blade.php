@@ -238,7 +238,6 @@
 @media (max-width: 1024px) {
     .massage-wrapper-v2 {
         max-width: 768px;
-        padding: 0 10px;
     }
     
     .card-header-v2 {
