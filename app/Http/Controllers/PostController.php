@@ -11,37 +11,44 @@ use Intervention\Image\Drivers\Gd\Driver;
 class PostController extends Controller
 {
     // Показать главную страницу со списком объявлений
-    public function index()
-    {
-        // Получаем посты из БД с пагинацией (1 на странице для теста)
-        $posts = DB::table('posts')
-            ->where('del', 0)
-            ->orderBy('date', 'desc')
-            ->paginate(10);
-
-        // Для каждого поста получаем первое фото и увеличиваем просмотры
-        foreach ($posts as $post) {
-            $post->cover_img = DB::table('gallery')
-                ->where('id_post', $post->id)
-                ->first();
-            
-            // Увеличиваем счётчик просмотров на 1
-            DB::table('posts')
-                ->where('id', $post->id)
-                ->increment('view');
-        }
-
-        // Проверяем авторизацию
-        $currentUser = null;
-        if (session('user_id')) {
-            $currentUser = DB::table('users')->where('id', session('user_id'))->first();
-        }
-
-        return view('home', [
-            'posts' => $posts,
-            'currentUser' => $currentUser
-        ]);
-    }
+	public function index(Request $request)
+	{
+		// Получаем параметр города из запроса
+		$selectedCity = $request->get('city', 'all');
+		
+		// Строим запрос постов
+		$query = DB::table('posts')->where('del', 0);
+		
+		// Если выбран конкретный город (не "all"), добавляем фильтр
+		if ($selectedCity !== 'all' && !empty($selectedCity)) {
+			$query->where('city', $selectedCity);
+		}
+		
+		// Сортировка по id DESC (новые первыми) и пагинация
+		$posts = $query->orderBy('id', 'desc')->paginate(10);
+		
+		// Для каждого поста получаем первое фото
+		foreach ($posts as $post) {
+			$post->cover_img = DB::table('gallery')
+				->where('id_post', $post->id)
+				->first();
+		}
+		
+		// Проверяем авторизацию
+		$currentUser = null;
+		if (session('user_id')) {
+			$currentUser = DB::table('users')->where('id', session('user_id'))->first();
+		}
+		
+		// Добавляем параметр города к пагинации
+		$posts->appends(['city' => $selectedCity]);
+		
+		return view('home', [
+			'posts' => $posts,
+			'currentUser' => $currentUser,
+			'selectedCity' => $selectedCity
+		]);
+	}
 
     // Показать детальную страницу объявления
     public function show($slug)

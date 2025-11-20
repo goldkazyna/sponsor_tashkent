@@ -366,7 +366,7 @@
     }
 }
 </style>
-
+@include('partials.city-filter')
 <div class="massage-wrapper-v2">
     
     @if(count($posts) == 0)
