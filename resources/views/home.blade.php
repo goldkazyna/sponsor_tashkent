@@ -192,6 +192,7 @@
     text-decoration: none;
 }
 
+/* Сообщение для неавторизованных */
 .restricted-message {
     color: #dc2626;
     font-size: 12px;
@@ -204,6 +205,30 @@
 
 .restricted-message a {
     color: #dc2626;
+    text-decoration: underline;
+}
+
+/* Сообщение "купите статус" */
+.restricted-sponsor {
+    background: #fef3c7;
+    border-color: #fcd34d;
+    color: #92400e;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+}
+
+.restricted-sponsor svg {
+    width: 18px;
+    height: 18px;
+    fill: #f59e0b;
+    flex-shrink: 0;
+}
+
+.restricted-sponsor a {
+    color: #92400e;
+    font-weight: 600;
     text-decoration: underline;
 }
 
@@ -365,8 +390,15 @@
         font-size: 13px;
     }
 }
+
+/* Курсор pointer для кликабельных фото */
+.photo-clickable {
+    cursor: pointer;
+}
 </style>
+
 @include('partials.city-filter')
+
 <div class="massage-wrapper-v2">
     
     @if(count($posts) == 0)
@@ -379,26 +411,30 @@
         
         @foreach($posts as $post)
             @php
-                // Определяем уровень доступа (как в CodeIgniter)
-                // 0 - гость
-                // 1 - авторизован, пол = мужчина (спонсор)
-                // 2 - авторизован, пол = женщина (содержанка) - ограниченный доступ
-                // 3 - авторизован со статусом проверенного спонсора
+                // НОВАЯ ЛОГИКА ДОСТУПА К КОНТАКТАМ
+                // 0 - не авторизован
+                // 1 - женщина смотрит мужское объявление - показываем контакты
+                // 2 - женщина смотрит женское объявление - нужен статус
+                // 3 - мужчина без статуса (prov=0) - нужен статус
+                // 4 - мужчина со статусом (prov=1) - показываем ВСЁ
                 
-                $access = 0;
+                $contactAccess = 0;
                 
                 if ($currentUser) {
-                    if ($currentUser->sex == 1) {
-                        // Мужчина - спонсор
-                        $access = 1;
+                    if ($currentUser->sex == 2) {
+                        // Женщина
+                        if ($post->sex == 1) {
+                            $contactAccess = 1; // мужское объявление - показываем
+                        } else {
+                            $contactAccess = 2; // женское - нужен статус
+                        }
                     } else {
-                        // Женщина - содержанка, нужен статус проверенного спонсора
-                        $access = 2;
-                    }
-                    
-                    // Если есть статус проверенного спонсора
-                    if ($currentUser->prov == 1) {
-                        $access = 3;
+                        // Мужчина
+                        if ($currentUser->prov == 1) {
+                            $contactAccess = 4; // есть статус - показываем всё
+                        } else {
+                            $contactAccess = 3; // нет статуса
+                        }
                     }
                 }
                 
@@ -415,19 +451,19 @@
                 <div class="card-header-v2">
                     <div class="header-content-v2">
                         
-                        <!-- Фото профиля с логикой доступа -->
+                        <!-- Фото профиля -->
                         <div class="photo-container">
-                            @if($access == 0)
+                            @if($contactAccess == 0)
+                                {{-- Не авторизован --}}
                                 @if(!empty($post->cover_img))
                                     <div class="photo-placeholder-v2">
-                                        <span>Для просмотра фото <a href="{{ route('login') }}">авторизуйтесь</a> или <a href="{{ route('register') }}">зарегистрируйтесь</a> на сайте</span>
+                                        <span>Для просмотра фото <a href="{{ route('login') }}">авторизуйтесь</a> или <a href="{{ route('register') }}">зарегистрируйтесь</a></span>
                                     </div>
                                 @else
                                     <img class="photo-v2" src="{{ asset('images/' . ($post->sex == 1 ? 'mens' : 'girls') . '.png') }}" alt="Фото">
                                 @endif
-                            @endif
-                            
-                            @if($access == 1 && $currentUser->sex == 1)
+                            @elseif($contactAccess == 1 || $contactAccess == 4)
+                                {{-- Показываем фото --}}
                                 @if(!empty($post->cover_img))
                                     <a href="{{ asset($post->cover_img->original_webp) }}" data-fancybox="post-{{ $post->id }}" data-caption="{{ $post->title }}">
                                         <img class="photo-v2 photo-clickable" src="{{ asset($post->cover_img->thumb_webp) }}" alt="Фото">
@@ -435,29 +471,12 @@
                                 @else
                                     <img class="photo-v2" src="{{ asset('images/' . ($post->sex == 1 ? 'mens' : 'girls') . '.png') }}" alt="Фото">
                                 @endif
-                            @endif
-                            
-                            @if($access == 1 && $currentUser->sex == 2)
-                                <div class="photo-placeholder-v2">
-                                    <span>Для просмотра фото необходимо купить статус проверенного спонсора</span>
-                                </div>
-                            @endif
-                            
-                            @if($access == 2)
+                            @else
+                                {{-- Нужен статус --}}
                                 @if(!empty($post->cover_img))
                                     <div class="photo-placeholder-v2">
-                                        <span>Для просмотра фото необходимо купить статус проверенного спонсора</span>
+                                        <span>Для просмотра фото <a href="/become-verified">купите статус</a> проверенного спонсора</span>
                                     </div>
-                                @else
-                                    <img class="photo-v2" src="{{ asset('images/' . ($post->sex == 1 ? 'mens' : 'girls') . '.png') }}" alt="Фото">
-                                @endif
-                            @endif
-                            
-                            @if($access == 3)
-                                @if(!empty($post->cover_img))
-                                    <a href="{{ asset($post->cover_img->original_webp) }}" data-fancybox="post-{{ $post->id }}" data-caption="{{ $post->title }}">
-                                        <img class="photo-v2 photo-clickable" src="{{ asset($post->cover_img->thumb_webp) }}" alt="Фото">
-                                    </a>
                                 @else
                                     <img class="photo-v2" src="{{ asset('images/' . ($post->sex == 1 ? 'mens' : 'girls') . '.png') }}" alt="Фото">
                                 @endif
@@ -467,20 +486,16 @@
                         <div class="service-info-v2">
                             <h3><a href="/posts/{{ $post->slug }}">{{ $post->title }}</a></h3>
                             
-                            <!-- Имя с логикой доступа -->
-                            @if($access == 0)
+                            <!-- Имя -->
+                            @if($contactAccess == 0)
                                 <div class="specialist-v2">
-                                    <span style="color: red; font-size:12px;"><b>Для просмотра имени <a href="{{ route('login') }}">авторизуйтесь</a> или <a href="{{ route('register') }}">зарегистрируйтесь</a> на сайте</b></span>
+                                    <span style="color: red; font-size:12px;"><b>Для просмотра имени <a href="{{ route('login') }}">авторизуйтесь</a> или <a href="{{ route('register') }}">зарегистрируйтесь</a></b></span>
                                 </div>
-                            @endif
-                            
-                            @if($access == 1 || $access == 3)
+                            @elseif($contactAccess == 1 || $contactAccess == 4)
                                 <div class="specialist-v2">{{ $post->fio }}</div>
-                            @endif
-                            
-                            @if($access == 2)
+                            @else
                                 <div class="specialist-v2">
-                                    <span style="color: red; font-size:12px;">Для просмотра имени необходимо купить статус проверенного спонсора</span>
+                                    <span style="color: #92400e; font-size:12px;">Для просмотра имени <a href="/become-verified" style="color: #92400e;">купите статус</a> проверенного спонсора</span>
                                 </div>
                             @endif
                             
@@ -501,78 +516,35 @@
                             </div>
                         </div>
                         
+                        <!-- КОНТАКТЫ -->
                         <div class="contact-panel-v2">
-                            
-                            <!-- Контакты с логикой доступа -->
                             @if(!empty($post->phone) || !empty($post->whats) || !empty($post->telegram))
                                 
-                                @if($access == 0)
+                                @if($contactAccess == 0)
+                                    {{-- Не авторизован --}}
                                     <div class="restricted-message">
-                                        Для просмотра контактов <a href="{{ route('login') }}">авторизуйтесь</a> или <a href="{{ route('register') }}">зарегистрируйтесь</a> на сайте
+                                        Для просмотра контактов <a href="{{ route('login') }}">авторизуйтесь</a> или <a href="{{ route('register') }}">зарегистрируйтесь</a>
                                     </div>
-                                @endif
-                                
-                                @if($access == 1 && $currentUser->sex == 1)
+                                @elseif($contactAccess == 1 || $contactAccess == 4)
+                                    {{-- Показываем контакты --}}
                                     @if(!empty($post->phone))
-                                        <a href="tel:{{ $post->phone }}" class="phone-v2">
-                                            {{ $post->phone }}
-                                        </a>
+                                        <a href="tel:{{ $post->phone }}" class="phone-v2">{{ $post->phone }}</a>
                                     @endif
-                                    
                                     <div class="contact-buttons-v2">
                                         @if(!empty($post->whats))
-                                            <a href="https://api.whatsapp.com/send?phone={{ $post->whats }}" 
-                                               class="contact-btn-v2 btn-whatsapp-v2" 
-                                               target="_blank">
-                                                WhatsApp
-                                            </a>
+                                            <a href="https://api.whatsapp.com/send?phone={{ $post->whats }}" class="contact-btn-v2 btn-whatsapp-v2" target="_blank">WhatsApp</a>
                                         @endif
-                                        
                                         @if(!empty($post->telegram))
-                                            <a href="https://t.me/{{ ltrim($post->telegram, '@') }}" 
-                                               class="contact-btn-v2 btn-telegram-v2"
-                                               target="_blank">
-                                                {{ ltrim($post->telegram, '@') }}
-                                            </a>
+                                            <a href="https://t.me/{{ ltrim($post->telegram, '@') }}" class="contact-btn-v2 btn-telegram-v2" target="_blank">{{ ltrim($post->telegram, '@') }}</a>
                                         @endif
                                     </div>
-                                @endif
-                                
-                                @if($access == 1 && $currentUser->sex == 2)
-                                    <div class="restricted-message">
-                                        Для просмотра контактов необходимо купить статус проверенного спонсора
-                                    </div>
-                                @endif
-                                
-                                @if($access == 2)
-                                    <div class="restricted-message">
-                                        Для просмотра контактов необходимо купить статус проверенного спонсора
-                                    </div>
-                                @endif
-                                
-                                @if($access == 3)
-                                    @if(!empty($post->phone))
-                                        <a href="tel:{{ $post->phone }}" class="phone-v2">
-                                            {{ $post->phone }}
-                                        </a>
-                                    @endif
-                                    
-                                    <div class="contact-buttons-v2">
-                                        @if(!empty($post->whats))
-                                            <a href="https://api.whatsapp.com/send?phone={{ $post->whats }}" 
-                                               class="contact-btn-v2 btn-whatsapp-v2"
-                                               target="_blank">
-                                                WhatsApp
-                                            </a>
-                                        @endif
-                                        
-                                        @if(!empty($post->telegram))
-                                            <a href="https://t.me/{{ ltrim($post->telegram, '@') }}" 
-                                               class="contact-btn-v2 btn-telegram-v2"
-                                               target="_blank">
-                                                {{ ltrim($post->telegram, '@') }}
-                                            </a>
-                                        @endif
+                                @else
+                                    {{-- Нужен статус --}}
+                                    <div class="restricted-message restricted-sponsor">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                            <path d="M23,12L20.56,9.22L20.9,5.54L17.29,4.72L15.4,1.54L12,3L8.6,1.54L6.71,4.72L3.1,5.53L3.44,9.21L1,12L3.44,14.78L3.1,18.47L6.71,19.29L8.6,22.47L12,21L15.4,22.46L17.29,19.28L20.9,18.46L20.56,14.78L23,12M10,17L6,13L7.41,11.59L10,14.17L16.59,7.58L18,9L10,17Z"/>
+                                        </svg>
+                                        <span>Для просмотра <a href="/become-verified">купите статус проверенного спонсора</a></span>
                                     </div>
                                 @endif
                                 
@@ -607,17 +579,7 @@
 <!-- Fancybox JS -->
 <script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.umd.js"></script>
 <script>
-    // Инициализация Fancybox
-    Fancybox.bind("[data-fancybox]", {
-        // Настройки
-    });
+    Fancybox.bind("[data-fancybox]", {});
 </script>
-
-<style>
-    /* Курсор pointer для кликабельных фото */
-    .photo-clickable {
-        cursor: pointer;
-    }
-</style>
 
 @endsection

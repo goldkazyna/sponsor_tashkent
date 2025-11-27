@@ -8,153 +8,158 @@
 </head>
 <body>
 <style>
-    /* Кнопка "Проверенный спонсор" */
     .btn-verified {
-        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%) !important;
-        color: white !important;
-        border: none !important;
-        display: inline-flex;
-        align-items: center;
-        font-weight: 600;
-        position: relative;
-        overflow: hidden;
-        padding: 0.6rem 1.2rem !important;
-    }
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%) !important;
+    color: white !important;
+    border: none !important;
+    display: inline-flex;
+    align-items: center;
+    font-weight: 600;
+    position: relative;
+    overflow: hidden;
+    padding: 0.6rem 1.2rem !important;
+}
 
-    .btn-verified-text {
-        font-size: 0.8rem;
-        line-height: 1.3;
-        text-align: left;
-    }
+.btn-verified-text {
+    font-size: 0.8rem;
+    line-height: 1.3;
+    text-align: left;
+}
 
-    .btn-verified::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: -100%;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-        transition: left 0.5s;
-    }
+.btn-verified::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    transition: left 0.5s;
+}
 
-    .btn-verified:hover::before {
-        left: 100%;
-    }
+.btn-verified:hover::before {
+    left: 100%;
+}
 
-    .btn-verified:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 20px rgba(59, 130, 246, 0.4);
-    }
+.btn-verified:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(59, 130, 246, 0.4);
+}
 
-    /* Sticky header */
-    header {
-        position: sticky;
-        top: 0;
-        z-index: 1000;
-        background: white;
-        transition: all 0.3s ease;
-    }
+/* Десктоп - статус "Проверен" */
+.btn-verified-active {
+    background: linear-gradient(135deg, #27ae60 0%, #229954 100%) !important;
+    color: white !important;
+    border: none !important;
+    display: inline-flex;
+    align-items: center;
+    font-weight: 600;
+    padding: 0.6rem 1.2rem !important;
+    cursor: default;
+    position: relative;
+    overflow: hidden;
+}
 
-    header.scrolled {
-        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-    }
+.btn-verified-active::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.3);
+    transform: translate(-50%, -50%);
+    animation: ripple 2s infinite;
+}
 
-    header.scrolled .top-menu {
-        max-height: 0;
-        overflow: hidden;
+@keyframes ripple {
+    0% {
+        width: 0;
+        height: 0;
+        opacity: 0.5;
+    }
+    100% {
+        width: 300px;
+        height: 300px;
         opacity: 0;
-        transition: max-height 0.3s ease, opacity 0.3s ease;
+    }
+}
+
+/* Мобильная версия */
+.mobile-verified-btn-wrapper {
+    display: none;
+}
+
+@media (max-width: 768px) {
+    .mobile-verified-btn-wrapper {
+        display: block;
+        padding: 0;
+        margin: 0 0 1.5rem 0;
     }
 
-    .top-menu {
-        max-height: 100px;
-        opacity: 1;
-        transition: max-height 0.3s ease, opacity 0.3s ease;
-    }
-
-    header.scrolled .main-menu {
-        padding: 0.75rem 0;
-    }
-
-    header.scrolled .logo img {
-        height: 40px !important;
-    }
-
-    header.scrolled .btn {
-        padding: 0.5rem 1rem;
-        font-size: 0.85rem;
-    }
-
-    header.scrolled .btn-verified-text {
-        font-size: 0.7rem;
-    }
-
-    /* Плавные переходы */
-    .main-menu {
-        transition: padding 0.3s ease;
-    }
-
-    .logo img {
-        transition: height 0.3s ease;
-    }
-
-    .btn {
+    /* Мобильная кнопка "Купить" */
+    .mobile-buy-btn {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+        color: white;
+        padding: 1rem 1.25rem;
+        border-radius: 12px;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 0.95rem;
+        box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
         transition: all 0.3s ease;
     }
 
-    /* Мобильная кнопка "Купить статус" */
-    .mobile-verified-btn-wrapper {
-        display: none;
+    .mobile-buy-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+        text-decoration: none;
+        color: white;
     }
 
-    @media (max-width: 768px) {
-        .main-menu {
-            background: #f8f9fa;
-            padding: 5px 0;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-        }
-
-        .mobile-verified-btn-wrapper {
-            display: block;
-            padding: 0;
-            margin: 0 0 1.5rem 0;
-        }
-
-        .mobile-verified-btn {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-            color: white;
-            padding: 1rem 1.25rem;
-            border-radius: 12px;
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 0.95rem;
-            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
-            transition: all 0.3s ease;
-        }
-
-        .mobile-verified-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
-            text-decoration: none;
-            color: white;
-        }
-
-        .mobile-verified-btn svg:first-child {
-            width: 24px;
-            height: 24px;
-            fill: white;
-            margin-right: 0.75rem;
-            flex-shrink: 0;
-        }
-
-        .mobile-verified-btn span {
-            flex: 1;
-        }
+    .mobile-buy-btn svg:first-child {
+        width: 24px;
+        height: 24px;
+        fill: white;
+        margin-right: 0.75rem;
+        flex-shrink: 0;
     }
+
+    .mobile-buy-btn span {
+        flex: 1;
+    }
+
+    /* Мобильный бейдж "Проверен" */
+    .mobile-verified-active {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+        color: white;
+        padding: 1rem 1.25rem;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 0.95rem;
+        box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3);
+        cursor: default;
+    }
+
+    .mobile-verified-active svg:first-child {
+        width: 24px;
+        height: 24px;
+        fill: white;
+        margin-right: 0.75rem;
+        flex-shrink: 0;
+    }
+
+    .mobile-verified-active span {
+        flex: 1;
+    }
+}
     </style>
     <header id="mainHeader">
         <!-- Верхнее меню (только десктоп) -->
@@ -176,16 +181,50 @@
 					<a href="/"><img src="{{ asset('images/logo.png') }}" alt="Спонсоры Ташкент" style="height: 50px;"></a>
 				</div>
 				<!-- Кнопки для десктопа -->
+				<?php
+				// Проверяем авторизацию и статус пользователя
+				$currentUser = null;
+				$isVerified = false;
+
+				if (session('user_id')) {
+					$currentUser = DB::table('users')->where('id', session('user_id'))->first();
+					if ($currentUser) {
+						$isVerified = $currentUser->prov == 1;
+					}
+				}
+				?>
+
+				<!-- ДЕСКТОПНАЯ ВЕРСИЯ - в главном меню -->
 				<div class="buttons">
-					<a href="/pricing" class="btn btn-verified">
-						<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="width: 16px; height: 16px; fill: white; margin-right: 5px;">
-							<path d="M23,12L20.56,9.22L20.9,5.54L17.29,4.72L15.4,1.54L12,3L8.6,1.54L6.71,4.72L3.1,5.53L3.44,9.21L1,12L3.44,14.78L3.1,18.47L6.71,19.29L8.6,22.47L12,21L15.4,22.46L17.29,19.28L20.9,18.46L20.56,14.78L23,12M10,17L6,13L7.41,11.59L10,14.17L16.59,7.58L18,9L10,17Z"/>
-						</svg>
-						<span class="btn-verified-text">Купить статус проверенного спонсора</span>
-					</a>
+					@if(!$currentUser)
+						<!-- Гость - показываем кнопку "Купить статус" -->
+						<a href="/become-verified" class="btn btn-verified">
+							<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="width: 16px; height: 16px; fill: white; margin-right: 5px;">
+								<path d="M23,12L20.56,9.22L20.9,5.54L17.29,4.72L15.4,1.54L12,3L8.6,1.54L6.71,4.72L3.1,5.53L3.44,9.21L1,12L3.44,14.78L3.1,18.47L6.71,19.29L8.6,22.47L12,21L15.4,22.46L17.29,19.28L20.9,18.46L20.56,14.78L23,12M10,17L6,13L7.41,11.59L10,14.17L16.59,7.58L18,9L10,17Z"/>
+							</svg>
+							<span class="btn-verified-text">Купить статус проверенного спонсора</span>
+						</a>
+					@elseif(!$isVerified)
+						<!-- Авторизован, но НЕ проверен - показываем кнопку -->
+						<a href="/become-verified" class="btn btn-verified">
+							<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="width: 16px; height: 16px; fill: white; margin-right: 5px;">
+								<path d="M23,12L20.56,9.22L20.9,5.54L17.29,4.72L15.4,1.54L12,3L8.6,1.54L6.71,4.72L3.1,5.53L3.44,9.21L1,12L3.44,14.78L3.1,18.47L6.71,19.29L8.6,22.47L12,21L15.4,22.46L17.29,19.28L20.9,18.46L20.56,14.78L23,12M10,17L6,13L7.41,11.59L10,14.17L16.59,7.58L18,9L10,17Z"/>
+							</svg>
+							<span class="btn-verified-text">Купить статус проверенного спонсора</span>
+						</a>
+					@else
+						<!-- Авторизован И проверен - показываем бейдж -->
+						<div class="btn btn-verified-active">
+							<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="width: 18px; height: 18px; fill: white; margin-right: 6px;">
+								<path d="M23,12L20.56,9.22L20.9,5.54L17.29,4.72L15.4,1.54L12,3L8.6,1.54L6.71,4.72L3.1,5.53L3.44,9.21L1,12L3.44,14.78L3.1,18.47L6.71,19.29L8.6,22.47L12,21L15.4,22.46L17.29,19.28L20.9,18.46L20.56,14.78L23,12M10,17L6,13L7.41,11.59L10,14.17L16.59,7.58L18,9L10,17Z"/>
+							</svg>
+							<span class="btn-verified-text">Проверенный спонсор</span>
+						</div>
+					@endif
+					
 					<a href="/add" class="btn btn-success">+ Добавить объявление</a>
 					
-					@if(session('user_id'))
+					@if($currentUser)
 						<!-- Авторизованный пользователь -->
 						<a href="{{ route('profile.index') }}" class="btn btn-outline">Мой профиль</a>
 						<form method="POST" action="{{ route('logout') }}" style="display: inline;">
@@ -196,6 +235,44 @@
 						<!-- Гость -->
 						<a href="/login" class="btn btn-outline">Войти</a>
 						<a href="/register" class="btn btn-outline">Регистрация</a>
+					@endif
+				</div>
+
+				<!-- МОБИЛЬНАЯ ВЕРСИЯ - кнопка перед контентом -->
+				<div class="mobile-verified-btn-wrapper">
+					@if(!$currentUser)
+						<!-- Гость - показываем кнопку -->
+						<a href="/become-verified" class="mobile-verified-btn mobile-buy-btn">
+							<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+								<path d="M23,12L20.56,9.22L20.9,5.54L17.29,4.72L15.4,1.54L12,3L8.6,1.54L6.71,4.72L3.1,5.53L3.44,9.21L1,12L3.44,14.78L3.1,18.47L6.71,19.29L8.6,22.47L12,21L15.4,22.46L17.29,19.28L20.9,18.46L20.56,14.78L23,12M10,17L6,13L7.41,11.59L10,14.17L16.59,7.58L18,9L10,17Z"/>
+							</svg>
+							<span>Купить статус проверенного спонсора</span>
+							<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="width: 18px; height: 18px; fill: white;">
+								<path d="M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z"/>
+							</svg>
+						</a>
+					@elseif(!$isVerified)
+						<!-- Авторизован, но НЕ проверен -->
+						<a href="/become-verified" class="mobile-verified-btn mobile-buy-btn">
+							<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+								<path d="M23,12L20.56,9.22L20.9,5.54L17.29,4.72L15.4,1.54L12,3L8.6,1.54L6.71,4.72L3.1,5.53L3.44,9.21L1,12L3.44,14.78L3.1,18.47L6.71,19.29L8.6,22.47L12,21L15.4,22.46L17.29,19.28L20.9,18.46L20.56,14.78L23,12M10,17L6,13L7.41,11.59L10,14.17L16.59,7.58L18,9L10,17Z"/>
+							</svg>
+							<span>Купить статус проверенного спонсора</span>
+							<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="width: 18px; height: 18px; fill: white;">
+								<path d="M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z"/>
+							</svg>
+						</a>
+					@else
+						<!-- Авторизован И проверен - показываем статус -->
+						<div class="mobile-verified-btn mobile-verified-active">
+							<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+								<path d="M23,12L20.56,9.22L20.9,5.54L17.29,4.72L15.4,1.54L12,3L8.6,1.54L6.71,4.72L3.1,5.53L3.44,9.21L1,12L3.44,14.78L3.1,18.47L6.71,19.29L8.6,22.47L12,21L15.4,22.46L17.29,19.28L20.9,18.46L20.56,14.78L23,12M10,17L6,13L7.41,11.59L10,14.17L16.59,7.58L18,9L10,17Z"/>
+							</svg>
+							<span>Вы - проверенный спонсор</span>
+							<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="width: 20px; height: 20px; fill: white;">
+								<path d="M9,20.42L2.79,14.21L5.62,11.38L9,14.77L18.88,4.88L21.71,7.71L9,20.42Z"/>
+							</svg>
+						</div>
 					@endif
 				</div>
                 
