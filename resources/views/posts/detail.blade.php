@@ -206,19 +206,49 @@
     margin-bottom: 1rem;
 }
 
+/* Красный блок - не авторизован */
 .restricted-box {
     background: #fef2f2;
     border: 2px solid #fecaca;
     color: #dc2626;
-    padding: 2rem;
+    padding: 1.5rem;
     border-radius: 12px;
     text-align: center;
-    font-size: 1rem;
+    font-size: 0.95rem;
     line-height: 1.6;
 }
 
 .restricted-box a {
     color: #dc2626;
+    text-decoration: underline;
+    font-weight: 600;
+}
+
+/* Жёлтый блок - нужен статус */
+.restricted-sponsor {
+    background: #fef3c7;
+    border: 2px solid #fcd34d;
+    color: #92400e;
+    padding: 1.5rem;
+    border-radius: 12px;
+    text-align: center;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.restricted-sponsor svg {
+    width: 24px;
+    height: 24px;
+    fill: #f59e0b;
+    flex-shrink: 0;
+}
+
+.restricted-sponsor a {
+    color: #92400e;
     text-decoration: underline;
     font-weight: 600;
 }
@@ -234,6 +264,50 @@
 
 .back-button:hover {
     color: #0f172a;
+    text-decoration: none;
+}
+
+/* Кнопка написать сообщение */
+.btn-message {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.8rem 1.5rem;
+    background: #1a202c;
+    color: white;
+    border-radius: 10px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+    margin-top: 1rem;
+}
+
+.btn-message:hover {
+    background: #2d3748;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(26, 32, 44, 0.3);
+    color: white;
+    text-decoration: none;
+}
+
+.btn-message-disabled {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.8rem 1.5rem;
+    background: #fef3c7;
+    color: #92400e;
+    border-radius: 10px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.95rem;
+    margin-top: 1rem;
+    border: 2px solid #fcd34d;
+}
+
+.btn-message-disabled:hover {
+    color: #92400e;
     text-decoration: none;
 }
 
@@ -304,6 +378,11 @@
         font-size: 0.95rem;
         line-height: 1.6;
     }
+    
+    .btn-message,
+    .btn-message-disabled {
+        width: 100%;
+    }
 }
 </style>
 
@@ -311,61 +390,92 @@
     <a href="/" class="back-button">← Вернуться к объявлениям</a>
     
     @php
-        // Определяем уровень доступа
-        $access = 0;
+        // НОВАЯ ЛОГИКА ДОСТУПА К КОНТАКТАМ
+        // 0 - не авторизован
+        // 1 - женщина смотрит мужское объявление - показываем контакты
+        // 2 - женщина смотрит женское объявление - нужен статус
+        // 3 - мужчина без статуса (prov=0) - нужен статус
+        // 4 - мужчина со статусом (prov=1) - показываем ВСЁ
+        
+        $contactAccess = 0;
         
         if ($currentUser) {
-            if ($currentUser->sex == 1) {
-                $access = 1;
+            if ($currentUser->sex == 2) {
+                // Женщина
+                if ($post->sex == 1) {
+                    $contactAccess = 1; // мужское объявление - показываем
+                } else {
+                    $contactAccess = 2; // женское - нужен статус
+                }
             } else {
-                $access = 2;
-            }
-            
-            if ($currentUser->prov == 1) {
-                $access = 3;
+                // Мужчина
+                if ($currentUser->prov == 1) {
+                    $contactAccess = 4; // есть статус - показываем всё
+                } else {
+                    $contactAccess = 3; // нет статуса
+                }
             }
         }
+        
+        // Получаем владельца объявления по email
+        $postOwner = DB::table('users')->where('email', $post->email)->first();
     @endphp
     
     <div class="card-layout">
         <!-- Боковая панель -->
         <div class="sidebar">
-            <!-- Главное фото -->
-            @if(count($photos) > 0 && ($access == 1 || $access == 3))
-                <a href="{{ asset($photos[0]->original_webp) }}" data-fancybox="gallery" data-caption="{{ $post->title }}">
-                    <img src="{{ asset($photos[0]->thumb_webp) }}" alt="{{ $post->fio }}" class="main-photo">
-                </a>
-                
-                <!-- Миниатюры -->
-                @if(count($photos) > 1)
-                    <div class="photo-thumbnails">
-                        @foreach($photos as $photo)
-                            <a href="{{ asset($photo->original_webp) }}" data-fancybox="gallery" data-caption="{{ $post->title }}">
-                                <img src="{{ asset($photo->thumb_webp) }}" alt="" class="thumbnail">
-                            </a>
-                        @endforeach
+            
+            <!-- ФОТО -->
+            @if($contactAccess == 0)
+                {{-- Не авторизован --}}
+                @if(count($photos) > 0)
+                    <div class="restricted-box" style="margin-bottom: 1.5rem;">
+                        Для просмотра фото <a href="{{ route('login') }}">авторизуйтесь</a> или <a href="{{ route('register') }}">зарегистрируйтесь</a>
                     </div>
+                @else
+                    <img src="{{ asset('images/' . ($post->sex == 1 ? 'mens' : 'girls') . '.png') }}" alt="Фото" class="main-photo">
                 @endif
-            @elseif($access == 0 || $access == 2)
-                <div class="restricted-box" style="margin-bottom: 1.5rem;">
-                    @if($access == 0)
-                        Для просмотра фото <a href="{{ route('login') }}">авторизуйтесь</a> или <a href="{{ route('register') }}">зарегистрируйтесь</a> на сайте
-                    @else
-                        Для просмотра фото необходимо купить статус проверенного спонсора
+            @elseif($contactAccess == 1 || $contactAccess == 4)
+                {{-- Показываем фото --}}
+                @if(count($photos) > 0)
+                    <a href="{{ asset($photos[0]->original_webp) }}" data-fancybox="gallery" data-caption="{{ $post->title }}">
+                        <img src="{{ asset($photos[0]->thumb_webp) }}" alt="{{ $post->fio }}" class="main-photo">
+                    </a>
+                    @if(count($photos) > 1)
+                        <div class="photo-thumbnails">
+                            @foreach($photos as $photo)
+                                <a href="{{ asset($photo->original_webp) }}" data-fancybox="gallery" data-caption="{{ $post->title }}">
+                                    <img src="{{ asset($photo->thumb_webp) }}" alt="" class="thumbnail">
+                                </a>
+                            @endforeach
+                        </div>
                     @endif
-                </div>
+                @else
+                    <img src="{{ asset('images/' . ($post->sex == 1 ? 'mens' : 'girls') . '.png') }}" alt="Фото" class="main-photo">
+                @endif
             @else
-                <img src="{{ asset('images/' . ($post->sex == 1 ? 'mens' : 'girls') . '.png') }}" alt="Фото" class="main-photo">
+                {{-- Нужен статус --}}
+                @if(count($photos) > 0)
+                    <div class="restricted-sponsor" style="margin-bottom: 1.5rem; flex-direction: column;">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                            <path d="M23,12L20.56,9.22L20.9,5.54L17.29,4.72L15.4,1.54L12,3L8.6,1.54L6.71,4.72L3.1,5.53L3.44,9.21L1,12L3.44,14.78L3.1,18.47L6.71,19.29L8.6,22.47L12,21L15.4,22.46L17.29,19.28L20.9,18.46L20.56,14.78L23,12M10,17L6,13L7.41,11.59L10,14.17L16.59,7.58L18,9L10,17Z"/>
+                        </svg>
+                        <span>Для просмотра фото <a href="/become-verified">купите статус</a> проверенного спонсора</span>
+                    </div>
+                @else
+                    <img src="{{ asset('images/' . ($post->sex == 1 ? 'mens' : 'girls') . '.png') }}" alt="Фото" class="main-photo">
+                @endif
             @endif
             
+            <!-- ИМЯ И ЛОКАЦИЯ -->
             <div class="master-info">
                 <div class="master-name">
-                    @if($access == 0)
+                    @if($contactAccess == 0)
                         <span style="color: #dc2626; font-size: 0.9rem;">Для просмотра имени <a href="{{ route('login') }}" style="text-decoration: underline;">авторизуйтесь</a></span>
-                    @elseif($access == 2)
-                        <span style="color: #dc2626; font-size: 0.9rem;">Для просмотра имени купите статус проверенного спонсора</span>
-                    @else
+                    @elseif($contactAccess == 1 || $contactAccess == 4)
                         {{ $post->fio }}
+                    @else
+                        <span style="color: #92400e; font-size: 0.9rem;">Для просмотра имени <a href="/become-verified" style="color: #92400e;">купите статус</a> проверенного спонсора</span>
                     @endif
                 </div>
                 <div class="master-location">
@@ -374,17 +484,15 @@
                 </div>
             </div>
 
-            <!-- Контакты -->
+            <!-- КОНТАКТЫ -->
             <div class="phone-section">
-                @if($access == 0)
+                @if($contactAccess == 0)
+                    {{-- Не авторизован --}}
                     <div class="restricted-box">
-                        Для просмотра контактов <a href="{{ route('login') }}">авторизуйтесь</a> или <a href="{{ route('register') }}">зарегистрируйтесь</a> на сайте
+                        Для просмотра контактов <a href="{{ route('login') }}">авторизуйтесь</a> или <a href="{{ route('register') }}">зарегистрируйтесь</a>
                     </div>
-                @elseif($access == 2)
-                    <div class="restricted-box">
-                        Для просмотра контактов необходимо купить статус проверенного спонсора
-                    </div>
-                @elseif($access == 1 || $access == 3)
+                @elseif($contactAccess == 1 || $contactAccess == 4)
+                    {{-- Показываем контакты --}}
                     <div class="contact-buttons">
                         @if(!empty($post->phone))
                             <a href="tel:{{ $post->phone }}" class="contact-btn phone-btn">
@@ -393,20 +501,24 @@
                         @endif
                         
                         @if(!empty($post->whats))
-                            <a href="https://api.whatsapp.com/send?phone={{ $post->whats }}" 
-                               class="contact-btn whatsapp-btn" 
-                               target="_blank">
+                            <a href="https://api.whatsapp.com/send?phone={{ $post->whats }}" class="contact-btn whatsapp-btn" target="_blank">
                                 WhatsApp
                             </a>
                         @endif
                         
                         @if(!empty($post->telegram))
-                            <a href="https://t.me/{{ ltrim($post->telegram, '@') }}" 
-                               class="contact-btn telegram-btn"
-                               target="_blank">
+                            <a href="https://t.me/{{ ltrim($post->telegram, '@') }}" class="contact-btn telegram-btn" target="_blank">
                                 Telegram
                             </a>
                         @endif
+                    </div>
+                @else
+                    {{-- Нужен статус --}}
+                    <div class="restricted-sponsor">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                            <path d="M23,12L20.56,9.22L20.9,5.54L17.29,4.72L15.4,1.54L12,3L8.6,1.54L6.71,4.72L3.1,5.53L3.44,9.21L1,12L3.44,14.78L3.1,18.47L6.71,19.29L8.6,22.47L12,21L15.4,22.46L17.29,19.28L20.9,18.46L20.56,14.78L23,12M10,17L6,13L7.41,11.59L10,14.17L16.59,7.58L18,9L10,17Z"/>
+                        </svg>
+                        <span>Для просмотра <a href="/become-verified">купите статус</a> проверенного спонсора</span>
                     </div>
                 @endif
             </div>
@@ -443,66 +555,44 @@
                 <h2 style="font-size: 1.4rem; font-weight: 700; color: #1a202c; margin-bottom: 1rem;">Описание</h2>
                 <div class="description-text">{{ $post->description }}</div>
             </div>
-			<!-- Добавь этот код на страницу просмотра объявления (resources/views/posts/show.blade.php) -->
-			<!-- В блок с контактами или рядом с телефоном -->
-
-			@if(session('user_id'))
-				@php
-					$currentUser = DB::table('users')->where('id', session('user_id'))->first();
-					$postOwner = DB::table('users')->where('email', $post->email)->first();
-				@endphp
-				
-				@if($currentUser && $postOwner && $currentUser->id != $postOwner->id)
-					<!-- Кнопка "Написать сообщение" -->
-					<a href="{{ route('profile.messages.chat', $postOwner->id) }}" class="btn-message">
-						<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="width: 20px; height: 20px; fill: currentColor; margin-right: 8px;">
-							<path d="M20,2H4A2,2 0 0,0 2,4V22L6,18H20A2,2 0 0,0 22,16V4A2,2 0 0,0 20,2M6,9H18V11H6M14,14H6V12H14M18,8H6V6H18"/>
-						</svg>
-						Написать сообщение
-					</a>
-				@endif
-			@else
-				<!-- Для неавторизованных - кнопка ведёт на авторизацию -->
-				<a href="{{ route('login') }}" class="btn-message">
-					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="width: 20px; height: 20px; fill: currentColor; margin-right: 8px;">
-						<path d="M20,2H4A2,2 0 0,0 2,4V22L6,18H20A2,2 0 0,0 22,16V4A2,2 0 0,0 20,2M6,9H18V11H6M14,14H6V12H14M18,8H6V6H18"/>
-					</svg>
-					Написать сообщение
-				</a>
-			@endif
-
-			<style>
-			.btn-message {
-				display: inline-flex;
-				align-items: center;
-				justify-content: center;
-				padding: 0.8rem 1.5rem;
-				background: #1a202c;
-				color: white;
-				border-radius: 10px;
-				text-decoration: none;
-				font-weight: 600;
-				font-size: 0.95rem;
-				transition: all 0.3s ease;
-				margin-top: 1rem;
-			}
-
-			.btn-message:hover {
-				background: #2d3748;
-				transform: translateY(-2px);
-				box-shadow: 0 8px 20px rgba(26, 32, 44, 0.3);
-				color: white;
-				text-decoration: none;
-			}
-
-			@media (max-width: 768px) {
-				.btn-message {
-					width: 100%;
-				}
-			}
-			</style>
+            
+            <!-- КНОПКА НАПИСАТЬ СООБЩЕНИЕ -->
+            @if($contactAccess == 0)
+                {{-- Не авторизован --}}
+                <a href="{{ route('login') }}" class="btn-message">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="width: 20px; height: 20px; fill: currentColor; margin-right: 8px;">
+                        <path d="M20,2H4A2,2 0 0,0 2,4V22L6,18H20A2,2 0 0,0 22,16V4A2,2 0 0,0 20,2M6,9H18V11H6M14,14H6V12H14M18,8H6V6H18"/>
+                    </svg>
+                    Написать сообщение
+                </a>
+            @elseif($contactAccess == 1 || $contactAccess == 4)
+                {{-- Показываем кнопку (женщина смотрит мужское или проверенный спонсор) --}}
+                @if($postOwner && $currentUser && $currentUser->id != $postOwner->id)
+                    <a href="{{ route('profile.messages.chat', $postOwner->id) }}" class="btn-message">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="width: 20px; height: 20px; fill: currentColor; margin-right: 8px;">
+                            <path d="M20,2H4A2,2 0 0,0 2,4V22L6,18H20A2,2 0 0,0 22,16V4A2,2 0 0,0 20,2M6,9H18V11H6M14,14H6V12H14M18,8H6V6H18"/>
+                        </svg>
+                        Написать сообщение
+                    </a>
+                @elseif(!$postOwner)
+                    {{-- Владелец не найден - показываем кнопку всё равно, но без ссылки --}}
+                    <span class="btn-message" style="opacity: 0.5; cursor: not-allowed;">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="width: 20px; height: 20px; fill: currentColor; margin-right: 8px;">
+                            <path d="M20,2H4A2,2 0 0,0 2,4V22L6,18H20A2,2 0 0,0 22,16V4A2,2 0 0,0 20,2M6,9H18V11H6M14,14H6V12H14M18,8H6V6H18"/>
+                        </svg>
+                        Сообщения недоступны
+                    </span>
+                @endif
+            @else
+                {{-- Нужен статус --}}
+                <a href="/become-verified" class="btn-message-disabled">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="width: 20px; height: 20px; fill: #f59e0b; margin-right: 8px;">
+                        <path d="M23,12L20.56,9.22L20.9,5.54L17.29,4.72L15.4,1.54L12,3L8.6,1.54L6.71,4.72L3.1,5.53L3.44,9.21L1,12L3.44,14.78L3.1,18.47L6.71,19.29L8.6,22.47L12,21L15.4,22.46L17.29,19.28L20.9,18.46L20.56,14.78L23,12M10,17L6,13L7.41,11.59L10,14.17L16.59,7.58L18,9L10,17Z"/>
+                    </svg>
+                    Для сообщений купите статус проверенного спонсора
+                </a>
+            @endif
         </div>
-		
     </div>
 </div>
 
