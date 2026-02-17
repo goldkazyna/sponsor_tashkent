@@ -45,8 +45,40 @@ class PostController extends Controller
 		// Добавляем параметр города к пагинации
 		$posts->appends(['city' => $selectedCity]);
 		
+		// ТОП объявления: 2 с наименьшим count_view (активные по date_end)
+		$topPosts = DB::table('top_post')
+			->where('date_end', '>=', now())
+			->orderBy('count_view', 'asc')
+			->limit(2)
+			->get();
+
+		$topPostsData = collect();
+		if ($topPosts->count() > 0) {
+			$topIds = $topPosts->pluck('id_post')->toArray();
+			$topViewMap = $topPosts->pluck('count_view', 'id_post')->toArray();
+			$topRecordIds = $topPosts->pluck('id', 'id_post')->toArray();
+
+			$topPostsData = DB::table('post')
+				->whereIn('id', $topIds)
+				->where('del', 0)
+				->get();
+
+			foreach ($topPostsData as $tp) {
+				$tp->cover_img = DB::table('gallery')->where('id_post', $tp->id)->first();
+				$cityRow = DB::table('city')->where('id', $tp->city)->first();
+				$tp->city_name = $cityRow ? $cityRow->title : $tp->city;
+				$tp->top_views = $topViewMap[$tp->id] ?? 0;
+			}
+
+			// Обновляем count_view +1
+			DB::table('top_post')
+				->whereIn('id', $topPosts->pluck('id')->toArray())
+				->increment('count_view');
+		}
+
 		return view('home', [
 			'posts' => $posts,
+			'topPosts' => $topPostsData,
 			'currentUser' => $currentUser,
 			'selectedCity' => $selectedCity
 		]);

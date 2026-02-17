@@ -397,12 +397,233 @@
 .photo-clickable {
     cursor: pointer;
 }
+
+/* ===== ТОП ОБЪЯВЛЕНИЯ ===== */
+.top-section-title {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+.top-section-title span {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 28px;
+    border: 2px solid #1a202c;
+    border-radius: 30px;
+    font-size: 16px;
+    font-weight: 600;
+    color: #1a202c;
+    background: white;
+}
+
+.card-v2.card-top {
+    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #eab308 100%);
+    border: 2px solid #d97706;
+    box-shadow: 0 4px 20px rgba(245, 158, 11, 0.3);
+}
+
+.card-top .card-header-v2 {
+    background: transparent;
+    border-bottom: 1px solid rgba(255,255,255,0.3);
+}
+
+.card-top .card-body-v2 {
+    background: rgba(0,0,0,0.03);
+}
+
+.card-top .service-info-v2 h3 a {
+    color: #1a202c;
+}
+
+.card-top .service-info-v2 h3 a:hover {
+    color: #78350f;
+}
+
+.card-top .description-v2 {
+    color: #1c1917;
+}
+
+.card-top .specialist-v2 {
+    color: #44403c;
+}
+
+.card-top .user-type-v2 {
+    color: #78350f;
+}
+
+.card-top .location-date-v2 {
+    color: #57534e;
+}
+
+.card-top .views-v2 {
+    color: #57534e;
+}
+
+.card-top .trusted-sponsor-v2 {
+    color: #065f46;
+}
+
+.top-badge {
+    display: inline-block;
+    background: #dc2626;
+    color: white;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 4px 12px;
+    border-radius: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.top-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 6px;
+}
+
+.top-header-row h3 {
+    flex: 1;
+    margin-right: 10px;
+}
 </style>
 
 @include('partials.city-filter')
 
 <div class="massage-wrapper-v2">
     
+    @if(isset($topPosts) && $topPosts->count() > 0)
+        <div class="top-section-title">
+            <span>⭐ Топ объявления</span>
+        </div>
+
+        @foreach($topPosts as $post)
+            @php
+                $contactAccess = 0;
+                if ($currentUser) {
+                    if ($currentUser->sex == 2) {
+                        $contactAccess = ($post->sex == 1) ? 1 : 2;
+                    } else {
+                        $contactAccess = ($currentUser->prov == 1) ? 4 : 3;
+                    }
+                }
+                $postUser = DB::table('users')->where('email', $post->email)->first();
+                $shortDescription = mb_strlen($post->discription) > 200
+                    ? mb_substr($post->discription, 0, 200) . '...'
+                    : $post->discription;
+            @endphp
+
+            <div class="card-v2 card-top">
+                <div class="card-header-v2">
+                    <div class="header-content-v2">
+
+                        <!-- Фото профиля -->
+                        <div class="photo-container">
+                            @if($contactAccess == 0)
+                                @if(!empty($post->cover_img))
+                                    <div class="photo-placeholder-v2">
+                                        <span>Для просмотра фото <a href="{{ route('login') }}">авторизуйтесь</a> или <a href="{{ route('register') }}">зарегистрируйтесь</a></span>
+                                    </div>
+                                @else
+                                    <img class="photo-v2" src="{{ asset('images/' . ($post->sex == 1 ? 'mens' : 'girls') . '.png') }}" alt="Фото">
+                                @endif
+                            @elseif($contactAccess == 1 || $contactAccess == 4)
+                                @if(!empty($post->cover_img))
+                                    <a href="{{ asset($post->cover_img->original_webp) }}" data-fancybox="top-{{ $post->id }}" data-caption="{{ $post->title }}">
+                                        <img class="photo-v2 photo-clickable" src="{{ asset($post->cover_img->thumb_webp) }}" alt="Фото">
+                                    </a>
+                                @else
+                                    <img class="photo-v2" src="{{ asset('images/' . ($post->sex == 1 ? 'mens' : 'girls') . '.png') }}" alt="Фото">
+                                @endif
+                            @else
+                                @if(!empty($post->cover_img))
+                                    <div class="photo-placeholder-v2">
+                                        <span>Для просмотра фото <a href="/become-verified">купите статус</a> проверенного пользователя</span>
+                                    </div>
+                                @else
+                                    <img class="photo-v2" src="{{ asset('images/' . ($post->sex == 1 ? 'mens' : 'girls') . '.png') }}" alt="Фото">
+                                @endif
+                            @endif
+                        </div>
+
+                        <div class="service-info-v2">
+                            <div class="top-header-row">
+                                <h3><a href="/post/detail/{{ $post->id }}">{{ $post->title }}</a></h3>
+                                <span class="top-badge">ТОП</span>
+                            </div>
+
+                            @if($contactAccess == 0)
+                                <div class="specialist-v2">
+                                    <span style="color: red; font-size:12px;"><b>Для просмотра имени <a href="{{ route('login') }}">авторизуйтесь</a> или <a href="{{ route('register') }}">зарегистрируйтесь</a></b></span>
+                                </div>
+                            @elseif($contactAccess == 1 || $contactAccess == 4)
+                                <div class="specialist-v2">{{ $post->fio }}</div>
+                            @else
+                                <div class="specialist-v2">
+                                    <span style="color: #78350f; font-size:12px;">Для просмотра имени <a href="/become-verified" style="color: #78350f;">купите статус</a> проверенного пользователя</span>
+                                </div>
+                            @endif
+
+                            <div class="user-type-v2">
+                                @if($post->sex == 1)
+                                    Мужчина ищет Женщину
+                                @else
+                                    Женщина ищет Мужчину
+                                @endif
+                                • {{ $post->who == 1 ? 'Спонсор' : 'Содержанка' }}
+                            </div>
+
+                            <div class="location-date-v2">📍 Казахстан/{{ $post->city_name }} • {{ \Carbon\Carbon::parse($post->date)->format('d.m.Y') }}</div>
+
+                            <div class="description-v2">{{ $shortDescription }}</div>
+                        </div>
+
+                        <!-- КОНТАКТЫ -->
+                        <div class="contact-panel-v2">
+                            @if(!empty($post->phone) || !empty($post->whats) || !empty($post->telegram))
+                                @if($contactAccess == 0)
+                                    <div class="restricted-message">
+                                        Для просмотра контактов <a href="{{ route('login') }}">авторизуйтесь</a> или <a href="{{ route('register') }}">зарегистрируйтесь</a>
+                                    </div>
+                                @elseif($contactAccess == 1 || $contactAccess == 4)
+                                    @if(!empty($post->phone))
+                                        <a href="tel:{{ $post->phone }}" class="phone-v2">{{ $post->phone }}</a>
+                                    @endif
+                                    <div class="contact-buttons-v2">
+                                        @if(!empty($post->whats))
+                                            <a href="https://api.whatsapp.com/send?phone={{ $post->whats }}" class="contact-btn-v2 btn-whatsapp-v2" target="_blank">WhatsApp</a>
+                                        @endif
+                                        @if(!empty($post->telegram))
+                                            <a href="https://t.me/{{ ltrim($post->telegram, '@') }}" class="contact-btn-v2 btn-telegram-v2" target="_blank">{{ ltrim($post->telegram, '@') }}</a>
+                                        @endif
+                                    </div>
+                                @else
+                                    <div class="restricted-message restricted-sponsor">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                            <path d="M23,12L20.56,9.22L20.9,5.54L17.29,4.72L15.4,1.54L12,3L8.6,1.54L6.71,4.72L3.1,5.53L3.44,9.21L1,12L3.44,14.78L3.1,18.47L6.71,19.29L8.6,22.47L12,21L15.4,22.46L17.29,19.28L20.9,18.46L20.56,14.78L23,12M10,17L6,13L7.41,11.59L10,14.17L16.59,7.58L18,9L10,17Z"/>
+                                        </svg>
+                                        <span>Для просмотра <a href="/become-verified">купите статус проверенного пользователя</a></span>
+                                    </div>
+                                @endif
+                            @endif
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-body-v2">
+                    <div class="views-trusted-v2">
+                        <div class="views-v2">👁 {{ $post->top_views }} просмотров</div>
+                        @if(!empty($postUser) && $postUser->prov == 1)
+                            <div class="trusted-sponsor-v2">✓ Проверенный пользователь</div>
+                        @endif
+                    </div>
+                </div>
+            </div>
+        @endforeach
+    @endif
+
     @if(count($posts) == 0)
         <div style="text-align: center; padding: 60px 20px; background: white; border-radius: 16px;">
             <h2 style="color: #64748b; margin-bottom: 15px;">Пока нет объявлений</h2>
