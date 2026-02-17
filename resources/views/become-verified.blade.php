@@ -415,8 +415,8 @@
         <div class="tariff-card">
             <div class="tariff-days">5</div>
             <div class="tariff-days-label">дней</div>
-            <div class="tariff-price">4 000 ₸</div>
-            <div class="tariff-price-usd">~ $7 (тест)</div>
+            <div class="tariff-price">7 592 ₸</div>
+            <div class="tariff-price-usd">~ $14</div>
             <ul class="tariff-features">
                 <li>
                     <svg viewBox="0 0 24 24"><path d="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z"/></svg>
@@ -433,7 +433,7 @@
             </ul>
             <form action="{{ route('payment.create') }}" method="POST">
                 @csrf
-                <input type="hidden" name="amount" value="4000">
+                <input type="hidden" name="amount" value="7592">
                 <input type="hidden" name="days" value="5">
                 <input type="hidden" name="service" value="verified_status">
                 <button type="submit" class="tariff-btn">Оплатить</button>
