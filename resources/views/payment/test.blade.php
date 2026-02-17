@@ -119,7 +119,7 @@
 
             <div class="form-group">
                 <label class="form-label">Сумма (KZT)</label>
-                <input type="number" name="amount" class="form-input" value="100" min="1">
+                <input type="number" name="amount" class="form-input" value="4000" min="4000">
             </div>
 
             <button type="submit" class="btn-pay">Оплатить</button>
