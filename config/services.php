@@ -35,4 +35,9 @@ return [
         ],
     ],
 
+    'betatransfer' => [
+        'public_key' => env('BETATRANSFER_PUBLIC_KEY'),
+        'secret_key' => env('BETATRANSFER_SECRET_KEY'),
+    ],
+
 ];

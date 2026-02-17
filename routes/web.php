@@ -69,3 +69,10 @@ Route::post('/become-verified/send', [ContactController::class, 'sendVerified'])
 
 Route::get('/boost-top', [ContactController::class, 'showBoostTop'])->name('boost.top');
 Route::post('/boost-top/send', [ContactController::class, 'sendBoostTop'])->name('boost.top.send');
+
+// Платёжная система
+Route::get('/payment/test', [App\Http\Controllers\PaymentController::class, 'test'])->name('payment.test');
+Route::post('/payment/create', [App\Http\Controllers\PaymentController::class, 'createPayment'])->name('payment.create');
+Route::post('/result_url_new', [App\Http\Controllers\PaymentController::class, 'callback'])->name('payment.callback');
+Route::get('/success_url', [App\Http\Controllers\PaymentController::class, 'success'])->name('payment.success');
+Route::get('/fail', [App\Http\Controllers\PaymentController::class, 'fail'])->name('payment.fail');
