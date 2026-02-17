@@ -51,7 +51,7 @@ class PaymentController extends Controller
             'urlSuccess' => route('payment.success'),
             'urlFail' => route('payment.fail'),
             'locale' => 'ru',
-            'redirect' => '1',
+            'redirect' => '0',
             'payerId' => (string) $user->id,
             'payerEmail' => $user->email,
             'payerName' => $user->fio ?? '',
