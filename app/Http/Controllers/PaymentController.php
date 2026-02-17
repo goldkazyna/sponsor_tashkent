@@ -158,19 +158,19 @@ class PaymentController extends Controller
         $secretKey = config('services.betatransfer.secret_key');
 
         $orderId      = $request->input('orderId');
+        $amount       = $request->input('amount');
         $receivedSign = $request->input('sign');
 
-        // Проверяем подпись по всем параметрам (кроме sign), как при создании платежа
-        $callbackData = $request->except('sign');
-        $expectedSign = md5(implode('', $callbackData) . $secretKey);
+        // Webhook signature: md5(amount + orderId + secret)
+        $expectedSign = md5($amount . $orderId . $secretKey);
 
         if ($receivedSign !== $expectedSign) {
-            Log::warning('Payment callback: signature mismatch (non-critical)', [
+            Log::warning('Payment callback: invalid signature', [
                 'order_id' => $orderId,
                 'expected' => $expectedSign,
                 'received' => $receivedSign,
             ]);
-            // Не отклоняем — обрабатываем заказ, т.к. формула подписи может отличаться
+            return response('Invalid signature', 400);
         }
 
         // Находим заказ
