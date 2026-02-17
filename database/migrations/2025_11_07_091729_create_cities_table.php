@@ -8,40 +8,39 @@ use Illuminate\Support\Facades\DB;
 return new class extends Migration
 {
     /**
-     * Таблица городов Узбекистана
+     * Таблица городов Казахстана
      */
     public function up(): void
     {
-        Schema::create('cities', function (Blueprint $table) {
+        Schema::create('city', function (Blueprint $table) {
             $table->id();
-            $table->string('name', 255); // Название города
+            $table->string('title', 255); // Название города
         });
 
-        // Добавляем города Узбекистана
-        DB::table('cities')->insert([
-            ['name' => 'Ташкент'],
-            ['name' => 'Самарканд'],
-            ['name' => 'Бухара'],
-            ['name' => 'Андижан'],
-            ['name' => 'Наманган'],
-            ['name' => 'Фергана'],
-            ['name' => 'Коканд'],
-            ['name' => 'Нукус'],
-            ['name' => 'Карши'],
-            ['name' => 'Термез'],
-            ['name' => 'Гулистан'],
-            ['name' => 'Ургенч'],
-            ['name' => 'Навои'],
-            ['name' => 'Джизак'],
-            ['name' => 'Маргилан'],
-            ['name' => 'Чирчик'],
-            ['name' => 'Ангрен'],
-            ['name' => 'Алмалык'],
+        DB::table('city')->insert([
+            ['title' => 'Алматы'],
+            ['title' => 'Астана'],
+            ['title' => 'Шымкент'],
+            ['title' => 'Караганда'],
+            ['title' => 'Актобе'],
+            ['title' => 'Тараз'],
+            ['title' => 'Павлодар'],
+            ['title' => 'Усть-Каменогорск'],
+            ['title' => 'Семей'],
+            ['title' => 'Атырау'],
+            ['title' => 'Костанай'],
+            ['title' => 'Петропавловск'],
+            ['title' => 'Актау'],
+            ['title' => 'Уральск'],
+            ['title' => 'Кызылорда'],
+            ['title' => 'Талдыкорган'],
+            ['title' => 'Экибастуз'],
+            ['title' => 'Кокшетау'],
         ]);
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('cities');
+        Schema::dropIfExists('city');
     }
 };

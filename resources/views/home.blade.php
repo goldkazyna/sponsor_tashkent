@@ -1,6 +1,8 @@
 @extends('layouts.app')
 
-@section('title', 'Главная - Спонсоры Ташкент')
+@section('title', 'Спонсоры и Содержанки в Алматы, Астане, Казахстане.')
+
+@section('meta_description', 'Используйте VPN для доступа к сайту. Вы можете найти для себя спонсора или содержанки в Алматы, Астане и других городах на данном портале.')
 
 @section('content')
 
@@ -442,9 +444,9 @@
                 $postUser = DB::table('users')->where('email', $post->email)->first();
                 
                 // Обрезаем описание до 200 символов
-                $shortDescription = mb_strlen($post->description) > 200 
-                    ? mb_substr($post->description, 0, 200) . '...' 
-                    : $post->description;
+                $shortDescription = mb_strlen($post->discription) > 200
+                    ? mb_substr($post->discription, 0, 200) . '...'
+                    : $post->discription;
             @endphp
             
             <div class="card-v2">
@@ -484,7 +486,7 @@
                         </div>
                         
                         <div class="service-info-v2">
-                            <h3><a href="/posts/{{ $post->slug }}">{{ $post->title }}</a></h3>
+                            <h3><a href="/post/detail/{{ $post->id }}">{{ $post->title }}</a></h3>
                             
                             <!-- Имя -->
                             @if($contactAccess == 0)
@@ -509,7 +511,7 @@
                                 • {{ $post->who == 1 ? 'Спонсор' : 'Содержанка' }}
                             </div>
                             
-                            <div class="location-date-v2">📍 Узбекистан/{{ $post->city }} • {{ \Carbon\Carbon::parse($post->date)->format('d.m.Y') }}</div>
+                            <div class="location-date-v2">📍 Казахстан/{{ $post->city_name }} • {{ \Carbon\Carbon::parse($post->date)->format('d.m.Y') }}</div>
                             
                             <div class="description-v2">
                                 {{ $shortDescription }}

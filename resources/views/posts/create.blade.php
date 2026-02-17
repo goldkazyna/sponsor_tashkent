@@ -67,7 +67,7 @@
             <div>
                 <label style="display: block; margin-bottom: 8px; font-weight: 500;">Телефон: *</label>
                 <input type="text" name="phone" value="{{ old('phone', $user->phone) }}" required 
-                       placeholder="+998901234567"
+                       placeholder="+77001234567"
                        style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px;">
             </div>
             <div>
@@ -76,8 +76,8 @@
                         style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px;">
                     <option value="">Выберите город</option>
                     @foreach($cities as $city)
-                        <option value="{{ $city->name }}" {{ old('city') == $city->name ? 'selected' : '' }}>
-                            {{ $city->name }}
+                        <option value="{{ $city->id }}" {{ old('city') == $city->id ? 'selected' : '' }}>
+                            {{ $city->title }}
                         </option>
                     @endforeach
                 </select>
@@ -88,7 +88,7 @@
             <div>
                 <label style="display: block; margin-bottom: 8px; font-weight: 500;">WhatsApp:</label>
                 <input type="text" name="whats" value="{{ old('whats') }}" 
-                       placeholder="+998901234567"
+                       placeholder="+77001234567"
                        style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px;">
             </div>
             <div>
@@ -101,9 +101,9 @@
 
         <div style="margin-bottom: 20px;">
             <label style="display: block; margin-bottom: 8px; font-weight: 500;">Описание: *</label>
-            <textarea name="description" rows="8" required 
+            <textarea name="discription" rows="8" required
                       placeholder="Расскажите о себе и о том, кого ищете..."
-                      style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px; resize: vertical;">{{ old('description') }}</textarea>
+                      style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px; resize: vertical;">{{ old('discription') }}</textarea>
             
         </div>
 

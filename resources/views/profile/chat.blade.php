@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Чат с {{ $interlocutor->fio ?? $interlocutor->email }}')
+@section('title', 'Чат с ' . ($interlocutor->fio ?: explode('@', $interlocutor->email ?? '')[0]))
 
 @section('content')
 
@@ -65,8 +65,11 @@
     flex-shrink: 0;
 }
 
-.chat-avatar svg {
-    fill: {{ $interlocutor->sex == 1 ? '#1e40af' : '#be185d' }};
+.chat-avatar .avatar-initials {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: {{ $interlocutor->sex == 1 ? '#1e40af' : '#be185d' }};
+    text-transform: uppercase;
 }
 
 .chat-user-details h2 {
@@ -347,20 +350,23 @@
             </svg>
         </a>
         
+        @php
+            $emailUser = explode('@', $interlocutor->email ?? '')[0];
+            $chatDisplayName = $interlocutor->fio ?: $emailUser;
+            $chatInitials = mb_strtoupper(mb_substr($chatDisplayName, 0, 2));
+        @endphp
         <div class="chat-user-info">
             <div class="chat-avatar">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="width: 24px; height: 24px;">
-                    <path d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z"/>
-                </svg>
+                <span class="avatar-initials">{{ $chatInitials }}</span>
             </div>
             <div class="chat-user-details">
-                <h2>{{ $interlocutor->fio ?? $interlocutor->email }}</h2>
+                <h2>{{ $chatDisplayName }}</h2>
                 <div class="chat-user-status">{{ $interlocutor->sex == 1 ? 'Спонсор' : 'Содержанка' }}</div>
             </div>
         </div>
 
         @if($post)
-        <a href="/posts/{{ $post->id }}" class="chat-post-link" target="_blank">
+        <a href="/post/detail/{{ $post->id }}" class="chat-post-link" target="_blank">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
                 <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2Z"/>
             </svg>

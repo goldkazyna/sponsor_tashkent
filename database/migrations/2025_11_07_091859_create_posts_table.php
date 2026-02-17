@@ -22,7 +22,7 @@ return new class extends Migration
      * - sex: пол (1 - мужчина, 2 - женщина)
      * - who: кто ищет (1 - спонсор, 2 - содержанка)
      * - city: город (название города)
-     * - description: описание объявления
+     * - discription: описание объявления
      * - view: количество просмотров
      * - ip: IP адрес
      * - del: удалено ли (0 - нет, 1 - да)
@@ -32,7 +32,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('posts', function (Blueprint $table) {
+        Schema::create('post', function (Blueprint $table) {
             $table->id();
             $table->string('title', 255);
             $table->string('slug', 255)->unique();
@@ -46,7 +46,7 @@ return new class extends Migration
             $table->integer('sex');
             $table->integer('who');
             $table->string('city', 255);
-            $table->text('description');
+            $table->text('discription');
             $table->integer('view')->default(10);
             $table->string('ip', 255);
             $table->boolean('del')->default(false);
@@ -65,6 +65,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('posts');
+        Schema::dropIfExists('post');
     }
 };

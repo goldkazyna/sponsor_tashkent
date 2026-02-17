@@ -17,7 +17,7 @@
         <a href="/" class="btn btn-success" style="padding: 12px 30px; font-size: 16px; text-decoration: none; display: inline-block;">
             На главную
         </a>
-        <a href="/posts/{{ $slug }}" class="btn btn-primary" style="padding: 12px 30px; font-size: 16px; text-decoration: none; display: inline-block;">
+        <a href="/post/detail/{{ $postId }}" class="btn btn-primary" style="padding: 12px 30px; font-size: 16px; text-decoration: none; display: inline-block;">
             Посмотреть объявление
         </a>
     </div>

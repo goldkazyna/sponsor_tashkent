@@ -17,7 +17,7 @@ class PostController extends Controller
 		$selectedCity = $request->get('city', 'all');
 		
 		// Строим запрос постов
-		$query = DB::table('posts')->where('del', 0);
+		$query = DB::table('post')->where('del', 0);
 		
 		// Если выбран конкретный город (не "all"), добавляем фильтр
 		if ($selectedCity !== 'all' && !empty($selectedCity)) {
@@ -27,11 +27,13 @@ class PostController extends Controller
 		// Сортировка по id DESC (новые первыми) и пагинация
 		$posts = $query->orderBy('id', 'desc')->paginate(10);
 		
-		// Для каждого поста получаем первое фото
+		// Для каждого поста получаем первое фото и название города
 		foreach ($posts as $post) {
 			$post->cover_img = DB::table('gallery')
 				->where('id_post', $post->id)
 				->first();
+			$cityRow = DB::table('city')->where('id', $post->city)->first();
+			$post->city_name = $cityRow ? $cityRow->title : $post->city;
 		}
 		
 		// Проверяем авторизацию
@@ -51,11 +53,11 @@ class PostController extends Controller
 	}
 
     // Показать детальную страницу объявления
-    public function show($slug)
+    public function show($id)
     {
-        // Получаем пост по slug
-        $post = DB::table('posts')
-            ->where('slug', $slug)
+        // Получаем пост по id
+        $post = DB::table('post')
+            ->where('id', $id)
             ->where('del', 0)
             ->first();
         
@@ -64,7 +66,7 @@ class PostController extends Controller
         }
         
         // Увеличиваем счётчик просмотров на 1
-        DB::table('posts')
+        DB::table('post')
             ->where('id', $post->id)
             ->increment('view');
         
@@ -77,7 +79,11 @@ class PostController extends Controller
         $postUser = DB::table('users')
             ->where('email', $post->email)
             ->first();
-        
+
+        // Получаем название города
+        $cityRow = DB::table('city')->where('id', $post->city)->first();
+        $post->city_name = $cityRow ? $cityRow->title : $post->city;
+
         // Проверяем авторизацию
         $currentUser = null;
         if (session('user_id')) {
@@ -100,11 +106,16 @@ class PostController extends Controller
             return redirect()->route('login')->with('error', 'Для добавления объявления необходимо войти');
         }
 
-        // Получаем список городов
-        $cities = DB::table('cities')->orderBy('name')->get();
-        
         // Получаем данные пользователя
         $user = DB::table('users')->where('id', session('user_id'))->first();
+
+        // Мужчина без статуса проверенного спонсора — не может добавлять
+        if ($user->sex == 1 && $user->prov != 1) {
+            return view('posts.need-status', compact('user'));
+        }
+
+        // Получаем список городов
+        $cities = DB::table('city')->orderBy('title')->get();
 
         return view('posts.create', compact('cities', 'user'));
     }
@@ -117,32 +128,35 @@ class PostController extends Controller
             return redirect()->route('login');
         }
 
+        $user = DB::table('users')->where('id', session('user_id'))->first();
+
+        // Мужчина без статуса — блокируем
+        if ($user->sex == 1 && $user->prov != 1) {
+            return redirect()->route('post.create');
+        }
+
         $request->validate([
             'title' => 'required|max:255',
             'fio' => 'required|min:2',
             'phone' => 'required',
             'city' => 'required',
-            'description' => 'required'
+            'discription' => 'required'
         ], [
             'title.required' => 'Заголовок обязателен',	
             'fio.required' => 'ФИО обязательно',
             'fio.min' => 'ФИО должно быть минимум 2 символа',
             'phone.required' => 'Телефон обязателен',
             'city.required' => 'Город обязателен',
-            'description.required' => 'Описание обязательно'
+            'discription.required' => 'Описание обязательно'
         ]);
 
-        // Генерируем slug из title
-        $slug = $this->generateUniqueSlug($request->title);
-
-        // Получаем данные пользователя
-        $user = DB::table('users')->where('id', session('user_id'))->first();
-
         // Сохраняем объявление
-        $postId = DB::table('posts')->insertGetId([
+        $postId = DB::table('post')->insertGetId([
             'title' => $request->title,
-            'slug' => $slug,
             'email' => $user->email,
+            'email_2' => $user->email,
+            'price' => '0',
+            'country' => '1',
             'phone' => $request->phone,
             'whats' => $request->whats ?? '',
             'telegram' => $request->telegram ?? '',
@@ -150,7 +164,7 @@ class PostController extends Controller
             'sex' => $user->sex,
             'who' => $user->sex,
             'city' => $request->city,
-            'description' => $request->description,
+            'discription' => $request->discription,
             'photo_view' => $request->has('photo_view') ? 1 : 0,
             'date' => now(),
             'ip' => $request->ip(),
@@ -161,7 +175,7 @@ class PostController extends Controller
             $this->processPhotos($request->photos, $postId);
         }
 
-        return view('posts.success', ['slug' => $slug]);
+        return view('posts.success', ['postId' => $postId]);
     }
 
     // Обработка и сохранение фото
@@ -234,7 +248,7 @@ class PostController extends Controller
         $originalSlug = $slug;
         $counter = 1;
         
-        while (DB::table('posts')->where('slug', $slug)->exists()) {
+        while (DB::table('post')->where('slug', $slug)->exists()) {
             $slug = $originalSlug . '-' . $counter;
             $counter++;
         }

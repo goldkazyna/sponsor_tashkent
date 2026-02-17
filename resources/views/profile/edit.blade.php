@@ -336,7 +336,7 @@
 
         <div class="form-group">
             <label class="form-label required">Описание</label>
-            <textarea name="description" class="form-input form-textarea" required>{{ $post->description }}</textarea>
+            <textarea name="discription" class="form-input form-textarea" required>{{ $post->discription }}</textarea>
         </div>
 
         <div class="form-group">
@@ -344,8 +344,8 @@
             <select name="city" class="form-select" required>
                 <option value="">Выберите город</option>
                 @foreach($cities as $city)
-                    <option value="{{ $city->name }}" {{ $post->city == $city->name ? 'selected' : '' }}>
-                        {{ $city->name }}
+                    <option value="{{ $city->id }}" {{ $post->city == $city->id ? 'selected' : '' }}>
+                        {{ $city->title }}
                     </option>
                 @endforeach
             </select>
@@ -353,7 +353,7 @@
 
         <div class="form-group">
             <label class="form-label required">Телефон</label>
-            <input type="text" name="phone" class="form-input" value="{{ $post->phone }}" placeholder="+998 90 123 45 67" required>
+            <input type="text" name="phone" class="form-input" value="{{ $post->phone }}" placeholder="+7 700 123 45 67" required>
         </div>
 
         <div class="form-group">
@@ -363,7 +363,7 @@
 
         <div class="form-group">
             <label class="form-label">WhatsApp</label>
-            <input type="text" name="whats" class="form-input" value="{{ $post->whats ?? '' }}" placeholder="+998 90 123 45 67">
+            <input type="text" name="whats" class="form-input" value="{{ $post->whats ?? '' }}" placeholder="+7 700 123 45 67">
         </div>
 
         @if(count($photos) > 0)

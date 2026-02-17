@@ -2,7 +2,7 @@
 
 <?php
 // Получаем все города из базы, сортировка по id ASC (популярные первые)
-$allCities = DB::table('cities')->orderBy('id', 'asc')->get();
+$allCities = DB::table('city')->orderBy('id', 'asc')->get();
 
 // Популярные города (первые 7)
 $popularCities = $allCities->take(7);
@@ -22,8 +22,8 @@ $selectedCity = request()->get('city', 'all');
                 </button>
                 
                 @foreach($popularCities as $city)
-                <button class="city-btn-v2 {{ $selectedCity === $city->name ? 'active' : '' }}" data-city="{{ $city->name }}">
-                    {{ $city->name }}
+                <button class="city-btn-v2 {{ $selectedCity == $city->id ? 'active' : '' }}" data-city="{{ $city->id }}">
+                    {{ $city->title }}
                 </button>
                 @endforeach
                 
@@ -75,11 +75,11 @@ $selectedCity = request()->get('city', 'all');
                 </button>
                 
                 @foreach($allCities as $city)
-                <button class="modal-city-btn-v2-improved {{ $selectedCity === $city->name ? 'active' : '' }}" data-city="{{ $city->name }}" onclick="selectCityV2Improved('{{ $city->name }}')">
+                <button class="modal-city-btn-v2-improved {{ $selectedCity == $city->id ? 'active' : '' }}" data-city="{{ $city->id }}" onclick="selectCityV2Improved('{{ $city->id }}')">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
                         <path d="M12,11.5A2.5,2.5 0 0,1 9.5,9A2.5,2.5 0 0,1 12,6.5A2.5,2.5 0 0,1 14.5,9A2.5,2.5 0 0,1 12,11.5M12,2A7,7 0 0,0 5,9C5,14.25 12,22 12,22C12,22 19,14.25 19,9A7,7 0 0,0 12,2Z"/>
                     </svg>
-                    {{ $city->name }}
+                    {{ $city->title }}
                 </button>
                 @endforeach
             </div>

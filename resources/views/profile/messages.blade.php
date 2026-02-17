@@ -110,26 +110,26 @@
     flex-shrink: 0;
 }
 
-.conversation-avatar svg {
-    width: 28px;
-    height: 28px;
-    fill: #94a3b8;
+.conversation-avatar .avatar-initials {
+    font-size: 1.2rem;
+    font-weight: 700;
+    text-transform: uppercase;
 }
 
 .conversation-avatar.male {
     background: #dbeafe;
 }
 
-.conversation-avatar.male svg {
-    fill: #1e40af;
+.conversation-avatar.male .avatar-initials {
+    color: #1e40af;
 }
 
 .conversation-avatar.female {
     background: #fce7f3;
 }
 
-.conversation-avatar.female svg {
-    fill: #be185d;
+.conversation-avatar.female .avatar-initials {
+    color: #be185d;
 }
 
 .conversation-content {
@@ -299,17 +299,20 @@
         <!-- Список диалогов -->
         <div class="conversations-list">
             @foreach($conversations as $conversation)
-                <a href="{{ route('profile.messages.chat', $conversation->interlocutor_id) }}" 
+                @php
+                    $emailUser = explode('@', $conversation->interlocutor->email ?? '')[0];
+                    $displayName = $conversation->interlocutor->fio ?: $emailUser;
+                    $initials = mb_strtoupper(mb_substr($displayName, 0, 2));
+                @endphp
+                <a href="{{ route('profile.messages.chat', $conversation->interlocutor->id ?? 0) }}"
                    class="conversation-item {{ $conversation->unread_count > 0 ? 'unread' : '' }}">
-                    <div class="conversation-avatar {{ $conversation->interlocutor->sex == 1 ? 'male' : 'female' }}">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                            <path d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z"/>
-                        </svg>
+                    <div class="conversation-avatar {{ ($conversation->interlocutor->sex ?? 1) == 1 ? 'male' : 'female' }}">
+                        <span class="avatar-initials">{{ $initials }}</span>
                     </div>
                     <div class="conversation-content">
                         <div class="conversation-header">
                             <div class="conversation-name">
-                                {{ $conversation->interlocutor->fio ?? $conversation->interlocutor->email }}
+                                {{ $displayName }}
                             </div>
                             <div class="conversation-time">
                                 {{ \Carbon\Carbon::parse($conversation->last_message_time)->diffForHumans() }}

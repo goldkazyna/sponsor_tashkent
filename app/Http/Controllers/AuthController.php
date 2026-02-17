@@ -38,7 +38,7 @@ class AuthController extends Controller
 		// Создаем пользователя
 		DB::table('users')->insert([
 			'email' => $request->email,
-			'password' => Hash::make($request->password),
+			'password' => sha1(md5($request->password)),
 			'sex' => $request->sex,
 			'ip' => $request->ip(),
 			'date' => now(),
@@ -69,7 +69,7 @@ class AuthController extends Controller
 
         $user = DB::table('users')->where('email', $request->email)->first();
 
-        if ($user && Hash::check($request->password, $user->password)) {
+        if ($user && $user->password === sha1(md5($request->password))) {
             // Успешный вход
             session(['user_id' => $user->id]);
             session(['user_email' => $user->email]);
@@ -118,7 +118,7 @@ class AuthController extends Controller
 		
 		Mail::raw("Для восстановления пароля перейдите по ссылке: {$resetUrl}", function($message) use ($request) {
 			$message->to($request->email)
-					->subject('Восстановление пароля - Спонсоры Ташкент');
+					->subject('Восстановление пароля - Спонсоры Казахстан');
 		});
 
 		return back()->with('success', 'Ссылка для восстановления пароля отправлена на ваш email!');
@@ -158,7 +158,7 @@ class AuthController extends Controller
 		DB::table('users')
 			->where('id', $user->id)
 			->update([
-				'password' => Hash::make($request->password),
+				'password' => sha1(md5($request->password)),
 				'restore_code' => ''
 			]);
 

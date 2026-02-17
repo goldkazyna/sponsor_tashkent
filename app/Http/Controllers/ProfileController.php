@@ -25,17 +25,19 @@ class ProfileController extends Controller
         $user = DB::table('users')->where('id', session('user_id'))->first();
 
         // Получаем объявления пользователя
-        $posts = DB::table('posts')
+        $posts = DB::table('post')
             ->where('email', $user->email)
             ->where('del', 0)
             ->orderBy('date', 'desc')
             ->get();
 
-        // Для каждого поста получаем первое фото
+        // Для каждого поста получаем первое фото и название города
         foreach ($posts as $post) {
             $post->cover_img = DB::table('gallery')
                 ->where('id_post', $post->id)
                 ->first();
+            $cityRow = DB::table('city')->where('id', $post->city)->first();
+            $post->city_name = $cityRow ? $cityRow->title : $post->city;
         }
 
         return view('profile.index', [
@@ -122,7 +124,7 @@ public function settings()
 		$user = DB::table('users')->where('id', session('user_id'))->first();
 
 		// Проверяем текущий пароль
-		if (!\Illuminate\Support\Facades\Hash::check($request->input('current_password'), $user->password)) {
+		if ($user->password !== sha1(md5($request->input('current_password')))) {
 			return back()->withErrors(['current_password' => 'Неверный текущий пароль']);
 		}
 
@@ -130,7 +132,7 @@ public function settings()
 		DB::table('users')
 			->where('id', session('user_id'))
 			->update([
-				'password' => \Illuminate\Support\Facades\Hash::make($request->input('new_password'))
+				'password' => sha1(md5($request->input('new_password')))
 			]);
 
 		return back()->with('success', 'Пароль успешно изменён');
@@ -164,7 +166,7 @@ public function settings()
         $user = DB::table('users')->where('id', session('user_id'))->first();
 
         // Получаем объявление
-        $post = DB::table('posts')
+        $post = DB::table('post')
             ->where('id', $id)
             ->where('email', $user->email)
             ->first();
@@ -175,7 +177,7 @@ public function settings()
         }
 
         // Получаем список городов
-        $cities = DB::table('cities')->orderBy('name')->get();
+        $cities = DB::table('city')->orderBy('title')->get();
 
         // Получаем фотографии объявления
         $photos = DB::table('gallery')
@@ -202,7 +204,7 @@ public function settings()
         $user = DB::table('users')->where('id', session('user_id'))->first();
 
         // Проверяем что объявление принадлежит пользователю
-        $post = DB::table('posts')
+        $post = DB::table('post')
             ->where('id', $id)
             ->where('email', $user->email)
             ->first();
@@ -212,12 +214,12 @@ public function settings()
         }
 
         // Обновляем объявление
-        DB::table('posts')
+        DB::table('post')
             ->where('id', $id)
             ->update([
                 'title' => $request->input('title'),
                 'fio' => $request->input('fio'),
-                'description' => $request->input('description'),
+                'discription' => $request->input('discription'),
                 'city' => $request->input('city'),
                 'phone' => $request->input('phone'),
                 'telegram' => $request->input('telegram', ''),
@@ -308,7 +310,7 @@ public function settings()
         $user = DB::table('users')->where('id', session('user_id'))->first();
 
         // Проверяем что объявление принадлежит пользователю
-        $post = DB::table('posts')
+        $post = DB::table('post')
             ->where('id', $id)
             ->where('email', $user->email)
             ->first();
@@ -318,7 +320,7 @@ public function settings()
         }
 
         // Мягкое удаление - устанавливаем del = 1
-        DB::table('posts')
+        DB::table('post')
             ->where('id', $id)
             ->update(['del' => 1]);
 
@@ -343,7 +345,7 @@ public function settings()
         }
 
         // Получаем объявление и проверяем что оно принадлежит пользователю
-        $post = DB::table('posts')
+        $post = DB::table('post')
             ->where('id', $photo->id_post)
             ->where('email', $user->email)
             ->first();
@@ -367,7 +369,6 @@ public function settings()
     }
 	
 	
-// Найди метод messages() и замени его на:
 	public function messages()
 	{
 		if (!session('user_id')) {
@@ -378,22 +379,22 @@ public function settings()
 
 		// Получаем список уникальных собеседников
 		$conversations = DB::select("
-			SELECT 
-				CASE 
-					WHEN m.sender_id = ? THEN m.receiver_id 
-					ELSE m.sender_id 
+			SELECT
+				CASE
+					WHEN m.sender_id = ? THEN m.receiver_id
+					ELSE m.sender_id
 				END as interlocutor_id,
 				MAX(m.created_at) as last_message_time,
-				(SELECT message FROM messages 
-				 WHERE (sender_id = interlocutor_id AND receiver_id = ?) 
+				(SELECT message FROM messages
+				 WHERE (sender_id = interlocutor_id AND receiver_id = ?)
 					OR (sender_id = ? AND receiver_id = interlocutor_id)
 				 ORDER BY created_at DESC LIMIT 1) as last_message,
-				(SELECT COUNT(*) FROM messages 
-				 WHERE sender_id = interlocutor_id 
-				   AND receiver_id = ? 
+				(SELECT COUNT(*) FROM messages
+				 WHERE sender_id = interlocutor_id
+				   AND receiver_id = ?
 				   AND is_read = 0) as unread_count,
-				(SELECT post_id FROM messages 
-				 WHERE (sender_id = interlocutor_id AND receiver_id = ?) 
+				(SELECT post_id FROM messages
+				 WHERE (sender_id = interlocutor_id AND receiver_id = ?)
 					OR (sender_id = ? AND receiver_id = interlocutor_id)
 				 ORDER BY created_at DESC LIMIT 1) as post_id
 			FROM messages m
@@ -401,8 +402,8 @@ public function settings()
 			GROUP BY interlocutor_id
 			ORDER BY last_message_time DESC
 		", [
-			$user->id, $user->id, $user->id, 
-			$user->id, $user->id, $user->id, 
+			$user->id, $user->id, $user->id,
+			$user->id, $user->id, $user->id,
 			$user->id, $user->id
 		]);
 
@@ -411,12 +412,11 @@ public function settings()
 			$interlocutor = DB::table('users')
 				->where('id', $conversation->interlocutor_id)
 				->first();
-			
+
 			$conversation->interlocutor = $interlocutor;
-			
-			// Получаем объявление если есть
+
 			if ($conversation->post_id) {
-				$conversation->post = DB::table('posts')
+				$conversation->post = DB::table('post')
 					->where('id', $conversation->post_id)
 					->first();
 			}
@@ -428,8 +428,6 @@ public function settings()
 		]);
 	}
 
-	// После метода messages() добавь эти новые методы:
-
 	public function messagesChat($interlocutorId)
 	{
 		if (!session('user_id')) {
@@ -437,9 +435,9 @@ public function settings()
 		}
 
 		$user = DB::table('users')->where('id', session('user_id'))->first();
-		
+
 		$interlocutor = DB::table('users')->where('id', $interlocutorId)->first();
-		
+
 		if (!$interlocutor) {
 			return redirect()->route('profile.messages')->with('error', 'Пользователь не найден');
 		}
@@ -467,7 +465,7 @@ public function settings()
 
 		$post = null;
 		if ($messages->isNotEmpty() && $messages->first()->post_id) {
-			$post = DB::table('posts')
+			$post = DB::table('post')
 				->where('id', $messages->first()->post_id)
 				->first();
 		}
@@ -489,7 +487,7 @@ public function settings()
 		$request->validate([
 			'receiver_id' => 'required|exists:users,id',
 			'message' => 'required|string|max:5000',
-			'post_id' => 'nullable|exists:posts,id'
+			'post_id' => 'nullable|exists:post,id'
 		]);
 
 		$user = DB::table('users')->where('id', session('user_id'))->first();
@@ -523,7 +521,7 @@ public function settings()
 		}
 
 		$user = DB::table('users')->where('id', session('user_id'))->first();
-		
+
 		$lastMessageId = $request->input('last_message_id', 0);
 
 		$newMessages = DB::table('messages')

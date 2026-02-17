@@ -29,7 +29,7 @@ Route::post('/password/update', [AuthController::class, 'resetPassword'])->name(
 // Объявления
 Route::get('/add', [PostController::class, 'create'])->name('post.create');
 Route::post('/add', [PostController::class, 'store'])->name('post.store');
-Route::get('/posts/{slug}', [PostController::class, 'show'])->name('post.detail');
+Route::get('/post/detail/{id}', [PostController::class, 'show'])->name('post.detail');
 
 // Личный кабинет (требует авторизации)
 Route::middleware(['web'])->group(function () {
@@ -57,3 +57,9 @@ Route::get('/pricing', function () {return view('pricing');})->name('pricing');
 
 Route::get('/contact', [ContactController::class, 'show'])->name('contact');
 Route::post('/contact/send', [ContactController::class, 'send'])->name('contact.send');
+
+Route::get('/become-verified', [ContactController::class, 'showVerified'])->name('become.verified');
+Route::post('/become-verified/send', [ContactController::class, 'sendVerified'])->name('become.verified.send');
+
+Route::get('/boost-top', [ContactController::class, 'showBoostTop'])->name('boost.top');
+Route::post('/boost-top/send', [ContactController::class, 'sendBoostTop'])->name('boost.top.send');

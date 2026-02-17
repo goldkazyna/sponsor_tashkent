@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', $post->title . ' - Спонсоры Ташкент')
+@section('title', $post->title . ' | Спонсоры и содержанки в Алматы, Астане, Казахстане.')
 
 @section('content')
 
@@ -480,7 +480,7 @@
                 </div>
                 <div class="master-location">
                     <span>📍</span>
-                    <span>Узбекистан - {{ $post->city }}</span>
+                    <span>Казахстан - {{ $post->city_name }}</span>
                 </div>
             </div>
 
@@ -553,7 +553,7 @@
 
             <div class="description-section">
                 <h2 style="font-size: 1.4rem; font-weight: 700; color: #1a202c; margin-bottom: 1rem;">Описание</h2>
-                <div class="description-text">{{ $post->description }}</div>
+                <div class="description-text">{{ $post->discription }}</div>
             </div>
             
             <!-- КНОПКА НАПИСАТЬ СООБЩЕНИЕ -->

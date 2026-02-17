@@ -226,7 +226,7 @@
 
             <div class="form-group">
                 <label class="form-label">Телефон</label>
-                <input type="text" name="phone" class="form-input" value="{{ $user->phone ?? '' }}" placeholder="+998 90 123 45 67">
+                <input type="text" name="phone" class="form-input" value="{{ $user->phone ?? '' }}" placeholder="+7 700 123 45 67">
                 <small style="color: #94a3b8; font-size: 0.85rem; display: block; margin-top: 0.5rem;">
                     Этот номер будет использоваться по умолчанию при создании объявлений
                 </small>

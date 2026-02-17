@@ -19,13 +19,12 @@ return new class extends Migration
 	{
 		Schema::create('gallery', function (Blueprint $table) {
 			$table->id();
-			$table->unsignedBigInteger('id_post');
+			$table->integer('id_post');
 			$table->string('original_webp', 255); // оригинал в WebP
 			$table->string('thumb_webp', 255);    // миниатюра 193x193 в WebP
 			$table->timestamps();
-			
+
 			$table->index('id_post');
-			$table->foreign('id_post')->references('id')->on('posts')->onDelete('cascade');
 		});
 	}
 
