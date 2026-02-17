@@ -51,7 +51,7 @@ class PaymentController extends Controller
             'urlSuccess' => route('payment.success'),
             'urlFail' => route('payment.fail'),
             'locale' => 'ru',
-            'redirect' => '0',
+            'redirect' => '1',
             'payerId' => (string) $user->id,
             'payerEmail' => $user->email,
             'payerName' => $user->fio ?? '',
@@ -63,28 +63,47 @@ class PaymentController extends Controller
 
         Log::info('Payment request', $postData);
 
-        // Запрос к API
+        // Запрос к API (redirect=1, но не следуем за редиректом — берём URL из Location)
         try {
-            $response = Http::timeout(30)->asForm()->post(
-                'https://merchant.betatransfer.io/api/payment?token=' . $publicKey,
-                $postData
-            );
+            $response = Http::timeout(30)
+                ->withOptions(['allow_redirects' => false])
+                ->asForm()
+                ->post(
+                    'https://merchant.betatransfer.io/api/payment?token=' . $publicKey,
+                    $postData
+                );
 
             $httpCode = $response->status();
             $body = $response->body();
-            $result = $response->json();
 
             Log::info('Payment response', [
                 'http_code' => $httpCode,
-                'body' => $body,
-                'json' => $result,
+                'headers' => $response->headers(),
+                'body' => mb_substr($body, 0, 500),
             ]);
 
+            // Если редирект — берём URL из заголовка Location
+            if ($httpCode >= 300 && $httpCode < 400) {
+                $location = $response->header('Location');
+                if ($location) {
+                    return redirect($location);
+                }
+            }
+
+            // Если JSON-ответ с url
+            $result = $response->json();
             if (isset($result['url'])) {
                 return redirect($result['url']);
             }
 
-            return back()->with('error', "Ошибка [{$httpCode}]: " . ($body ?: 'пустой ответ'));
+            // Если HTML — пробуем найти URL оплаты в теле ответа
+            if ($httpCode === 200 && str_contains($body, 'processingv2.betatransfer.io')) {
+                if (preg_match('/"url"\s*:\s*"(https:\/\/processingv2\.betatransfer\.io\/[^"]+)"/', $body, $matches)) {
+                    return redirect($matches[1]);
+                }
+            }
+
+            return back()->with('error', "Ошибка [{$httpCode}]: " . mb_substr($body, 0, 200));
 
         } catch (\Exception $e) {
             Log::error('Payment request failed: ' . $e->getMessage());
