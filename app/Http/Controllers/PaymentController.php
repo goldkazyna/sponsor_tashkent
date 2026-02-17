@@ -41,16 +41,7 @@ class PaymentController extends Controller
         $amount = $request->input('amount', '100');
         $currency = 'KZT';
 
-        // Параметры платежа
-        $params = [
-            'orderId' => $orderId,
-            'amount' => $amount,
-            'currency' => $currency,
-        ];
-
-        // Подпись: md5(amount + currency + orderId + secretKey)
-        $sign = md5($amount . $currency . $orderId . $secretKey);
-
+        // Собираем параметры (без sign)
         $postData = [
             'orderId' => $orderId,
             'amount' => $amount,
@@ -63,8 +54,11 @@ class PaymentController extends Controller
             'payerId' => (string) $user->id,
             'payerEmail' => $user->email,
             'payerName' => $user->fio ?? '',
-            'sign' => $sign,
         ];
+
+        // Подпись: md5(все значения параметров + секретный ключ)
+        $sign = md5(implode('', $postData) . $secretKey);
+        $postData['sign'] = $sign;
 
         Log::info('Payment request', $postData);
 
