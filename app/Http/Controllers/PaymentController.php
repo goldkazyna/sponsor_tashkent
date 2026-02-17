@@ -64,23 +64,32 @@ class PaymentController extends Controller
         Log::info('Payment request', $postData);
 
         // Запрос к API
-        $response = Http::asForm()->post(
-            'https://merchant.betatransfer.io/api/payment?token=' . $publicKey,
-            $postData
-        );
+        try {
+            $response = Http::timeout(30)->asForm()->post(
+                'https://merchant.betatransfer.io/api/payment?token=' . $publicKey,
+                $postData
+            );
 
-        $result = $response->json();
+            $httpCode = $response->status();
+            $body = $response->body();
+            $result = $response->json();
 
-        Log::info('Payment response', $result ?? []);
+            Log::info('Payment response', [
+                'http_code' => $httpCode,
+                'body' => $body,
+                'json' => $result,
+            ]);
 
-        if (isset($result['url'])) {
-            // Сохраняем заказ в БД (опционально)
-            // DB::table('orders')->insert([...]);
+            if (isset($result['url'])) {
+                return redirect($result['url']);
+            }
 
-            return redirect($result['url']);
+            return back()->with('error', "Ошибка [{$httpCode}]: " . ($body ?: 'пустой ответ'));
+
+        } catch (\Exception $e) {
+            Log::error('Payment request failed: ' . $e->getMessage());
+            return back()->with('error', 'Ошибка соединения: ' . $e->getMessage());
         }
-
-        return back()->with('error', 'Ошибка создания платежа: ' . json_encode($result, JSON_UNESCAPED_UNICODE));
     }
 
     /**
