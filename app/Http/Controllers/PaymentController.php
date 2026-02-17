@@ -14,7 +14,7 @@ class PaymentController extends Controller
      * Допустимые тарифы: days => amount в KZT
      */
     private const TARIFFS = [
-        5  => 7592,
+        5  => 4000,
         10 => 10846,
         30 => 16268,
     ];
