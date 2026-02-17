@@ -75,7 +75,7 @@ class PaymentController extends Controller
             'urlSuccess'    => route('payment.success'),
             'urlFail'       => route('payment.fail'),
             'locale'        => 'ru',
-            'redirect'      => '0',
+            'redirect'      => '1',
             'payerId'       => (string) $user->id,
             'payerEmail'    => $user->email,
             'payerName'     => $user->fio ?? '',
@@ -157,11 +157,24 @@ class PaymentController extends Controller
 
         $secretKey = config('services.betatransfer.secret_key');
 
-        // Параметры из колбэка Betatransfer
-        $orderId      = $request->input('orderId');
-        $orderAmount  = $request->input('orderAmount');
-        $currency     = $request->input('currency');
+        // Параметры из колбэка
+        $orderId = $request->input('orderId');
+        $amount  = $request->input('amount');
+        $currency = $request->input('currency');
         $receivedSign = $request->input('sign');
+        $status  = $request->input('status');
+
+        // Проверяем подпись: md5(orderId + amount + currency + secretKey)
+        $expectedSign = md5($orderId . $amount . $currency . $secretKey);
+
+        if ($receivedSign !== $expectedSign) {
+            Log::warning('Payment callback: invalid signature', [
+                'order_id' => $orderId,
+                'expected' => $expectedSign,
+                'received' => $receivedSign,
+            ]);
+            return response('Invalid signature', 400);
+        }
 
         // Находим заказ
         $order = DB::table('orders')->where('order_id', $orderId)->first();
