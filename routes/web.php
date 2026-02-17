@@ -9,6 +9,12 @@ use App\Http\Controllers\ContactController;
 // Главная страница со списком объявлений
 Route::get('/', [PostController::class, 'index'])->name('home');
 
+// Редирект старых URL
+Route::get('/soderganki', function () { return redirect('/', 301); });
+
+// Правила сайта
+Route::get('/rules', function () { return view('rules'); })->name('rules');
+
 // Регистрация
 Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
 Route::post('/register', [AuthController::class, 'register'])->name('register.post');

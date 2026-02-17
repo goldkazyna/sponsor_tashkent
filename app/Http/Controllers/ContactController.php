@@ -153,7 +153,7 @@ class ContactController extends Controller
             'telegram.required' => 'Telegram обязателен для связи',
         ]);
 
-        $telegramMessage = "⭐ <b>Заявка на статус проверенного спонсора</b>\n\n";
+        $telegramMessage = "⭐ <b>Заявка на статус проверенного пользователя</b>\n\n";
 
         if ($request->name) {
             $telegramMessage .= "👤 <b>Имя:</b> {$request->name}\n";
