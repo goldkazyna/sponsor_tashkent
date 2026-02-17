@@ -46,6 +46,7 @@ class PaymentController extends Controller
             'orderId' => $orderId,
             'amount' => $amount,
             'currency' => $currency,
+            'paymentSystem' => 'card',
             'urlResult' => route('payment.callback'),
             'urlSuccess' => route('payment.success'),
             'urlFail' => route('payment.fail'),
