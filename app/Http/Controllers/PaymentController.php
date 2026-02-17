@@ -6,22 +6,18 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
+use Carbon\Carbon;
 
 class PaymentController extends Controller
 {
     /**
-     * Тестовая страница оплаты
+     * Допустимые тарифы: days => amount в KZT
      */
-    public function test()
-    {
-        if (!session('user_id')) {
-            return redirect()->route('login')->with('error', 'Для оплаты необходимо авторизоваться');
-        }
-
-        $user = DB::table('users')->where('id', session('user_id'))->first();
-
-        return view('payment.test', compact('user'));
-    }
+    private const TARIFFS = [
+        5  => 7592,
+        10 => 10846,
+        30 => 16268,
+    ];
 
     /**
      * Создать платёж и перенаправить на страницу оплаты
@@ -29,41 +25,68 @@ class PaymentController extends Controller
     public function createPayment(Request $request)
     {
         if (!session('user_id')) {
-            return redirect()->route('login');
+            return redirect()->route('login')->with('error', 'Для оплаты необходимо авторизоваться');
+        }
+
+        $request->validate([
+            'amount' => 'required|integer',
+            'days'   => 'required|integer|in:5,10,30',
+            'service' => 'required|string|in:verified_status,top_post',
+        ]);
+
+        $days = (int) $request->input('days');
+        $amount = (int) $request->input('amount');
+        $service = $request->input('service');
+
+        // Проверяем соответствие суммы тарифу
+        if (!isset(self::TARIFFS[$days]) || self::TARIFFS[$days] !== $amount) {
+            return back()->with('error', 'Некорректные параметры тарифа');
         }
 
         $user = DB::table('users')->where('id', session('user_id'))->first();
+        if (!$user) {
+            return redirect()->route('login')->with('error', 'Пользователь не найден');
+        }
+
+        $orderId = 'order_' . $user->id . '_' . time();
+
+        // Сохраняем заказ в БД
+        DB::table('orders')->insert([
+            'user_id'  => $user->id,
+            'email'    => $user->email,
+            'order_id' => $orderId,
+            'amount'   => $amount,
+            'days'     => $days,
+            'service'  => $service,
+            'status'   => 'pending',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
 
         $publicKey = config('services.betatransfer.public_key');
         $secretKey = config('services.betatransfer.secret_key');
 
-        $orderId = 'order_' . $user->id . '_' . time();
-        $amount = $request->input('amount', '100');
-        $currency = 'KZT';
-
-        // Собираем параметры (без sign)
         $postData = [
-            'orderId' => $orderId,
-            'amount' => $amount,
-            'currency' => $currency,
+            'orderId'       => $orderId,
+            'amount'        => (string) $amount,
+            'currency'      => 'KZT',
             'paymentSystem' => 'P2R_KZT',
-            'urlResult' => route('payment.callback'),
-            'urlSuccess' => route('payment.success'),
-            'urlFail' => route('payment.fail'),
-            'locale' => 'ru',
-            'redirect' => '1',
-            'payerId' => (string) $user->id,
-            'payerEmail' => $user->email,
-            'payerName' => $user->fio ?? '',
+            'urlResult'     => route('payment.callback'),
+            'urlSuccess'    => route('payment.success'),
+            'urlFail'       => route('payment.fail'),
+            'locale'        => 'ru',
+            'redirect'      => '1',
+            'payerId'       => (string) $user->id,
+            'payerEmail'    => $user->email,
+            'payerName'     => $user->fio ?? '',
         ];
 
         // Подпись: md5(все значения параметров + секретный ключ)
         $sign = md5(implode('', $postData) . $secretKey);
         $postData['sign'] = $sign;
 
-        Log::info('Payment request', $postData);
+        Log::info('Payment request', ['order_id' => $orderId, 'amount' => $amount, 'days' => $days]);
 
-        // Запрос к API (redirect=1, но не следуем за редиректом — берём URL из Location)
         try {
             $response = Http::timeout(30)
                 ->withOptions(['allow_redirects' => false])
@@ -78,7 +101,6 @@ class PaymentController extends Controller
 
             Log::info('Payment response', [
                 'http_code' => $httpCode,
-                'headers' => $response->headers(),
                 'body' => mb_substr($body, 0, 500),
             ]);
 
@@ -103,11 +125,25 @@ class PaymentController extends Controller
                 }
             }
 
-            return back()->with('error', "Ошибка [{$httpCode}]: " . mb_substr($body, 0, 200));
+            // Обновляем статус заказа при ошибке
+            DB::table('orders')->where('order_id', $orderId)->update([
+                'status'       => 'failed',
+                'payment_data' => json_encode(['error' => mb_substr($body, 0, 1000), 'http_code' => $httpCode]),
+                'updated_at'   => now(),
+            ]);
+
+            return back()->with('error', 'Ошибка при создании платежа. Попробуйте позже.');
 
         } catch (\Exception $e) {
             Log::error('Payment request failed: ' . $e->getMessage());
-            return back()->with('error', 'Ошибка соединения: ' . $e->getMessage());
+
+            DB::table('orders')->where('order_id', $orderId)->update([
+                'status'       => 'failed',
+                'payment_data' => json_encode(['exception' => $e->getMessage()]),
+                'updated_at'   => now(),
+            ]);
+
+            return back()->with('error', 'Ошибка соединения с платёжной системой. Попробуйте позже.');
         }
     }
 
@@ -119,15 +155,78 @@ class PaymentController extends Controller
     {
         Log::info('Payment callback received', $request->all());
 
-        // TODO: Проверка подписи
-        // TODO: Активация статуса пользователя
+        $secretKey = config('services.betatransfer.secret_key');
+
+        // Параметры из колбэка
+        $orderId = $request->input('orderId');
+        $amount  = $request->input('amount');
+        $currency = $request->input('currency');
+        $receivedSign = $request->input('sign');
+        $status  = $request->input('status');
+
+        // Проверяем подпись: md5(orderId + amount + currency + secretKey)
+        $expectedSign = md5($orderId . $amount . $currency . $secretKey);
+
+        if ($receivedSign !== $expectedSign) {
+            Log::warning('Payment callback: invalid signature', [
+                'order_id' => $orderId,
+                'expected' => $expectedSign,
+                'received' => $receivedSign,
+            ]);
+            return response('Invalid signature', 400);
+        }
+
+        // Находим заказ
+        $order = DB::table('orders')->where('order_id', $orderId)->first();
+
+        if (!$order) {
+            Log::warning('Payment callback: order not found', ['order_id' => $orderId]);
+            return response('Order not found', 404);
+        }
+
+        // Если заказ уже оплачен — не обрабатываем повторно
+        if ($order->status === 'paid') {
+            Log::info('Payment callback: order already paid', ['order_id' => $orderId]);
+            return response('OK', 200);
+        }
+
+        // Сохраняем данные колбэка
+        DB::table('orders')->where('order_id', $orderId)->update([
+            'status'       => 'paid',
+            'payment_data' => json_encode($request->all()),
+            'updated_at'   => now(),
+        ]);
+
+        // Активируем статус проверенного пользователя
+        if ($order->service === 'verified_status') {
+            $user = DB::table('users')->where('id', $order->user_id)->first();
+
+            if ($user) {
+                // Если у пользователя уже есть активный статус — продлеваем от prov_date
+                $baseDate = ($user->prov == 1 && $user->prov_date && Carbon::parse($user->prov_date)->isFuture())
+                    ? Carbon::parse($user->prov_date)
+                    : Carbon::now();
+
+                $newProvDate = $baseDate->addDays($order->days);
+
+                DB::table('users')->where('id', $order->user_id)->update([
+                    'prov'      => 1,
+                    'prov_date' => $newProvDate,
+                ]);
+
+                Log::info('Verified status activated', [
+                    'user_id'   => $order->user_id,
+                    'days'      => $order->days,
+                    'prov_date' => $newProvDate->toDateTimeString(),
+                ]);
+            }
+        }
 
         return response('OK', 200);
     }
 
     /**
      * Страница успешной оплаты
-     * GET /success_url
      */
     public function success(Request $request)
     {
@@ -136,7 +235,6 @@ class PaymentController extends Controller
 
     /**
      * Страница неудачной оплаты
-     * GET /fail
      */
     public function fail(Request $request)
     {

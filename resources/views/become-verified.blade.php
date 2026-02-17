@@ -7,8 +7,8 @@
 <link rel="stylesheet" href="{{ asset('css/cabinet.css') }}?v={{ time() }}">
 
 <style>
-.contact-container {
-    max-width: 700px;
+.verified-container {
+    max-width: 900px;
     margin: 2rem auto;
     padding: 0 1.5rem;
 }
@@ -40,91 +40,227 @@
     fill: currentColor;
 }
 
-.contact-form-wrapper {
-    background: white;
-    border-radius: 16px;
-    padding: 2.5rem;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-}
-
-.form-header {
+.verified-header {
     text-align: center;
-    margin-bottom: 2rem;
+    margin-bottom: 2.5rem;
 }
 
-.form-header h1 {
+.verified-header h1 {
     font-size: 1.8rem;
     font-weight: 700;
     color: #1a202c;
     margin-bottom: 0.75rem;
 }
 
-.form-header p {
+.verified-header p {
     color: #64748b;
     font-size: 0.95rem;
     line-height: 1.6;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.tariffs-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.tariff-card {
+    background: white;
+    border-radius: 16px;
+    padding: 2rem 1.5rem;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    text-align: center;
+    position: relative;
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.tariff-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+}
+
+.tariff-card.popular {
+    border-color: #3b82f6;
 }
 
 .tariff-badge {
-    display: inline-block;
+    position: absolute;
+    top: -12px;
+    left: 50%;
+    transform: translateX(-50%);
     background: linear-gradient(135deg, #3b82f6, #2563eb);
     color: white;
-    padding: 0.4rem 1rem;
+    padding: 0.3rem 1rem;
     border-radius: 20px;
-    font-size: 0.85rem;
+    font-size: 0.75rem;
     font-weight: 600;
-    margin-top: 0.75rem;
+    white-space: nowrap;
 }
 
-.warning-notice {
-    background: #fffbeb;
-    border: 2px solid #fcd34d;
-    border-radius: 12px;
-    padding: 1.25rem;
-    margin-bottom: 2rem;
-    display: flex;
-    gap: 1rem;
+.tariff-days {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: #1a202c;
+    line-height: 1;
+    margin-bottom: 0.25rem;
 }
 
-.warning-notice svg {
-    width: 24px;
-    height: 24px;
-    fill: #d97706;
-    flex-shrink: 0;
-    margin-top: 2px;
-}
-
-.warning-notice-text {
-    color: #92400e;
+.tariff-days-label {
+    color: #64748b;
     font-size: 0.9rem;
-    line-height: 1.6;
+    margin-bottom: 1.5rem;
 }
 
-.privacy-notice {
-    background: #f0f9ff;
-    border: 2px solid #bfdbfe;
-    border-radius: 12px;
-    padding: 1.25rem;
-    margin-bottom: 2rem;
+.tariff-price {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #1a202c;
+    margin-bottom: 0.25rem;
+}
+
+.tariff-price-usd {
+    color: #94a3b8;
+    font-size: 0.85rem;
+    margin-bottom: 1.5rem;
+}
+
+.tariff-features {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 1.5rem;
+    text-align: left;
+}
+
+.tariff-features li {
+    padding: 0.4rem 0;
+    font-size: 0.85rem;
+    color: #475569;
     display: flex;
-    gap: 1rem;
+    align-items: center;
+    gap: 0.5rem;
 }
 
-.privacy-notice svg {
-    width: 24px;
-    height: 24px;
-    fill: #2563eb;
+.tariff-features li svg {
+    width: 16px;
+    height: 16px;
+    fill: #22c55e;
     flex-shrink: 0;
 }
 
-.privacy-notice-text {
-    color: #1e40af;
+.tariff-btn {
+    width: 100%;
+    padding: 0.85rem 1rem;
+    border: none;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    color: white;
+    background: #1a202c;
+}
+
+.tariff-btn:hover {
+    background: #2d3748;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(26,32,44,0.3);
+}
+
+.tariff-card.popular .tariff-btn {
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+}
+
+.tariff-card.popular .tariff-btn:hover {
+    box-shadow: 0 4px 12px rgba(59,130,246,0.4);
+}
+
+.tariff-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+.verified-info {
+    background: white;
+    border-radius: 16px;
+    padding: 2rem;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+}
+
+.verified-info h3 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #1a202c;
+    margin-bottom: 1rem;
+}
+
+.info-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+}
+
+.info-list li {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.9rem;
+    color: #475569;
+}
+
+.info-list li svg {
+    width: 20px;
+    height: 20px;
+    fill: #3b82f6;
+    flex-shrink: 0;
+}
+
+.error-message {
+    background: #fee2e2;
+    border: 2px solid #fca5a5;
+    color: #991b1b;
+    padding: 1rem;
+    border-radius: 10px;
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+
+.help-form-wrapper {
+    background: white;
+    border-radius: 16px;
+    padding: 2.5rem;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    margin-top: 2rem;
+}
+
+.help-form-header {
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+
+.help-form-header h3 {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #1a202c;
+    margin-bottom: 0.5rem;
+}
+
+.help-form-header p {
+    color: #64748b;
     font-size: 0.9rem;
     line-height: 1.6;
 }
 
 .form-group {
-    margin-bottom: 1.5rem;
+    margin-bottom: 1.25rem;
 }
 
 .form-label {
@@ -210,7 +346,7 @@
 }
 
 .success-message,
-.error-message {
+.error-message-form {
     padding: 1rem;
     border-radius: 10px;
     margin-bottom: 1.5rem;
@@ -223,28 +359,39 @@
     color: #065f46;
 }
 
-.error-message {
+.error-message-form {
     background: #fee2e2;
     border: 2px solid #fca5a5;
     color: #991b1b;
 }
 
 @media (max-width: 768px) {
-    .contact-container {
-        padding: 0;
+    .verified-container {
+        padding: 0 1rem;
     }
 
-    .contact-form-wrapper {
+    .tariffs-grid {
+        grid-template-columns: 1fr;
+        max-width: 400px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .info-list {
+        grid-template-columns: 1fr;
+    }
+
+    .verified-header h1 {
+        font-size: 1.4rem;
+    }
+
+    .help-form-wrapper {
         padding: 1.75rem;
-    }
-
-    .form-header h1 {
-        font-size: 1.5rem;
     }
 }
 </style>
 
-<div class="contact-container">
+<div class="verified-container">
 
     <a href="{{ route('home') }}" class="back-button">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
@@ -253,100 +400,172 @@
         На главную
     </a>
 
-    <div class="contact-form-wrapper">
+    <div class="verified-header">
+        <h1>Купить статус проверенного пользователя</h1>
+        <p>Получите значок проверенного пользователя и повысьте доверие к вашему профилю. Выберите подходящий тариф:</p>
+    </div>
 
-        <div class="form-header">
-            <h1>Купить статус проверенного пользователя</h1>
-            <p>Получите значок проверенного пользователя и повысьте доверие к вашему профилю</p>
-            <div class="tariff-badge">Тариф: 30 дней</div>
+    @if(session('error'))
+        <div class="error-message">{{ session('error') }}</div>
+    @endif
+
+    <div class="tariffs-grid">
+
+        {{-- 5 дней --}}
+        <div class="tariff-card">
+            <div class="tariff-days">5</div>
+            <div class="tariff-days-label">дней</div>
+            <div class="tariff-price">7 592 ₸</div>
+            <div class="tariff-price-usd">~ $14</div>
+            <ul class="tariff-features">
+                <li>
+                    <svg viewBox="0 0 24 24"><path d="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z"/></svg>
+                    Значок проверенного
+                </li>
+                <li>
+                    <svg viewBox="0 0 24 24"><path d="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z"/></svg>
+                    Повышенное доверие
+                </li>
+                <li>
+                    <svg viewBox="0 0 24 24"><path d="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z"/></svg>
+                    Больше откликов
+                </li>
+            </ul>
+            <form action="{{ route('payment.create') }}" method="POST">
+                @csrf
+                <input type="hidden" name="amount" value="7592">
+                <input type="hidden" name="days" value="5">
+                <input type="hidden" name="service" value="verified_status">
+                <button type="submit" class="tariff-btn">Оплатить</button>
+            </form>
         </div>
 
-        <!-- Предупреждение -->
-        <div class="warning-notice">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                <path d="M13,13H11V7H13M13,17H11V15H13M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2Z"/>
-            </svg>
-            <div class="warning-notice-text">
-                <strong>Важно!</strong> В связи с постоянными блокировками карт, оплата производится по следующей схеме: заполните форму ниже и <strong>обязательно укажите ваш Telegram</strong>. Мы свяжемся с вами и сообщим реквизиты для перевода.
-            </div>
+        {{-- 10 дней --}}
+        <div class="tariff-card">
+            <div class="tariff-days">10</div>
+            <div class="tariff-days-label">дней</div>
+            <div class="tariff-price">10 846 ₸</div>
+            <div class="tariff-price-usd">~ $20</div>
+            <ul class="tariff-features">
+                <li>
+                    <svg viewBox="0 0 24 24"><path d="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z"/></svg>
+                    Значок проверенного
+                </li>
+                <li>
+                    <svg viewBox="0 0 24 24"><path d="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z"/></svg>
+                    Повышенное доверие
+                </li>
+                <li>
+                    <svg viewBox="0 0 24 24"><path d="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z"/></svg>
+                    Больше откликов
+                </li>
+            </ul>
+            <form action="{{ route('payment.create') }}" method="POST">
+                @csrf
+                <input type="hidden" name="amount" value="10846">
+                <input type="hidden" name="days" value="10">
+                <input type="hidden" name="service" value="verified_status">
+                <button type="submit" class="tariff-btn">Оплатить</button>
+            </form>
         </div>
 
-        <!-- Конфиденциальность -->
-        <div class="privacy-notice">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                <path d="M12,1L3,5V11C3,16.55 6.84,21.74 12,23C17.16,21.74 21,16.55 21,11V5L12,1M12,5A3,3 0 0,1 15,8A3,3 0 0,1 12,11A3,3 0 0,1 9,8A3,3 0 0,1 12,5M17.13,17C15.92,18.85 14.11,20.24 12,20.92C9.89,20.24 8.08,18.85 6.87,17C6.53,16.5 6.24,16 6,15.47C6,13.82 8.71,12.47 12,12.47C15.29,12.47 18,13.79 18,15.47C17.76,16 17.47,16.5 17.13,17Z"/>
-            </svg>
-            <div class="privacy-notice-text">
-                <strong>Полная конфиденциальность:</strong> Ваши данные будут переданы только администрации сайта и никогда не будут доступны третьим лицам.
-            </div>
+        {{-- 30 дней --}}
+        <div class="tariff-card popular">
+            <div class="tariff-badge">Популярный</div>
+            <div class="tariff-days">30</div>
+            <div class="tariff-days-label">дней</div>
+            <div class="tariff-price">16 268 ₸</div>
+            <div class="tariff-price-usd">~ $30</div>
+            <ul class="tariff-features">
+                <li>
+                    <svg viewBox="0 0 24 24"><path d="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z"/></svg>
+                    Значок проверенного
+                </li>
+                <li>
+                    <svg viewBox="0 0 24 24"><path d="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z"/></svg>
+                    Повышенное доверие
+                </li>
+                <li>
+                    <svg viewBox="0 0 24 24"><path d="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z"/></svg>
+                    Максимальная выгода
+                </li>
+            </ul>
+            <form action="{{ route('payment.create') }}" method="POST">
+                @csrf
+                <input type="hidden" name="amount" value="16268">
+                <input type="hidden" name="days" value="30">
+                <input type="hidden" name="service" value="verified_status">
+                <button type="submit" class="tariff-btn">Оплатить</button>
+            </form>
         </div>
 
-        <!-- Сообщения -->
+    </div>
+
+    <div class="verified-info">
+        <h3>Что даёт статус проверенного?</h3>
+        <ul class="info-list">
+            <li>
+                <svg viewBox="0 0 24 24"><path d="M23,12L20.56,9.22L20.9,5.54L17.29,4.72L15.4,1.54L12,3L8.6,1.54L6.71,4.72L3.1,5.53L3.44,9.21L1,12L3.44,14.78L3.1,18.47L6.71,19.29L8.6,22.47L12,21L15.4,22.46L17.29,19.28L20.9,18.46L20.56,14.78L23,12M10,17L6,13L7.41,11.59L10,14.17L16.59,7.58L18,9L10,17Z"/></svg>
+                Значок верификации на профиле
+            </li>
+            <li>
+                <svg viewBox="0 0 24 24"><path d="M12,17.27L18.18,21L16.54,13.97L22,9.24L14.81,8.63L12,2L9.19,8.63L2,9.24L7.46,13.97L5.82,21L12,17.27Z"/></svg>
+                Приоритет в результатах поиска
+            </li>
+            <li>
+                <svg viewBox="0 0 24 24"><path d="M12,1L3,5V11C3,16.55 6.84,21.74 12,23C17.16,21.74 21,16.55 21,11V5L12,1M12,5A3,3 0 0,1 15,8A3,3 0 0,1 12,11A3,3 0 0,1 9,8A3,3 0 0,1 12,5Z"/></svg>
+                Повышенное доверие пользователей
+            </li>
+            <li>
+                <svg viewBox="0 0 24 24"><path d="M20,2H4A2,2 0 0,0 2,4V22L6,18H20A2,2 0 0,0 22,16V4A2,2 0 0,0 20,2M20,16H6L4,18V4H20"/></svg>
+                Больше откликов на объявления
+            </li>
+        </ul>
+    </div>
+
+    {{-- Форма помощи --}}
+    <div class="help-form-wrapper">
+
+        <div class="help-form-header">
+            <h3>Нужна помощь с оплатой?</h3>
+            <p>Заполните форму ниже или напишите напрямую нам в Telegram — <a href="https://t.me/Sponsor_admin" target="_blank" style="color: #3b82f6; font-weight: 600; text-decoration: none;">@Sponsor_admin</a></p>
+        </div>
+
         <div class="success-message" id="successMessage"></div>
-        <div class="error-message" id="errorMessage"></div>
+        <div class="error-message-form" id="errorMessage"></div>
 
-        <form id="verifiedForm">
+        <form id="helpForm">
             @csrf
 
-            <!-- Имя -->
             <div class="form-group">
                 <label class="form-label">Имя</label>
-                <input
-                    type="text"
-                    name="name"
-                    class="form-input"
-                    placeholder="Ваше имя"
-                    value="{{ $user->fio ?? '' }}"
-                >
+                <input type="text" name="name" class="form-input" placeholder="Ваше имя" value="{{ $user->fio ?? '' }}">
             </div>
 
-            <!-- Email -->
             <div class="form-group">
                 <label class="form-label required">Email</label>
-                <input
-                    type="email"
-                    name="email"
-                    class="form-input"
-                    placeholder="your@email.com"
-                    value="{{ $user->email ?? '' }}"
-                    {{ $user ? 'readonly' : '' }}
-                    required
-                >
+                <input type="email" name="email" class="form-input" placeholder="your@email.com" value="{{ $user->email ?? '' }}" {{ $user ? 'readonly' : '' }} required>
                 @if($user)
                     <div class="form-helper">Email из вашего профиля</div>
                 @endif
             </div>
 
-            <!-- Telegram -->
             <div class="form-group">
                 <label class="form-label required">Ваш Telegram</label>
-                <input
-                    type="text"
-                    name="telegram"
-                    class="form-input"
-                    placeholder="@username"
-                    value="{{ ($user->telegram_username ?? null) ? '@' . $user->telegram_username : '' }}"
-                    required
-                >
-                <div class="form-helper">Обязательно укажите Telegram — мы свяжемся с вами для уточнения реквизитов оплаты</div>
+                <input type="text" name="telegram" class="form-input" placeholder="@username" value="{{ ($user->telegram_username ?? null) ? '@' . $user->telegram_username : '' }}" required>
+                <div class="form-helper">Укажите Telegram — мы свяжемся с вами для помощи</div>
             </div>
 
-            <!-- Комментарий -->
             <div class="form-group">
                 <label class="form-label">Комментарий</label>
-                <textarea
-                    name="message"
-                    class="form-textarea"
-                    placeholder="Дополнительная информация (необязательно)..."
-                ></textarea>
+                <textarea name="message" class="form-textarea" placeholder="Опишите вашу проблему или вопрос..."></textarea>
             </div>
 
-            <!-- Кнопка -->
             <button type="submit" class="submit-button" id="submitBtn">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                    <path d="M23,12L20.56,9.22L20.9,5.54L17.29,4.72L15.4,1.54L12,3L8.6,1.54L6.71,4.72L3.1,5.53L3.44,9.21L1,12L3.44,14.78L3.1,18.47L6.71,19.29L8.6,22.47L12,21L15.4,22.46L17.29,19.28L20.9,18.46L20.56,14.78L23,12M10,17L6,13L7.41,11.59L10,14.17L16.59,7.58L18,9L10,17Z"/>
+                    <path d="M2,21L23,12L2,3V10L17,12L2,14V21Z"/>
                 </svg>
-                Отправить заявку
+                Отправить
             </button>
 
         </form>
@@ -356,7 +575,7 @@
 </div>
 
 <script>
-document.getElementById('verifiedForm').addEventListener('submit', function(e) {
+document.getElementById('helpForm').addEventListener('submit', function(e) {
     e.preventDefault();
 
     const submitBtn = document.getElementById('submitBtn');
@@ -367,13 +586,13 @@ document.getElementById('verifiedForm').addEventListener('submit', function(e) {
     errorMsg.style.display = 'none';
 
     submitBtn.disabled = true;
-    submitBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="width:20px;height:20px;fill:white;"><path d="M12,4V2A10,10 0 0,0 2,12H4A8,8 0 0,1 12,4Z"/></svg> Отправка...';
+    submitBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="width:20px;height:20px;fill:white;animation:spin 1s linear infinite;"><path d="M12,4V2A10,10 0 0,0 2,12H4A8,8 0 0,1 12,4Z"/></svg> Отправка...';
 
     const data = {
-        name: document.querySelector('[name="name"]').value,
-        email: document.querySelector('[name="email"]').value,
-        telegram: document.querySelector('[name="telegram"]').value,
-        message: document.querySelector('[name="message"]').value,
+        name: this.querySelector('[name="name"]').value,
+        email: this.querySelector('[name="email"]').value,
+        telegram: this.querySelector('[name="telegram"]').value,
+        message: this.querySelector('[name="message"]').value,
     };
 
     fetch('{{ route("become.verified.send") }}', {
@@ -395,7 +614,7 @@ document.getElementById('verifiedForm').addEventListener('submit', function(e) {
         if (data.success) {
             successMsg.textContent = data.message;
             successMsg.style.display = 'block';
-            document.getElementById('verifiedForm').reset();
+            document.getElementById('helpForm').reset();
             successMsg.scrollIntoView({ behavior: 'smooth', block: 'center' });
         } else {
             errorMsg.textContent = data.message || 'Произошла ошибка при отправке';
@@ -409,7 +628,7 @@ document.getElementById('verifiedForm').addEventListener('submit', function(e) {
     })
     .finally(() => {
         submitBtn.disabled = false;
-        submitBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="width:20px;height:20px;fill:white;"><path d="M23,12L20.56,9.22L20.9,5.54L17.29,4.72L15.4,1.54L12,3L8.6,1.54L6.71,4.72L3.1,5.53L3.44,9.21L1,12L3.44,14.78L3.1,18.47L6.71,19.29L8.6,22.47L12,21L15.4,22.46L17.29,19.28L20.9,18.46L20.56,14.78L23,12M10,17L6,13L7.41,11.59L10,14.17L16.59,7.58L18,9L10,17Z"/></svg> Отправить заявку';
+        submitBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="width:20px;height:20px;fill:white;"><path d="M2,21L23,12L2,3V10L17,12L2,14V21Z"/></svg> Отправить';
     });
 });
 </script>
