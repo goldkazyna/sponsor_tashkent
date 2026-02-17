@@ -85,7 +85,7 @@ class PaymentController extends Controller
             return redirect($result['url']);
         }
 
-        return back()->with('error', 'Ошибка создания платежа: ' . ($result['status'] ?? 'unknown error'));
+        return back()->with('error', 'Ошибка создания платежа: ' . json_encode($result, JSON_UNESCAPED_UNICODE));
     }
 
     /**
