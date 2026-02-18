@@ -150,7 +150,7 @@ class TelegramBotController extends Controller
                 break;
 
             case 'register_sex':
-                $sexMap = ['🤵 Спонсор' => 1, '💃 Содержанка' => 2];
+                $sexMap = ['👨 Мужчина' => 1, '👩 Женщина' => 2];
 
                 if (!isset($sexMap[$text])) {
                     $this->sendMessage($chatId, "❌ Выберите один из вариантов:", $this->getSexKeyboard());
@@ -321,7 +321,7 @@ class TelegramBotController extends Controller
     {
         return [
             'keyboard' => [
-                [['text' => '🤵 Спонсор'], ['text' => '💃 Содержанка']],
+                [['text' => '👨 Мужчина'], ['text' => '👩 Женщина']],
                 [['text' => '❌ Отмена']],
             ],
             'resize_keyboard' => true,
