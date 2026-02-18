@@ -374,7 +374,7 @@ class TelegramBotController extends Controller
 
         $text = "{$hearts}{$post->title}{$hearts}\n";
         $text .= "------------------------------\n";
-        $text .= "🚩 {$post->city}\n";
+        $text .= "🚩 Казахстан/{$post->city}\n";
         $text .= "📅 {$date}\n";
         $text .= "{$sexLabel}\n";
         $text .= "{$whoLabel}\n";
