@@ -614,7 +614,7 @@
 
                 <div class="card-body-v2">
                     <div class="views-trusted-v2">
-                        <div class="views-v2">👁 {{ $post->top_views }} просмотров</div>
+                        <div class="views-v2">👁 {{ $post->view }} просмотров</div>
                         @if(!empty($postUser) && $postUser->prov == 1)
                             <div class="trusted-sponsor-v2">✓ Проверенный пользователь</div>
                         @endif
