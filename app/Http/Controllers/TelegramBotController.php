@@ -411,6 +411,9 @@ class TelegramBotController extends Controller
         if ($user) {
             $name = $post->fio ?: 'Не указано';
             $tg = $post->telegram ?: 'Не указан';
+            if ($tg !== 'Не указан' && !str_starts_with($tg, '@')) {
+                $tg = '@' . $tg;
+            }
             $text .= "👤 Имя: {$name}\n";
             $text .= "📩 Telegram: {$tg}\n";
         } else {
