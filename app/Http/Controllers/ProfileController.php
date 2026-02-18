@@ -228,9 +228,9 @@ public function settings()
                 'fio' => $request->input('fio'),
                 'discription' => $request->input('discription'),
                 'city' => $request->input('city'),
-                'phone' => $request->input('phone', ''),
-                'telegram' => $request->input('telegram', ''),
-                'whats' => $request->input('whats', '')
+                'phone' => $request->input('phone') ?? '',
+                'telegram' => $request->input('telegram') ?? '',
+                'whats' => $request->input('whats') ?? ''
             ]);
 
         // Обрабатываем новые фото если есть
