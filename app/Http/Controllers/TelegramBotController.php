@@ -278,7 +278,8 @@ class TelegramBotController extends Controller
                 break;
 
             case '🔍 Просмотреть объявления':
-                $this->sendMessage($chatId, "🏙 Выберите город:", $this->getCityKeyboard());
+                $this->sendMessage($chatId, "🏙 Выберите город или смотрите все объявления:", $this->getCityKeyboard());
+                $this->handleViewPosts($chatId, $user, 1);
                 break;
 
             case '➕ Добавить объявление':
@@ -481,7 +482,7 @@ class TelegramBotController extends Controller
      */
     private function getCityKeyboard(): array
     {
-        $cities = DB::table('city')->orderBy('title')->get();
+        $cities = DB::table('city')->orderBy('id')->get();
         $keyboard = [[['text' => '🏠 Главное меню']]];
         $row = [];
 
