@@ -29,14 +29,16 @@ class PaymentController extends Controller
         }
 
         $request->validate([
-            'amount' => 'required|integer',
-            'days'   => 'required|integer|in:5,10,30',
+            'amount'  => 'required|integer',
+            'days'    => 'required|integer|in:5,10,30',
             'service' => 'required|string|in:verified_status,top_post',
+            'post_id' => 'nullable|integer',
         ]);
 
         $days = (int) $request->input('days');
         $amount = (int) $request->input('amount');
         $service = $request->input('service');
+        $postId = $request->input('post_id');
 
         // Проверяем соответствие суммы тарифу
         if (!isset(self::TARIFFS[$days]) || self::TARIFFS[$days] !== $amount) {
@@ -57,6 +59,7 @@ class PaymentController extends Controller
             'order_id' => $orderId,
             'amount'   => $amount,
             'days'     => $days,
+            'post_id'  => $postId,
             'service'  => $service,
             'status'   => 'pending',
             'created_at' => now(),
@@ -194,12 +197,11 @@ class PaymentController extends Controller
             'updated_at'   => now(),
         ]);
 
-        // Активируем статус проверенного пользователя
+        // Активируем услугу
         if ($order->service === 'verified_status') {
             $user = DB::table('users')->where('id', $order->user_id)->first();
 
             if ($user) {
-                // Если у пользователя уже есть активный статус — продлеваем от prov_date
                 $baseDate = ($user->prov == 1 && $user->prov_date && Carbon::parse($user->prov_date)->isFuture())
                     ? Carbon::parse($user->prov_date)
                     : Carbon::now();
@@ -217,6 +219,40 @@ class PaymentController extends Controller
                     'prov_date' => $newProvDate->toDateTimeString(),
                 ]);
             }
+        }
+
+        if ($order->service === 'top_post' && $order->post_id) {
+            $dateEnd = Carbon::now()->addDays($order->days);
+
+            // Сбрасываем count_view у всех топ-объявлений
+            DB::table('top_post')->update(['count_view' => 0]);
+
+            // Проверяем, есть ли уже этот пост в топе
+            $existing = DB::table('top_post')->where('id_post', $order->post_id)->first();
+
+            if ($existing) {
+                // Продлеваем срок
+                $baseDate = Carbon::parse($existing->date_end)->isFuture()
+                    ? Carbon::parse($existing->date_end)
+                    : Carbon::now();
+
+                DB::table('top_post')->where('id_post', $order->post_id)->update([
+                    'date_end'   => $baseDate->addDays($order->days),
+                    'count_view' => 0,
+                ]);
+            } else {
+                DB::table('top_post')->insert([
+                    'id_post'    => $order->post_id,
+                    'count_view' => 0,
+                    'date_end'   => $dateEnd,
+                ]);
+            }
+
+            Log::info('Top post activated', [
+                'post_id'  => $order->post_id,
+                'days'     => $order->days,
+                'date_end' => $dateEnd->toDateTimeString(),
+            ]);
         }
 
         return response('OK', 200);

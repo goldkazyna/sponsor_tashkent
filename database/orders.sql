@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS `orders` (
     `order_id` VARCHAR(100) NOT NULL,
     `amount` DECIMAL(10, 2) NOT NULL,
     `days` INT NOT NULL,
+    `post_id` BIGINT UNSIGNED NULL,
     `service` VARCHAR(50) NOT NULL DEFAULT 'verified_status',
     `status` VARCHAR(20) NOT NULL DEFAULT 'pending',
     `payment_data` JSON NULL,
@@ -15,3 +16,6 @@ CREATE TABLE IF NOT EXISTS `orders` (
     KEY `orders_user_id_index` (`user_id`),
     KEY `orders_status_index` (`status`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Добавить post_id если таблица уже существует:
+-- ALTER TABLE `orders` ADD COLUMN `post_id` BIGINT UNSIGNED NULL AFTER `days`;
