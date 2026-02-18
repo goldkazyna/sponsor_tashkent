@@ -171,12 +171,21 @@
                                         </svg>
                                         Редактировать
                                     </a>
+                                    @if($post->is_top)
+                                    <span class="post-btn" style="background: linear-gradient(135deg, #f59e0b, #d97706); color: white; cursor: default;">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="width: 14px; height: 14px; fill: white; display: inline-block; vertical-align: middle; margin-right: 4px;">
+                                            <path d="M12,17.27L18.18,21L16.54,13.97L22,9.24L14.81,8.62L12,2L9.19,8.62L2,9.24L7.45,13.97L5.82,21L12,17.27Z"/>
+                                        </svg>
+                                        В ТОПе
+                                    </span>
+                                    @else
                                     <a href="/boost-top?post_id={{ $post->id }}" class="post-btn post-btn-top">
                                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="width: 14px; height: 14px; fill: currentColor; display: inline-block; vertical-align: middle; margin-right: 4px;">
                                             <path d="M12,17.27L18.18,21L16.54,13.97L22,9.24L14.81,8.62L12,2L9.19,8.62L2,9.24L7.45,13.97L5.82,21L12,17.27Z"/>
                                         </svg>
                                         Поднять в ТОП
                                     </a>
+                                    @endif
                                     <button class="post-btn post-btn-delete" onclick="deletePost({{ $post->id }})">
                                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="width: 14px; height: 14px; fill: currentColor; display: inline-block; vertical-align: middle; margin-right: 4px;">
                                             <path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"/>

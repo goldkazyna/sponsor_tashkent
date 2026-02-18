@@ -31,6 +31,12 @@ class ProfileController extends Controller
             ->orderBy('date', 'desc')
             ->get();
 
+        // Получаем ID постов в активном топе
+        $topPostIds = DB::table('top_post')
+            ->where('date_end', '>=', now())
+            ->pluck('id_post')
+            ->toArray();
+
         // Для каждого поста получаем первое фото и название города
         foreach ($posts as $post) {
             $post->cover_img = DB::table('gallery')
@@ -38,6 +44,7 @@ class ProfileController extends Controller
                 ->first();
             $cityRow = DB::table('city')->where('id', $post->city)->first();
             $post->city_name = $cityRow ? $cityRow->title : $post->city;
+            $post->is_top = in_array($post->id, $topPostIds);
         }
 
         return view('profile.index', [
