@@ -9,13 +9,39 @@ $popularCities = $allCities->take(7);
 
 // Получаем выбранный город из параметра (по умолчанию 'all')
 $selectedCity = request()->get('city', 'all');
+$selectedWho = request()->get('who', 'all');
 ?>
 
 <div class="city-filter-v2-improved">
     <div class="filter-container-v2-improved">
-        
+
+        <!-- Фильтр "Кого ищу" -->
+        <div class="who-filter-v2">
+            <div class="who-filter-label">КОГО ИЩУ</div>
+            <div class="who-buttons-v2">
+                <label class="who-radio-v2 {{ $selectedWho === 'all' ? 'active' : '' }}">
+                    <input type="radio" name="who" value="all" {{ $selectedWho === 'all' ? 'checked' : '' }} onchange="applyWhoFilter('all')">
+                    <span class="who-radio-dot"></span>
+                    Все
+                </label>
+                <label class="who-radio-v2 {{ $selectedWho === '1' ? 'active' : '' }}">
+                    <input type="radio" name="who" value="1" {{ $selectedWho === '1' ? 'checked' : '' }} onchange="applyWhoFilter('1')">
+                    <span class="who-radio-dot"></span>
+                    ♂ Мужчину
+                </label>
+                <label class="who-radio-v2 {{ $selectedWho === '2' ? 'active' : '' }}">
+                    <input type="radio" name="who" value="2" {{ $selectedWho === '2' ? 'checked' : '' }} onchange="applyWhoFilter('2')">
+                    <span class="who-radio-dot"></span>
+                    ♀ Девушку
+                </label>
+            </div>
+        </div>
+
+        <div class="filter-divider-v2"></div>
+
         <!-- Десктопная версия -->
         <div class="desktop-filter-v2">
+            <div class="who-filter-label">ГОРОД</div>
             <div class="city-buttons-v2">
                 <button class="city-btn-v2 {{ $selectedCity === 'all' ? 'active' : '' }}" data-city="all">
                     Все города
@@ -88,6 +114,81 @@ $selectedCity = request()->get('city', 'all');
 </div>
 
 <style>
+/* Фильтр "Кого ищу" */
+.who-filter-v2 {
+    padding: 0 4px 8px;
+}
+
+.who-filter-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #9ca3af;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+}
+
+.who-buttons-v2 {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+}
+
+.who-radio-v2 {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    color: #475569;
+    padding: 6px 14px;
+    border-radius: 20px;
+    border: 2px solid transparent;
+    transition: all 0.2s ease;
+}
+
+.who-radio-v2 input[type="radio"] {
+    display: none;
+}
+
+.who-radio-dot {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    border: 2px solid #cbd5e1;
+    position: relative;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.who-radio-v2.active .who-radio-dot {
+    border-color: #f59e0b;
+}
+
+.who-radio-v2.active .who-radio-dot::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #f59e0b;
+}
+
+.who-radio-v2.active {
+    color: #f59e0b;
+    border-color: #fef3c7;
+    background: #fffbeb;
+}
+
+.filter-divider-v2 {
+    height: 1px;
+    background: #e5e7eb;
+    margin: 8px 4px 12px;
+}
+
 /* ВАРИАНТ 2 - УЛУЧШЕННЫЙ */
 .city-filter-v2-improved {
     max-width: 1200px;
@@ -439,18 +540,16 @@ function closeModalV2Improved(event) {
 
 // Выбрать город - РЕАЛЬНАЯ ФИЛЬТРАЦИЯ
 function selectCityV2Improved(cityName) {
-    // Формируем URL с параметром города
     const url = new URL(window.location.href);
-    
+
     if (cityName === 'all') {
-        // Если выбран "Все города", убираем параметр city
         url.searchParams.delete('city');
     } else {
-        // Устанавливаем параметр city
         url.searchParams.set('city', cityName);
     }
-    
-    // Переходим на новый URL
+    // Сбрасываем на первую страницу
+    url.searchParams.delete('page');
+
     window.location.href = url.toString();
 }
 
@@ -461,6 +560,19 @@ document.querySelectorAll('.city-btn-v2:not(.more-cities-btn-v2)').forEach(btn =
         selectCityV2Improved(city);
     });
 });
+
+// Фильтр "Кого ищу"
+function applyWhoFilter(who) {
+    const url = new URL(window.location.href);
+    if (who === 'all') {
+        url.searchParams.delete('who');
+    } else {
+        url.searchParams.set('who', who);
+    }
+    // Сбрасываем на первую страницу
+    url.searchParams.delete('page');
+    window.location.href = url.toString();
+}
 
 // Закрытие модального окна по Escape
 document.addEventListener('keydown', function(e) {

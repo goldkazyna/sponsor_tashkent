@@ -13,15 +13,21 @@ class PostController extends Controller
     // Показать главную страницу со списком объявлений
 	public function index(Request $request)
 	{
-		// Получаем параметр города из запроса
+		// Получаем параметры фильтров
 		$selectedCity = $request->get('city', 'all');
-		
+		$selectedWho = $request->get('who', 'all');
+
 		// Строим запрос постов
 		$query = DB::table('post')->where('del', 0);
-		
-		// Если выбран конкретный город (не "all"), добавляем фильтр
+
+		// Фильтр по городу
 		if ($selectedCity !== 'all' && !empty($selectedCity)) {
 			$query->where('city', $selectedCity);
+		}
+
+		// Фильтр "Кого ищу" (who: 1=спонсор ищет женщину, 2=содержанка ищет мужчину)
+		if ($selectedWho !== 'all' && in_array($selectedWho, ['1', '2'])) {
+			$query->where('who', $selectedWho);
 		}
 		
 		// Сортировка по id DESC (новые первыми) и пагинация
@@ -49,7 +55,7 @@ class PostController extends Controller
 		}
 
 		// Добавляем параметр города к пагинации
-		$posts->appends(['city' => $selectedCity]);
+		$posts->appends(['city' => $selectedCity, 'who' => $selectedWho]);
 		
 		// ТОП объявления: 2 с наименьшим count_view (активные по date_end)
 		$topPosts = DB::table('top_post')
