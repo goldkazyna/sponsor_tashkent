@@ -244,6 +244,8 @@ class PaymentController extends Controller
                         'id_post'    => $order->post_id,
                         'count_view' => 0,
                         'date_end'   => $dateEnd,
+                        'created_at' => now(),
+                        'updated_at' => now(),
                     ]);
                 }
 
