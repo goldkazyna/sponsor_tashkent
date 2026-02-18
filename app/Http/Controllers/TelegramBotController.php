@@ -179,11 +179,13 @@ class TelegramBotController extends Controller
             'callback_query_id' => $callback['id'],
         ]);
 
-        // Пагинация объявлений
+        // Пагинация объявлений: posts_page_{page}_{cityId}
         if (str_starts_with($data, 'posts_page_')) {
-            $page = (int) str_replace('posts_page_', '', $data);
+            $parts = explode('_', str_replace('posts_page_', '', $data));
+            $page = (int) ($parts[0] ?? 1);
+            $cityId = (int) ($parts[1] ?? 0);
             $user = DB::table('users')->where('telegram_id', $telegramId)->first();
-            $this->handleViewPosts($chatId, $user, $page);
+            $this->handleViewPosts($chatId, $user, $page, $cityId);
             return;
         }
 
@@ -276,7 +278,7 @@ class TelegramBotController extends Controller
                 break;
 
             case '🔍 Просмотреть объявления':
-                $this->handleViewPosts($chatId, $user, 1);
+                $this->sendMessage($chatId, "🏙 Выберите город:", $this->getCityKeyboard());
                 break;
 
             case '➕ Добавить объявление':
@@ -308,7 +310,19 @@ class TelegramBotController extends Controller
                 $this->sendMessage($chatId, "👋 Вы вышли из аккаунта.", $this->getGuestKeyboard());
                 break;
 
+            case '🏠 Главное меню':
+                $keyboard = $user ? $this->getAuthKeyboard() : $this->getGuestKeyboard();
+                $this->sendMessage($chatId, "📋 Главное меню:", $keyboard);
+                break;
+
             default:
+                // Проверяем, не город ли это
+                $city = DB::table('city')->where('title', $text)->first();
+                if ($city) {
+                    $this->handleViewPosts($chatId, $user, 1, $city->id);
+                    break;
+                }
+
                 $keyboard = $user ? $this->getAuthKeyboard() : $this->getGuestKeyboard();
                 $this->sendMessage($chatId, "Неизвестная команда. Выберите действие из меню:", $keyboard);
                 break;
@@ -318,25 +332,34 @@ class TelegramBotController extends Controller
     /**
      * Просмотр объявлений с пагинацией.
      */
-    private function handleViewPosts(int $chatId, ?object $user, int $page): void
+    private function handleViewPosts(int $chatId, ?object $user, int $page, int $cityId = 0): void
     {
         $perPage = 10;
-        $total = DB::table('post')->where('del', 0)->count();
+
+        $query = DB::table('post')->where('del', 0);
+        if ($cityId > 0) {
+            $query->where('city', $cityId);
+        }
+        $total = $query->count();
+
         $totalPages = max(1, ceil($total / $perPage));
         $page = max(1, min($page, $totalPages));
         $offset = ($page - 1) * $perPage;
 
-        $posts = DB::table('post')
+        $postsQuery = DB::table('post')
             ->leftJoin('city', 'post.city', '=', 'city.id')
             ->select('post.*', 'city.title as city_name')
-            ->where('post.del', 0)
-            ->orderByDesc('post.date')
+            ->where('post.del', 0);
+        if ($cityId > 0) {
+            $postsQuery->where('post.city', $cityId);
+        }
+        $posts = $postsQuery->orderByDesc('post.date')
             ->offset($offset)
             ->limit($perPage)
             ->get();
 
         if ($posts->isEmpty()) {
-            $this->sendMessage($chatId, "📭 Объявлений пока нет.");
+            $this->sendMessage($chatId, "📭 Объявлений в этом городе пока нет.");
             return;
         }
 
@@ -345,12 +368,13 @@ class TelegramBotController extends Controller
         }
 
         // Кнопки пагинации
+        $cityParam = $cityId > 0 ? "_{$cityId}" : "_0";
         $buttons = [];
         if ($page > 1) {
-            $buttons[] = ['text' => '◀ Предыдущая страница', 'callback_data' => "posts_page_" . ($page - 1)];
+            $buttons[] = ['text' => '◀ Предыдущая страница', 'callback_data' => "posts_page_" . ($page - 1) . $cityParam];
         }
         if ($page < $totalPages) {
-            $buttons[] = ['text' => '▶ Следующая страница', 'callback_data' => "posts_page_" . ($page + 1)];
+            $buttons[] = ['text' => '▶ Следующая страница', 'callback_data' => "posts_page_" . ($page + 1) . $cityParam];
         }
 
         $inline = [];
@@ -449,6 +473,33 @@ class TelegramBotController extends Controller
             ],
             'resize_keyboard' => true,
             'input_field_placeholder' => 'Выберите действие',
+        ];
+    }
+
+    /**
+     * Клавиатура городов.
+     */
+    private function getCityKeyboard(): array
+    {
+        $cities = DB::table('city')->orderBy('title')->get();
+        $keyboard = [[['text' => '🏠 Главное меню']]];
+        $row = [];
+
+        foreach ($cities as $city) {
+            $row[] = ['text' => $city->title];
+            if (count($row) === 2) {
+                $keyboard[] = $row;
+                $row = [];
+            }
+        }
+        if (!empty($row)) {
+            $keyboard[] = $row;
+        }
+
+        return [
+            'keyboard' => $keyboard,
+            'resize_keyboard' => true,
+            'input_field_placeholder' => 'Выберите город',
         ];
     }
 
