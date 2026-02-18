@@ -107,7 +107,7 @@ class TelegramBotController extends Controller
                     'user_id' => $user->id,
                 ], now()->addMinutes(10));
 
-                $this->sendMessage($chatId, "Введите пароль:");
+                $this->sendMessage($chatId, "🔑 Введите пароль:");
                 break;
 
             case 'awaiting_password':
@@ -153,7 +153,7 @@ class TelegramBotController extends Controller
                     'step' => 'awaiting_email',
                 ], now()->addMinutes(10));
 
-                $this->sendMessage($chatId, "Введите ваш email:", $this->getCancelKeyboard());
+                $this->sendMessage($chatId, "📧 Введите ваш email:", $this->getCancelKeyboard());
                 break;
 
             case '💾 Зарегистрироваться':
@@ -196,7 +196,7 @@ class TelegramBotController extends Controller
                         'telegram_username' => null,
                     ]);
                 }
-                $this->sendMessage($chatId, "Вы вышли из аккаунта.", $this->getGuestKeyboard());
+                $this->sendMessage($chatId, "👋 Вы вышли из аккаунта.", $this->getGuestKeyboard());
                 break;
 
             default:
