@@ -394,11 +394,12 @@
         // 0 - не авторизован
         // 1 - женщина смотрит мужское объявление - показываем контакты
         // 2 - женщина смотрит женское объявление - нужен статус
-        // 3 - мужчина без статуса (prov=0) - нужен статус
+        // 3 - мужчина без статуса смотрит женское объявление - нужен статус
         // 4 - мужчина со статусом (prov=1) - показываем ВСЁ
-        
+        // 5 - мужчина без статуса смотрит мужское объявление - показываем имя
+
         $contactAccess = 0;
-        
+
         if ($currentUser) {
             if ($currentUser->sex == 2) {
                 // Женщина
@@ -411,8 +412,10 @@
                 // Мужчина
                 if ($currentUser->prov == 1) {
                     $contactAccess = 4; // есть статус - показываем всё
+                } elseif ($post->sex == 1) {
+                    $contactAccess = 5; // мужское объявление - показываем имя
                 } else {
-                    $contactAccess = 3; // нет статуса
+                    $contactAccess = 3; // женское - нужен статус
                 }
             }
         }
@@ -472,7 +475,7 @@
                 <div class="master-name">
                     @if($contactAccess == 0)
                         <span style="color: #dc2626; font-size: 0.9rem;">Для просмотра имени <a href="{{ route('login') }}" style="text-decoration: underline;">авторизуйтесь</a></span>
-                    @elseif($contactAccess == 1 || $contactAccess == 4)
+                    @elseif(in_array($contactAccess, [1, 4, 5]))
                         {{ $post->fio }}
                     @else
                         <span style="color: #92400e; font-size: 0.9rem;">Для просмотра имени <a href="/become-verified" style="color: #92400e;">купите статус</a> проверенного спонсора</span>
