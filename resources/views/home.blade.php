@@ -506,7 +506,13 @@
                     if ($currentUser->sex == 2) {
                         $contactAccess = ($post->sex == 1) ? 1 : 2;
                     } else {
-                        $contactAccess = ($currentUser->prov == 1) ? 4 : 3;
+                        if ($currentUser->prov == 1) {
+                            $contactAccess = 4;
+                        } elseif ($post->sex == 1) {
+                            $contactAccess = 5;
+                        } else {
+                            $contactAccess = 3;
+                        }
                     }
                 }
                 $postUser = DB::table('users')->where('email', $post->email)->first();
@@ -558,7 +564,7 @@
                                 <div class="specialist-v2">
                                     <span style="color: red; font-size:12px;"><b>Для просмотра имени <a href="{{ route('login') }}">авторизуйтесь</a> или <a href="{{ route('register') }}">зарегистрируйтесь</a></b></span>
                                 </div>
-                            @elseif($contactAccess == 1 || $contactAccess == 4)
+                            @elseif(in_array($contactAccess, [1, 4, 5]))
                                 <div class="specialist-v2">{{ $post->fio }}</div>
                             @else
                                 <div class="specialist-v2">
@@ -638,11 +644,12 @@
                 // 0 - не авторизован
                 // 1 - женщина смотрит мужское объявление - показываем контакты
                 // 2 - женщина смотрит женское объявление - нужен статус
-                // 3 - мужчина без статуса (prov=0) - нужен статус
+                // 3 - мужчина без статуса смотрит женское объявление - нужен статус
                 // 4 - мужчина со статусом (prov=1) - показываем ВСЁ
-                
+                // 5 - мужчина без статуса смотрит мужское объявление - показываем имя
+
                 $contactAccess = 0;
-                
+
                 if ($currentUser) {
                     if ($currentUser->sex == 2) {
                         // Женщина
@@ -655,8 +662,10 @@
                         // Мужчина
                         if ($currentUser->prov == 1) {
                             $contactAccess = 4; // есть статус - показываем всё
+                        } elseif ($post->sex == 1) {
+                            $contactAccess = 5; // мужское объявление - показываем имя
                         } else {
-                            $contactAccess = 3; // нет статуса
+                            $contactAccess = 3; // женское - нужен статус
                         }
                     }
                 }
@@ -714,7 +723,7 @@
                                 <div class="specialist-v2">
                                     <span style="color: red; font-size:12px;"><b>Для просмотра имени <a href="{{ route('login') }}">авторизуйтесь</a> или <a href="{{ route('register') }}">зарегистрируйтесь</a></b></span>
                                 </div>
-                            @elseif($contactAccess == 1 || $contactAccess == 4)
+                            @elseif(in_array($contactAccess, [1, 4, 5]))
                                 <div class="specialist-v2">{{ $post->fio }}</div>
                             @else
                                 <div class="specialist-v2">
