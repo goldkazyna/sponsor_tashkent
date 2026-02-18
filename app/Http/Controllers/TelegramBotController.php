@@ -364,6 +364,11 @@ class TelegramBotController extends Controller
             return;
         }
 
+        // ТОП объявление на первой странице
+        if ($page === 1) {
+            $this->showTopPost($chatId, $user);
+        }
+
         foreach ($posts as $post) {
             $this->sendMessage($chatId, $this->formatPost($post, $user));
         }
@@ -387,6 +392,41 @@ class TelegramBotController extends Controller
         $this->sendMessage($chatId, "📄 Страница: {$page}/{$totalPages}", [
             'inline_keyboard' => $inline,
         ]);
+    }
+
+    /**
+     * Показать ТОП объявление.
+     */
+    private function showTopPost(int $chatId, ?object $user): void
+    {
+        // Берём с наименьшим count_view, если одинаковы — рандом
+        $topRecord = DB::table('top_post')
+            ->where('date_end', '>=', now())
+            ->orderBy('count_view', 'asc')
+            ->inRandomOrder()
+            ->first();
+
+        if (!$topRecord) {
+            return;
+        }
+
+        $post = DB::table('post')
+            ->leftJoin('city', 'post.city', '=', 'city.id')
+            ->select('post.*', 'city.title as city_name')
+            ->where('post.id', $topRecord->id_post)
+            ->where('post.del', 0)
+            ->first();
+
+        if (!$post) {
+            return;
+        }
+
+        // Увеличиваем count_view на 1
+        DB::table('top_post')->where('id', $topRecord->id)->increment('count_view');
+
+        $text = "◆◆◆ТОП ОБЪЯВЛЕНИЕ◆◆◆\n" . $this->formatPost($post, $user);
+
+        $this->sendMessage($chatId, $text);
     }
 
     /**
