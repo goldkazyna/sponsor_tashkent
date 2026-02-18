@@ -352,8 +352,8 @@
         </div>
 
         <div class="form-group">
-            <label class="form-label required">Телефон</label>
-            <input type="text" name="phone" class="form-input" value="{{ $post->phone }}" placeholder="+7 700 123 45 67" required>
+            <label class="form-label">Телефон</label>
+            <input type="text" name="phone" class="form-input" value="{{ $post->phone }}" placeholder="+7 700 123 45 67">
         </div>
 
         <div class="form-group">
