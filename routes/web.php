@@ -83,3 +83,12 @@ Route::get('/clear-cache-secret', function () {
     Artisan::call('view:clear');
     return 'Cache cleared!';
 });
+
+// Временно: последние ошибки из лога
+Route::get('/debug-log-secret', function () {
+    $logFile = storage_path('logs/laravel.log');
+    if (!file_exists($logFile)) return 'No log file';
+    $lines = file($logFile);
+    $last = array_slice($lines, -80);
+    return '<pre>' . htmlspecialchars(implode('', $last)) . '</pre>';
+});
