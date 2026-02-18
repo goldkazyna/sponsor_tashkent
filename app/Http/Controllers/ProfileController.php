@@ -228,7 +228,7 @@ public function settings()
                 'fio' => $request->input('fio'),
                 'discription' => $request->input('discription'),
                 'city' => $request->input('city'),
-                'phone' => $request->input('phone'),
+                'phone' => $request->input('phone', ''),
                 'telegram' => $request->input('telegram', ''),
                 'whats' => $request->input('whats', '')
             ]);
