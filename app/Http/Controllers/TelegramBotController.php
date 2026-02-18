@@ -260,7 +260,7 @@ class TelegramBotController extends Controller
                 break;
 
             case '🔍 Просмотреть объявления':
-                $this->sendMessage($chatId, "Функция просмотра объявлений будет доступна в следующем обновлении.");
+                $this->handleViewPosts($chatId, $user);
                 break;
 
             case '➕ Добавить объявление':
@@ -296,6 +296,54 @@ class TelegramBotController extends Controller
                 $keyboard = $user ? $this->getAuthKeyboard() : $this->getGuestKeyboard();
                 $this->sendMessage($chatId, "Неизвестная команда. Выберите действие из меню:", $keyboard);
                 break;
+        }
+    }
+
+    /**
+     * Просмотр последних объявлений.
+     */
+    private function handleViewPosts(int $chatId, ?object $user): void
+    {
+        $posts = DB::table('post')
+            ->where('del', 0)
+            ->orderByDesc('date')
+            ->limit(10)
+            ->get();
+
+        if ($posts->isEmpty()) {
+            $this->sendMessage($chatId, "📭 Объявлений пока нет.");
+            return;
+        }
+
+        foreach ($posts as $post) {
+            $hearts = $post->sex == 1 ? '💙💙💙' : '💗💗💗';
+            $sexLabel = $post->sex == 1 ? '👦 Я: Мужчина' : '👩 Я: Женщина';
+            $whoLabel = $post->who == 1 ? '👩 Ищу: Женщину' : '👦 Ищу: Мужчину';
+            $date = date('d.m.Y H:i:s', strtotime($post->date));
+
+            $text = "{$hearts}{$post->title}{$hearts}\n";
+            $text .= "------------------------------\n";
+            $text .= "🚩 {$post->city}\n";
+            $text .= "📅 {$date}\n";
+            $text .= "{$sexLabel}\n";
+            $text .= "{$whoLabel}\n";
+            $text .= "------------------------------\n";
+
+            if ($user) {
+                $name = $post->fio ?: 'Не указано';
+                $tg = $post->telegram ?: 'Не указан';
+                $text .= "👤 Имя: {$name}\n";
+                $text .= "📩 Telegram: {$tg}\n";
+            } else {
+                $text .= "🚫 Для просмотра Имени авторизуйтесь или зарегистрируйтесь 🚫\n";
+                $text .= "🚫 Для просмотра telegram авторизуйтесь или зарегистрируйтесь 🚫\n";
+            }
+
+            $text .= "------------------------------\n";
+            $text .= "💬 {$post->discription}\n";
+            $text .= "Просмотры: {$post->view}";
+
+            $this->sendMessage($chatId, $text);
         }
     }
 
