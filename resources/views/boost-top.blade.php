@@ -438,7 +438,7 @@
             </ul>
             <form action="{{ route('payment.create') }}" method="POST">
                 @csrf
-                <input type="hidden" name="amount" value="4000">
+                <input type="hidden" name="amount" value="7592">
                 <input type="hidden" name="days" value="5">
                 <input type="hidden" name="service" value="top_post">
                 <input type="hidden" name="post_id" value="{{ $post->id ?? '' }}">
