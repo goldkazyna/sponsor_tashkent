@@ -58,11 +58,11 @@ class TelegramBotController extends Controller
             return response()->json(['ok' => true]);
         }
 
-        // Проверяем состояние диалога (авторизация)
+        // Проверяем состояние диалога (авторизация/регистрация)
         $state = Cache::get("tg_state_{$telegramId}");
 
         if ($state) {
-            $this->handleAuthFlow($chatId, $telegramId, $username, $text, $state);
+            $this->handleDialogFlow($chatId, $telegramId, $username, $text, $state);
         } else {
             $this->handleTextButton($chatId, $telegramId, $text);
         }
@@ -79,21 +79,21 @@ class TelegramBotController extends Controller
     }
 
     /**
-     * Процесс авторизации по шагам.
+     * Процесс авторизации/регистрации по шагам.
      */
-    private function handleAuthFlow(int $chatId, int $telegramId, ?string $username, string $text, array $state): void
+    private function handleDialogFlow(int $chatId, int $telegramId, ?string $username, string $text, array $state): void
     {
         // Отмена на любом шаге
         if ($text === '❌ Отмена') {
             Cache::forget("tg_state_{$telegramId}");
-            $this->sendMessage($chatId, "Авторизация отменена.", $this->getGuestKeyboard());
+            $this->sendMessage($chatId, "Действие отменено.", $this->getGuestKeyboard());
             return;
         }
 
         switch ($state['step']) {
-            case 'awaiting_email':
+            // === АВТОРИЗАЦИЯ ===
+            case 'login_email':
                 $email = trim(mb_strtolower($text));
-
                 $user = DB::table('users')->where('email', $email)->first();
 
                 if (!$user) {
@@ -102,35 +102,88 @@ class TelegramBotController extends Controller
                 }
 
                 Cache::put("tg_state_{$telegramId}", [
-                    'step' => 'awaiting_password',
-                    'email' => $email,
+                    'step' => 'login_password',
                     'user_id' => $user->id,
                 ], now()->addMinutes(10));
 
                 $this->sendMessage($chatId, "🔑 Введите пароль:");
                 break;
 
-            case 'awaiting_password':
-                $password = $text;
-                $userId = $state['user_id'];
+            case 'login_password':
+                $user = DB::table('users')->where('id', $state['user_id'])->first();
 
-                $user = DB::table('users')->where('id', $userId)->first();
-
-                if (!$user || $user->password !== sha1(md5($password))) {
+                if (!$user || $user->password !== sha1(md5($text))) {
                     $this->sendMessage($chatId, "❌ Неверный пароль.\n\nПопробуйте ещё раз или нажмите «❌ Отмена»:");
                     return;
                 }
 
-                // Сохраняем telegram_id и username
-                DB::table('users')->where('id', $userId)->update([
+                DB::table('users')->where('id', $user->id)->update([
                     'telegram_id' => $telegramId,
                     'telegram_username' => $username,
                 ]);
 
                 Cache::forget("tg_state_{$telegramId}");
+                $this->sendMessage($chatId, "✅ Вы успешно авторизованы!", $this->getAuthKeyboard());
+                break;
 
-                $name = $user->name ?? 'пользователь';
-                $this->sendMessage($chatId, "✅ Вы успешно авторизованы, {$name}!", $this->getAuthKeyboard());
+            // === РЕГИСТРАЦИЯ ===
+            case 'register_email':
+                $email = trim(mb_strtolower($text));
+
+                if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                    $this->sendMessage($chatId, "❌ Некорректный email.\n\nПопробуйте ещё раз или нажмите «❌ Отмена»:");
+                    return;
+                }
+
+                $exists = DB::table('users')->where('email', $email)->exists();
+                if ($exists) {
+                    $this->sendMessage($chatId, "❌ Этот email уже зарегистрирован.\n\nПопробуйте другой или нажмите «❌ Отмена»:");
+                    return;
+                }
+
+                Cache::put("tg_state_{$telegramId}", [
+                    'step' => 'register_sex',
+                    'email' => $email,
+                ], now()->addMinutes(10));
+
+                $this->sendMessage($chatId, "👤 Выберите кто вы:", $this->getSexKeyboard());
+                break;
+
+            case 'register_sex':
+                $sexMap = ['🤵 Спонсор' => 1, '💃 Содержанка' => 2];
+
+                if (!isset($sexMap[$text])) {
+                    $this->sendMessage($chatId, "❌ Выберите один из вариантов:", $this->getSexKeyboard());
+                    return;
+                }
+
+                $sex = $sexMap[$text];
+                $email = $state['email'];
+                $password = bin2hex(random_bytes(4)); // 8-символьный пароль
+
+                DB::table('users')->insert([
+                    'email' => $email,
+                    'password' => sha1(md5($password)),
+                    'sex' => $sex,
+                    'ip' => '',
+                    'date' => now(),
+                    'activate' => 1,
+                    'confirm' => 1,
+                    'telegram_id' => $telegramId,
+                    'telegram_username' => $username,
+                    'device_key' => uniqid('device_', true),
+                ]);
+
+                Cache::forget("tg_state_{$telegramId}");
+
+                $this->sendMessage(
+                    $chatId,
+                    "✅ Регистрация завершена!\n\n"
+                    . "📧 Email: <b>{$email}</b>\n"
+                    . "🔑 Пароль: <code>{$password}</code>\n\n"
+                    . "Сохраните пароль — он нужен для входа на сайте.",
+                    $this->getAuthKeyboard()
+                );
                 break;
         }
     }
@@ -150,14 +203,23 @@ class TelegramBotController extends Controller
                 }
 
                 Cache::put("tg_state_{$telegramId}", [
-                    'step' => 'awaiting_email',
+                    'step' => 'login_email',
                 ], now()->addMinutes(10));
 
                 $this->sendMessage($chatId, "📧 Введите ваш email:", $this->getCancelKeyboard());
                 break;
 
             case '💾 Зарегистрироваться':
-                $this->sendMessage($chatId, "Функция регистрации будет доступна в следующем обновлении.");
+                if ($user) {
+                    $this->sendMessage($chatId, "Вы уже зарегистрированы!", $this->getAuthKeyboard());
+                    return;
+                }
+
+                Cache::put("tg_state_{$telegramId}", [
+                    'step' => 'register_email',
+                ], now()->addMinutes(10));
+
+                $this->sendMessage($chatId, "📧 Введите ваш email:", $this->getCancelKeyboard());
                 break;
 
             case '🔍 Просмотреть объявления':
@@ -253,7 +315,21 @@ class TelegramBotController extends Controller
     }
 
     /**
-     * Клавиатура отмены (во время авторизации).
+     * Клавиатура выбора пола (при регистрации).
+     */
+    private function getSexKeyboard(): array
+    {
+        return [
+            'keyboard' => [
+                [['text' => '🤵 Спонсор'], ['text' => '💃 Содержанка']],
+                [['text' => '❌ Отмена']],
+            ],
+            'resize_keyboard' => true,
+        ];
+    }
+
+    /**
+     * Клавиатура отмены.
      */
     private function getCancelKeyboard(): array
     {
