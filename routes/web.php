@@ -75,3 +75,11 @@ Route::post('/payment/create', [App\Http\Controllers\PaymentController::class, '
 Route::post('/result_url_new', [App\Http\Controllers\PaymentController::class, 'callback'])->name('payment.callback');
 Route::get('/success_url', [App\Http\Controllers\PaymentController::class, 'success'])->name('payment.success');
 Route::get('/fail', [App\Http\Controllers\PaymentController::class, 'fail'])->name('payment.fail');
+
+// Очистка кеша (без консоли)
+Route::get('/clear-cache-secret', function () {
+    Artisan::call('config:clear');
+    Artisan::call('cache:clear');
+    Artisan::call('view:clear');
+    return 'Cache cleared!';
+});
