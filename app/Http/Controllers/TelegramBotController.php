@@ -179,6 +179,22 @@ class TelegramBotController extends Controller
             'callback_query_id' => $callback['id'],
         ]);
 
+        // Пагинация объявлений
+        if (str_starts_with($data, 'posts_page_')) {
+            $page = (int) str_replace('posts_page_', '', $data);
+            $user = DB::table('users')->where('telegram_id', $telegramId)->first();
+            $this->handleViewPosts($chatId, $user, $page);
+            return;
+        }
+
+        // Возврат в главное меню
+        if ($data === 'back_to_menu') {
+            $user = DB::table('users')->where('telegram_id', $telegramId)->first();
+            $keyboard = $user ? $this->getAuthKeyboard() : $this->getGuestKeyboard();
+            $this->sendMessage($chatId, "📋 Главное меню:", $keyboard);
+            return;
+        }
+
         if (in_array($data, ['sex_1', 'sex_2'])) {
             $state = Cache::get("tg_state_{$telegramId}");
 
@@ -260,7 +276,7 @@ class TelegramBotController extends Controller
                 break;
 
             case '🔍 Просмотреть объявления':
-                $this->handleViewPosts($chatId, $user);
+                $this->handleViewPosts($chatId, $user, 1);
                 break;
 
             case '➕ Добавить объявление':
@@ -300,14 +316,21 @@ class TelegramBotController extends Controller
     }
 
     /**
-     * Просмотр последних объявлений.
+     * Просмотр объявлений с пагинацией.
      */
-    private function handleViewPosts(int $chatId, ?object $user): void
+    private function handleViewPosts(int $chatId, ?object $user, int $page): void
     {
+        $perPage = 10;
+        $total = DB::table('post')->where('del', 0)->count();
+        $totalPages = max(1, ceil($total / $perPage));
+        $page = max(1, min($page, $totalPages));
+        $offset = ($page - 1) * $perPage;
+
         $posts = DB::table('post')
             ->where('del', 0)
             ->orderByDesc('date')
-            ->limit(10)
+            ->offset($offset)
+            ->limit($perPage)
             ->get();
 
         if ($posts->isEmpty()) {
@@ -316,35 +339,62 @@ class TelegramBotController extends Controller
         }
 
         foreach ($posts as $post) {
-            $hearts = $post->sex == 1 ? '💙💙💙' : '💗💗💗';
-            $sexLabel = $post->sex == 1 ? '👦 Я: Мужчина' : '👩 Я: Женщина';
-            $whoLabel = $post->who == 1 ? '👩 Ищу: Женщину' : '👦 Ищу: Мужчину';
-            $date = date('d.m.Y H:i:s', strtotime($post->date));
-
-            $text = "{$hearts}{$post->title}{$hearts}\n";
-            $text .= "------------------------------\n";
-            $text .= "🚩 {$post->city}\n";
-            $text .= "📅 {$date}\n";
-            $text .= "{$sexLabel}\n";
-            $text .= "{$whoLabel}\n";
-            $text .= "------------------------------\n";
-
-            if ($user) {
-                $name = $post->fio ?: 'Не указано';
-                $tg = $post->telegram ?: 'Не указан';
-                $text .= "👤 Имя: {$name}\n";
-                $text .= "📩 Telegram: {$tg}\n";
-            } else {
-                $text .= "🚫 Для просмотра Имени авторизуйтесь или зарегистрируйтесь 🚫\n";
-                $text .= "🚫 Для просмотра telegram авторизуйтесь или зарегистрируйтесь 🚫\n";
-            }
-
-            $text .= "------------------------------\n";
-            $text .= "💬 {$post->discription}\n";
-            $text .= "Просмотры: {$post->view}";
-
-            $this->sendMessage($chatId, $text);
+            $this->sendMessage($chatId, $this->formatPost($post, $user));
         }
+
+        // Кнопки пагинации
+        $buttons = [];
+        if ($page > 1) {
+            $buttons[] = ['text' => '◀ Предыдущая страница', 'callback_data' => "posts_page_" . ($page - 1)];
+        }
+        if ($page < $totalPages) {
+            $buttons[] = ['text' => '▶ Следующая страница', 'callback_data' => "posts_page_" . ($page + 1)];
+        }
+
+        $inline = [];
+        if (!empty($buttons)) {
+            $inline[] = $buttons;
+        }
+        $inline[] = [['text' => '🔙 В главное меню', 'callback_data' => 'back_to_menu']];
+
+        $this->sendMessage($chatId, "📄 Страница: {$page}/{$totalPages}", [
+            'inline_keyboard' => $inline,
+        ]);
+    }
+
+    /**
+     * Форматирование одного объявления.
+     */
+    private function formatPost(object $post, ?object $user): string
+    {
+        $hearts = $post->sex == 1 ? '💙💙💙' : '💗💗💗';
+        $sexLabel = $post->sex == 1 ? '👦 Я: Мужчина' : '👩 Я: Женщина';
+        $whoLabel = $post->who == 1 ? '👩 Ищу: Женщину' : '👦 Ищу: Мужчину';
+        $date = date('d.m.Y H:i:s', strtotime($post->date));
+
+        $text = "{$hearts}{$post->title}{$hearts}\n";
+        $text .= "------------------------------\n";
+        $text .= "🚩 {$post->city}\n";
+        $text .= "📅 {$date}\n";
+        $text .= "{$sexLabel}\n";
+        $text .= "{$whoLabel}\n";
+        $text .= "------------------------------\n";
+
+        if ($user) {
+            $name = $post->fio ?: 'Не указано';
+            $tg = $post->telegram ?: 'Не указан';
+            $text .= "👤 Имя: {$name}\n";
+            $text .= "📩 Telegram: {$tg}\n";
+        } else {
+            $text .= "🚫 Для просмотра Имени авторизуйтесь или зарегистрируйтесь 🚫\n";
+            $text .= "🚫 Для просмотра telegram авторизуйтесь или зарегистрируйтесь 🚫\n";
+        }
+
+        $text .= "------------------------------\n";
+        $text .= "💬 {$post->discription}\n";
+        $text .= "Просмотры: {$post->view}";
+
+        return $text;
     }
 
     /**
