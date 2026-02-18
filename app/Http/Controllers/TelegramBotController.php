@@ -42,6 +42,12 @@ class TelegramBotController extends Controller
 
         Log::info('Telegram webhook received', $update);
 
+        // Обработка inline кнопок (callback_query)
+        if (isset($update['callback_query'])) {
+            $this->handleCallbackQuery($update['callback_query']);
+            return response()->json(['ok' => true]);
+        }
+
         if (!isset($update['message'])) {
             return response()->json(['ok' => true]);
         }
@@ -146,45 +152,70 @@ class TelegramBotController extends Controller
                     'email' => $email,
                 ], now()->addMinutes(10));
 
-                $this->sendMessage($chatId, "👤 Выберите кто вы:", $this->getSexKeyboard());
-                break;
-
-            case 'register_sex':
-                $sexMap = ['👨 Мужчина' => 1, '👩 Женщина' => 2];
-
-                if (!isset($sexMap[$text])) {
-                    $this->sendMessage($chatId, "❌ Выберите один из вариантов:", $this->getSexKeyboard());
-                    return;
-                }
-
-                $sex = $sexMap[$text];
-                $email = $state['email'];
-                $password = bin2hex(random_bytes(4)); // 8-символьный пароль
-
-                DB::table('users')->insert([
-                    'email' => $email,
-                    'password' => sha1(md5($password)),
-                    'sex' => $sex,
-                    'ip' => '',
-                    'date' => now(),
-                    'activate' => 1,
-                    'confirm' => 1,
-                    'telegram_id' => $telegramId,
-                    'telegram_username' => $username,
-                    'device_key' => uniqid('device_', true),
+                $this->sendMessage($chatId, "👤 Выберите ваш пол:", [
+                    'inline_keyboard' => [
+                        [
+                            ['text' => '👨 Мужчина', 'callback_data' => 'sex_1'],
+                            ['text' => '👩 Женщина', 'callback_data' => 'sex_2'],
+                        ],
+                    ],
                 ]);
-
-                Cache::forget("tg_state_{$telegramId}");
-
-                $this->sendMessage(
-                    $chatId,
-                    "✅ Регистрация завершена!\n\n"
-                    . "📧 Email: <b>{$email}</b>\n"
-                    . "🔑 Пароль: <code>{$password}</code>\n\n"
-                    . "Сохраните пароль — он нужен для входа на сайте.",
-                    $this->getAuthKeyboard()
-                );
                 break;
+        }
+    }
+
+    /**
+     * Обработка inline кнопок.
+     */
+    private function handleCallbackQuery(array $callback): void
+    {
+        $chatId = $callback['message']['chat']['id'];
+        $telegramId = $callback['from']['id'];
+        $username = $callback['from']['username'] ?? null;
+        $data = $callback['data'];
+
+        // Подтверждаем нажатие
+        Http::post("{$this->apiUrl}/answerCallbackQuery", [
+            'callback_query_id' => $callback['id'],
+        ]);
+
+        if (in_array($data, ['sex_1', 'sex_2'])) {
+            $state = Cache::get("tg_state_{$telegramId}");
+
+            if (!$state || $state['step'] !== 'register_sex') {
+                $this->sendMessage($chatId, "❌ Сессия истекла. Начните регистрацию заново.", $this->getGuestKeyboard());
+                return;
+            }
+
+            $sex = $data === 'sex_1' ? 1 : 2;
+            $email = $state['email'];
+            $password = bin2hex(random_bytes(4));
+
+            DB::table('users')->insert([
+                'email' => $email,
+                'password' => sha1(md5($password)),
+                'sex' => $sex,
+                'ip' => '',
+                'date' => now(),
+                'activate' => 1,
+                'confirm' => 1,
+                'telegram_id' => $telegramId,
+                'telegram_username' => $username,
+                'device_key' => uniqid('device_', true),
+            ]);
+
+            Cache::forget("tg_state_{$telegramId}");
+
+            $sexLabel = $sex === 1 ? '👨 Мужчина' : '👩 Женщина';
+            $this->sendMessage(
+                $chatId,
+                "✅ Регистрация завершена!\n\n"
+                . "📧 Email: <b>{$email}</b>\n"
+                . "🔑 Пароль: <code>{$password}</code>\n"
+                . "👤 Пол: {$sexLabel}\n\n"
+                . "Сохраните пароль — он нужен для входа на сайте.",
+                $this->getAuthKeyboard()
+            );
         }
     }
 
@@ -311,20 +342,6 @@ class TelegramBotController extends Controller
             ],
             'resize_keyboard' => true,
             'input_field_placeholder' => 'Выберите действие',
-        ];
-    }
-
-    /**
-     * Клавиатура выбора пола (при регистрации).
-     */
-    private function getSexKeyboard(): array
-    {
-        return [
-            'keyboard' => [
-                [['text' => '👨 Мужчина'], ['text' => '👩 Женщина']],
-                [['text' => '❌ Отмена']],
-            ],
-            'resize_keyboard' => true,
         ];
     }
 
