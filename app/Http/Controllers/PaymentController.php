@@ -242,10 +242,9 @@ class PaymentController extends Controller
                 } else {
                     DB::table('top_post')->insert([
                         'id_post'    => $order->post_id,
-                        'count_view' => 0,
+                        'date'       => now(),
                         'date_end'   => $dateEnd,
-                        'created_at' => now(),
-                        'updated_at' => now(),
+                        'count_view' => 0,
                     ]);
                 }
 
