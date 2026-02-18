@@ -327,8 +327,10 @@ class TelegramBotController extends Controller
         $offset = ($page - 1) * $perPage;
 
         $posts = DB::table('post')
-            ->where('del', 0)
-            ->orderByDesc('date')
+            ->leftJoin('city', 'post.city', '=', 'city.id')
+            ->select('post.*', 'city.title as city_name')
+            ->where('post.del', 0)
+            ->orderByDesc('post.date')
             ->offset($offset)
             ->limit($perPage)
             ->get();
@@ -374,7 +376,8 @@ class TelegramBotController extends Controller
 
         $text = "{$hearts}{$post->title}{$hearts}\n";
         $text .= "------------------------------\n";
-        $text .= "🚩 Казахстан/{$post->city}\n";
+        $cityName = $post->city_name ?? $post->city;
+        $text .= "🚩 Казахстан/{$cityName}\n";
         $text .= "📅 {$date}\n";
         $text .= "{$sexLabel}\n";
         $text .= "{$whoLabel}\n";
