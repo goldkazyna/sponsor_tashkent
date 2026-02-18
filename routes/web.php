@@ -5,6 +5,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ContactController;
+use App\Http\Controllers\TelegramBotController;
 
 // Главная страница со списком объявлений
 Route::get('/', [PostController::class, 'index'])->name('home');
@@ -83,6 +84,10 @@ Route::get('/clear-cache-secret', function () {
     Artisan::call('view:clear');
     return 'Cache cleared!';
 });
+
+// Telegram Bot
+Route::post('/telegram/webhook', [TelegramBotController::class, 'webhook']);
+Route::get('/telegram/set-webhook', [TelegramBotController::class, 'setWebhook']);
 
 // Временно: последние ошибки из лога
 Route::get('/debug-log-secret', function () {
