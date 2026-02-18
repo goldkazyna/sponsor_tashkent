@@ -42,6 +42,12 @@ class PostController extends Controller
 			$currentUser = DB::table('users')->where('id', session('user_id'))->first();
 		}
 		
+		// Увеличиваем view +1 для всех объявлений на текущей странице
+		$postIds = $posts->pluck('id')->toArray();
+		if (!empty($postIds)) {
+			DB::table('post')->whereIn('id', $postIds)->increment('view');
+		}
+
 		// Добавляем параметр города к пагинации
 		$posts->appends(['city' => $selectedCity]);
 		
