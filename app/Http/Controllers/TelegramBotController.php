@@ -190,12 +190,6 @@ class TelegramBotController extends Controller
                 break;
 
             case '❌ Выход':
-                if ($user) {
-                    DB::table('users')->where('id', $user->id)->update([
-                        'telegram_id' => null,
-                        'telegram_username' => null,
-                    ]);
-                }
                 $this->sendMessage($chatId, "👋 Вы вышли из аккаунта.", $this->getGuestKeyboard());
                 break;
 
