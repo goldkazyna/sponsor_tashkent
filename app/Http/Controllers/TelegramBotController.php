@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -52,7 +53,16 @@ class TelegramBotController extends Controller
         $username = $message['from']['username'] ?? null;
 
         if ($text === '/start') {
+            Cache::forget("tg_state_{$telegramId}");
             $this->handleStart($chatId, $telegramId, $username);
+            return response()->json(['ok' => true]);
+        }
+
+        // Проверяем состояние диалога (авторизация)
+        $state = Cache::get("tg_state_{$telegramId}");
+
+        if ($state) {
+            $this->handleAuthFlow($chatId, $telegramId, $username, $text, $state);
         } else {
             $this->handleTextButton($chatId, $telegramId, $text);
         }
@@ -69,6 +79,63 @@ class TelegramBotController extends Controller
     }
 
     /**
+     * Процесс авторизации по шагам.
+     */
+    private function handleAuthFlow(int $chatId, int $telegramId, ?string $username, string $text, array $state): void
+    {
+        // Отмена на любом шаге
+        if ($text === '❌ Отмена') {
+            Cache::forget("tg_state_{$telegramId}");
+            $this->sendMessage($chatId, "Авторизация отменена.", $this->getGuestKeyboard());
+            return;
+        }
+
+        switch ($state['step']) {
+            case 'awaiting_email':
+                $email = trim(mb_strtolower($text));
+
+                $user = DB::table('users')->where('email', $email)->first();
+
+                if (!$user) {
+                    $this->sendMessage($chatId, "❌ Пользователь с таким email не найден.\n\nПопробуйте ещё раз или нажмите «❌ Отмена»:");
+                    return;
+                }
+
+                Cache::put("tg_state_{$telegramId}", [
+                    'step' => 'awaiting_password',
+                    'email' => $email,
+                    'user_id' => $user->id,
+                ], now()->addMinutes(10));
+
+                $this->sendMessage($chatId, "Введите пароль:");
+                break;
+
+            case 'awaiting_password':
+                $password = $text;
+                $userId = $state['user_id'];
+
+                $user = DB::table('users')->where('id', $userId)->first();
+
+                if (!$user || $user->password !== sha1(md5($password))) {
+                    $this->sendMessage($chatId, "❌ Неверный пароль.\n\nПопробуйте ещё раз или нажмите «❌ Отмена»:");
+                    return;
+                }
+
+                // Сохраняем telegram_id и username
+                DB::table('users')->where('id', $userId)->update([
+                    'telegram_id' => $telegramId,
+                    'telegram_username' => $username,
+                ]);
+
+                Cache::forget("tg_state_{$telegramId}");
+
+                $name = $user->name ?? 'пользователь';
+                $this->sendMessage($chatId, "✅ Вы успешно авторизованы, {$name}!", $this->getAuthKeyboard());
+                break;
+        }
+    }
+
+    /**
      * Обработка нажатий текстовых кнопок.
      */
     private function handleTextButton(int $chatId, int $telegramId, string $text): void
@@ -77,7 +144,16 @@ class TelegramBotController extends Controller
 
         switch ($text) {
             case '🖊 Авторизоваться':
-                $this->sendMessage($chatId, "Функция авторизации будет доступна в следующем обновлении.");
+                if ($user) {
+                    $this->sendMessage($chatId, "Вы уже авторизованы!", $this->getAuthKeyboard());
+                    return;
+                }
+
+                Cache::put("tg_state_{$telegramId}", [
+                    'step' => 'awaiting_email',
+                ], now()->addMinutes(10));
+
+                $this->sendMessage($chatId, "Введите ваш email:", $this->getCancelKeyboard());
                 break;
 
             case '💾 Зарегистрироваться':
@@ -114,7 +190,13 @@ class TelegramBotController extends Controller
                 break;
 
             case '❌ Выход':
-                $this->sendMessage($chatId, "Функция выхода будет доступна в следующем обновлении.");
+                if ($user) {
+                    DB::table('users')->where('id', $user->id)->update([
+                        'telegram_id' => null,
+                        'telegram_username' => null,
+                    ]);
+                }
+                $this->sendMessage($chatId, "Вы вышли из аккаунта.", $this->getGuestKeyboard());
                 break;
 
             default:
@@ -173,6 +255,19 @@ class TelegramBotController extends Controller
             ],
             'resize_keyboard' => true,
             'input_field_placeholder' => 'Выберите действие',
+        ];
+    }
+
+    /**
+     * Клавиатура отмены (во время авторизации).
+     */
+    private function getCancelKeyboard(): array
+    {
+        return [
+            'keyboard' => [
+                [['text' => '❌ Отмена']],
+            ],
+            'resize_keyboard' => true,
         ];
     }
 }
