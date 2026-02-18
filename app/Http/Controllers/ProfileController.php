@@ -184,7 +184,7 @@ public function settings()
         }
 
         // Получаем список городов
-        $cities = DB::table('city')->orderBy('title')->get();
+        $cities = DB::table('city')->orderBy('id')->get();
 
         // Получаем фотографии объявления
         $photos = DB::table('gallery')

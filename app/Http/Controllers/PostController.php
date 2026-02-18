@@ -153,7 +153,7 @@ class PostController extends Controller
         }
 
         // Получаем список городов
-        $cities = DB::table('city')->orderBy('title')->get();
+        $cities = DB::table('city')->orderBy('id')->get();
 
         return view('posts.create', compact('cities', 'user'));
     }
