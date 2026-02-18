@@ -101,18 +101,19 @@ class TelegramBotController extends Controller
                 break;
 
             case '🚀 Топ объявлений':
+            case '🚀 Топ объявления':
                 $this->sendMessage($chatId, "Топ объявлений будет доступен в следующем обновлении.");
                 break;
 
-            case '📋 Мои объявления':
+            case '📨 Мои объявления':
                 $this->sendMessage($chatId, "Функция просмотра ваших объявлений будет доступна в следующем обновлении.");
                 break;
 
-            case '💎 Купить статус':
+            case '📌 Купить статус':
                 $this->sendMessage($chatId, "Функция покупки статуса будет доступна в следующем обновлении.");
                 break;
 
-            case '🚪 Выход':
+            case '❌ Выход':
                 $this->sendMessage($chatId, "Функция выхода будет доступна в следующем обновлении.");
                 break;
 
@@ -166,9 +167,9 @@ class TelegramBotController extends Controller
         return [
             'keyboard' => [
                 [['text' => '🔍 Просмотреть объявления'], ['text' => '➕ Добавить объявление']],
-                [['text' => '📋 Мои объявления'], ['text' => '💎 Купить статус']],
+                [['text' => '📨 Мои объявления'], ['text' => '📌 Купить статус']],
                 [['text' => '💻 Написать админу'], ['text' => '📄 Инструкция']],
-                [['text' => '🚀 Топ объявлений'], ['text' => '🚪 Выход']],
+                [['text' => '🚀 Топ объявления'], ['text' => '❌ Выход']],
             ],
             'resize_keyboard' => true,
             'input_field_placeholder' => 'Выберите действие',
