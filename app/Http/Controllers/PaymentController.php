@@ -75,7 +75,7 @@ class PaymentController extends Controller
             'currency'      => 'KZT',
             'paymentSystem' => 'P2R_KZT',
             'urlResult'     => route('payment.callback'),
-            'urlSuccess'    => route('payment.success'),
+            'urlSuccess'    => route('payment.success', ['service' => $service]),
             'urlFail'       => route('payment.fail'),
             'locale'        => 'ru',
             'redirect'      => '1',
