@@ -65,14 +65,7 @@ class TelegramBotController extends Controller
      */
     private function handleStart(int $chatId, int $telegramId, ?string $username): void
     {
-        $user = DB::table('users')->where('telegram_id', $telegramId)->first();
-
-        if ($user) {
-            $name = $user->name ?? 'пользователь';
-            $this->sendMessage($chatId, "С возвращением, {$name}! Выберите действие:", $this->getAuthKeyboard());
-        } else {
-            $this->sendMessage($chatId, "Добро пожаловать! Выберите действие:", $this->getGuestKeyboard());
-        }
+        $this->sendMessage($chatId, "Добро пожаловать! Выберите действие:", $this->getGuestKeyboard());
     }
 
     /**
