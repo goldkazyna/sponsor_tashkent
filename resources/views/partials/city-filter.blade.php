@@ -65,6 +65,15 @@ $selectedWho = request()->get('who', 'all');
         
         <!-- Мобильная версия -->
         <div class="mobile-filter-v2">
+            <button class="mobile-who-btn-v2" onclick="openWhoModal()">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                    <path d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z"/>
+                </svg>
+                Кого ищу
+                @if($selectedWho !== 'all')
+                    <span class="selected-city-badge-v2">{{ $selectedWho === '1' ? '♂ Мужчину' : '♀ Девушку' }}</span>
+                @endif
+            </button>
             <button class="mobile-search-btn-v2" onclick="openModalV2Improved()">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
                     <path d="M12,11.5A2.5,2.5 0 0,1 9.5,9A2.5,2.5 0 0,1 12,6.5A2.5,2.5 0 0,1 14.5,9A2.5,2.5 0 0,1 12,11.5M12,2A7,7 0 0,0 5,9C5,14.25 12,22 12,22C12,22 19,14.25 19,9A7,7 0 0,0 12,2Z"/>
@@ -108,6 +117,42 @@ $selectedWho = request()->get('who', 'all');
                     {{ $city->title }}
                 </button>
                 @endforeach
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно "Кого ищу" -->
+<div class="city-modal-v2-improved" id="whoModalV2" onclick="closeWhoModal(event)">
+    <div class="modal-content-v2-improved" onclick="event.stopPropagation()">
+        <div class="modal-header-v2-improved">
+            <h3>Кого ищу</h3>
+            <button class="close-btn-v2-improved" onclick="closeWhoModal()">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                    <path d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z"/>
+                </svg>
+            </button>
+        </div>
+        <div class="modal-body-v2-improved">
+            <div class="modal-grid-v2-improved">
+                <button class="modal-city-btn-v2-improved {{ $selectedWho === 'all' ? 'active' : '' }}" onclick="applyWhoFilter('all')">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z"/>
+                    </svg>
+                    Все
+                </button>
+                <button class="modal-city-btn-v2-improved {{ $selectedWho === '1' ? 'active' : '' }}" onclick="applyWhoFilter('1')">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z"/>
+                    </svg>
+                    ♂ Мужчину
+                </button>
+                <button class="modal-city-btn-v2-improved {{ $selectedWho === '2' ? 'active' : '' }}" onclick="applyWhoFilter('2')">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z"/>
+                    </svg>
+                    ♀ Девушку
+                </button>
             </div>
         </div>
     </div>
@@ -264,6 +309,35 @@ $selectedWho = request()->get('who', 'all');
     width: 16px;
     height: 16px;
     fill: currentColor;
+}
+
+/* Мобильная кнопка "Кого ищу" */
+.mobile-who-btn-v2 {
+    width: 100%;
+    padding: 14px 20px;
+    background: #f59e0b;
+    border: none;
+    border-radius: 12px;
+    color: white;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    position: relative;
+}
+
+.mobile-who-btn-v2 svg {
+    width: 22px;
+    height: 22px;
+    fill: white;
+}
+
+.mobile-who-btn-v2:active {
+    transform: scale(0.98);
 }
 
 /* Мобильная кнопка поиска */
@@ -500,12 +574,22 @@ $selectedWho = request()->get('who', 'all');
     .desktop-filter-v2 {
         display: none;
     }
-    
+
+    .who-filter-v2 {
+        display: none;
+    }
+
+    .filter-divider-v2 {
+        display: none;
+    }
+
     /* Показываем мобильную версию */
     .mobile-filter-v2 {
-        display: block;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
     }
-    
+
     .filter-container-v2-improved {
         padding: 0px;
         border-radius: 12px;
@@ -560,6 +644,20 @@ document.querySelectorAll('.city-btn-v2:not(.more-cities-btn-v2)').forEach(btn =
         selectCityV2Improved(city);
     });
 });
+
+// Открыть модальное окно "Кого ищу"
+function openWhoModal() {
+    document.getElementById('whoModalV2').classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+
+// Закрыть модальное окно "Кого ищу"
+function closeWhoModal(event) {
+    if (!event || event.target.id === 'whoModalV2') {
+        document.getElementById('whoModalV2').classList.remove('active');
+        document.body.style.overflow = '';
+    }
+}
 
 // Фильтр "Кого ищу"
 function applyWhoFilter(who) {
