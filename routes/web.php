@@ -89,6 +89,15 @@ Route::get('/clear-cache-secret', function () {
 Route::post('/telegram/webhook', [TelegramBotController::class, 'webhook']);
 Route::get('/telegram/set-webhook', [TelegramBotController::class, 'setWebhook']);
 
+// Отметка о просмотре инструкции по оплате
+Route::post('/instruction/seen', function () {
+    if (!session('user_id')) {
+        return response()->json(['error' => 'Unauthorized'], 401);
+    }
+    DB::table('users')->where('id', session('user_id'))->update(['saw_instruction' => 1]);
+    return response()->json(['ok' => true]);
+})->name('instruction.seen');
+
 // Крон: проверка истёкших статусов и ТОП объявлений
 Route::get('/cron/check_date', function () {
     $now = now();

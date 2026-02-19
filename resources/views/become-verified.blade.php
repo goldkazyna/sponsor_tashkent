@@ -365,6 +365,155 @@
     color: #991b1b;
 }
 
+/* Кнопка инструкции */
+.instruction-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.7rem 1.4rem;
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+}
+
+.instruction-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(16,185,129,0.4);
+}
+
+.instruction-btn svg {
+    width: 20px;
+    height: 20px;
+    fill: white;
+}
+
+.instruction-center {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+/* Модалка-оверлей */
+.modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 9999;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+}
+
+.modal-overlay.active {
+    display: flex;
+}
+
+.modal-box {
+    background: white;
+    border-radius: 16px;
+    padding: 2rem;
+    max-width: 550px;
+    width: 100%;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    position: relative;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.modal-close {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #94a3b8;
+    line-height: 1;
+}
+
+.modal-close:hover {
+    color: #1a202c;
+}
+
+.modal-title {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #1a202c;
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
+.modal-text {
+    color: #475569;
+    font-size: 0.95rem;
+    line-height: 1.7;
+    margin-bottom: 1.5rem;
+}
+
+.modal-text ol {
+    padding-left: 1.25rem;
+    margin: 0.75rem 0;
+}
+
+.modal-text ol li {
+    margin-bottom: 0.5rem;
+}
+
+.modal-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.modal-btn-primary {
+    width: 100%;
+    padding: 0.85rem 1rem;
+    border: none;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    color: white;
+    background: linear-gradient(135deg, #10b981, #059669);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.modal-btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(16,185,129,0.4);
+}
+
+.modal-btn-secondary {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 2px solid #e2e8f0;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    color: #64748b;
+    background: white;
+    text-align: center;
+}
+
+.modal-btn-secondary:hover {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+    color: #1a202c;
+}
+
 @media (max-width: 768px) {
     .verified-container {
         padding: 0 1rem;
@@ -388,6 +537,10 @@
     .help-form-wrapper {
         padding: 1.75rem;
     }
+
+    .modal-box {
+        padding: 1.5rem;
+    }
 }
 </style>
 
@@ -403,6 +556,13 @@
     <div class="verified-header">
         <h1>Купить статус проверенного пользователя</h1>
         <p>Получите значок проверенного пользователя и повысьте доверие к вашему профилю. Выберите подходящий тариф:</p>
+    </div>
+
+    <div class="instruction-center">
+        <button type="button" class="instruction-btn" onclick="openInstruction()">
+            <svg viewBox="0 0 24 24"><path d="M11,9H13V7H11M12,20C7.59,20 4,16.41 4,12C4,7.59 7.59,4 12,4C16.41,4 20,7.59 20,12C20,16.41 16.41,20 12,20M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M11,17H13V11H11V17Z"/></svg>
+            Инструкция по оплате
+        </button>
     </div>
 
     @if(session('error'))
@@ -574,7 +734,108 @@
 
 </div>
 
+{{-- Модалка: предложение изучить инструкцию --}}
+<div class="modal-overlay" id="paymentInterceptModal">
+    <div class="modal-box">
+        <button class="modal-close" onclick="closeModal('paymentInterceptModal')">&times;</button>
+        <div class="modal-title">Рекомендуем изучить инструкцию</div>
+        <div class="modal-text">
+            Перед оплатой рекомендуем ознакомиться с инструкцией, чтобы понять как проходит процесс оплаты и избежать возможных ошибок.
+        </div>
+        <div class="modal-buttons">
+            <button type="button" class="modal-btn-primary" onclick="closeModal('paymentInterceptModal'); openInstruction();">
+                <svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:white;"><path d="M11,9H13V7H11M12,20C7.59,20 4,16.41 4,12C4,7.59 7.59,4 12,4C16.41,4 20,7.59 20,12C20,16.41 16.41,20 12,20M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M11,17H13V11H11V17Z"/></svg>
+                Посмотреть инструкцию
+            </button>
+            <button type="button" class="modal-btn-secondary" id="proceedPaymentBtn">
+                Всё равно оплатить
+            </button>
+        </div>
+    </div>
+</div>
+
+{{-- Модалка: инструкция по оплате --}}
+<div class="modal-overlay" id="instructionModal">
+    <div class="modal-box">
+        <button class="modal-close" onclick="closeModal('instructionModal')">&times;</button>
+        <div class="modal-title">Инструкция по оплате</div>
+        <div class="modal-text">
+            <ol>
+                <li>Нажмите кнопку <strong>«Оплатить»</strong> напротив нужного тарифа.</li>
+                <li>Вы будете перенаправлены на страницу платёжной системы.</li>
+                <li>Выберите удобный способ оплаты и следуйте инструкциям на экране.</li>
+                <li>После успешной оплаты статус активируется автоматически.</li>
+                <li>Если возникли проблемы — напишите нам в Telegram: <a href="https://t.me/Sponsor_admin" target="_blank" style="color:#3b82f6;font-weight:600;">@Sponsor_admin</a></li>
+            </ol>
+        </div>
+        <div class="modal-buttons">
+            <button type="button" class="modal-btn-secondary" onclick="closeModal('instructionModal')">Закрыть</button>
+        </div>
+    </div>
+</div>
+
 <script>
+var sawInstruction = {{ ($user->saw_instruction ?? 0) ? 'true' : 'false' }};
+var pendingForm = null;
+
+function openModal(id) {
+    document.getElementById(id).classList.add('active');
+}
+
+function closeModal(id) {
+    document.getElementById(id).classList.remove('active');
+}
+
+function openInstruction() {
+    openModal('instructionModal');
+    if (!sawInstruction) {
+        sawInstruction = true;
+        fetch('{{ route("instruction.seen") }}', {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json'
+            }
+        });
+    }
+}
+
+// Перехватываем все формы оплаты
+document.querySelectorAll('.tariff-card form').forEach(function(form) {
+    form.addEventListener('submit', function(e) {
+        if (!sawInstruction) {
+            e.preventDefault();
+            pendingForm = form;
+            openModal('paymentInterceptModal');
+        }
+    });
+});
+
+// Кнопка "Всё равно оплатить"
+document.getElementById('proceedPaymentBtn').addEventListener('click', function() {
+    closeModal('paymentInterceptModal');
+    if (pendingForm) {
+        sawInstruction = true;
+        fetch('{{ route("instruction.seen") }}', {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json'
+            }
+        });
+        pendingForm.submit();
+    }
+});
+
+// Закрытие модалки по клику на оверлей
+document.querySelectorAll('.modal-overlay').forEach(function(overlay) {
+    overlay.addEventListener('click', function(e) {
+        if (e.target === overlay) {
+            overlay.classList.remove('active');
+        }
+    });
+});
+
 document.getElementById('helpForm').addEventListener('submit', function(e) {
     e.preventDefault();
 
