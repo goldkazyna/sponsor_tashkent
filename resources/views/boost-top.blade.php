@@ -373,6 +373,105 @@
     color: #991b1b;
 }
 
+.instruction-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.7rem 1.4rem;
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+}
+
+.instruction-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(16,185,129,0.4);
+    color: white;
+}
+
+.instruction-btn svg { width: 20px; height: 20px; fill: white; }
+
+.instruction-center { text-align: center; margin-bottom: 2rem; }
+
+.modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 9999;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+}
+
+.modal-overlay.active { display: flex; }
+
+.modal-box {
+    background: white;
+    border-radius: 16px;
+    padding: 2rem;
+    max-width: 550px;
+    width: 100%;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    position: relative;
+}
+
+.modal-close {
+    position: absolute;
+    top: 1rem; right: 1rem;
+    background: none; border: none;
+    font-size: 1.5rem; cursor: pointer;
+    color: #94a3b8; line-height: 1;
+}
+
+.modal-close:hover { color: #1a202c; }
+
+.modal-title {
+    font-size: 1.3rem; font-weight: 700;
+    color: #1a202c; margin-bottom: 1rem; text-align: center;
+}
+
+.modal-text {
+    color: #475569; font-size: 0.95rem;
+    line-height: 1.7; margin-bottom: 1.5rem;
+}
+
+.modal-buttons { display: flex; flex-direction: column; gap: 0.75rem; }
+
+.modal-btn-primary {
+    width: 100%; padding: 0.85rem 1rem;
+    border: none; border-radius: 10px;
+    font-weight: 600; font-size: 0.95rem;
+    cursor: pointer; transition: all 0.3s ease;
+    color: white; background: linear-gradient(135deg, #10b981, #059669);
+    display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+    text-decoration: none;
+}
+
+.modal-btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(16,185,129,0.4);
+    color: white;
+}
+
+.modal-btn-secondary {
+    width: 100%; padding: 0.75rem 1rem;
+    border: 2px solid #e2e8f0; border-radius: 10px;
+    font-weight: 600; font-size: 0.9rem;
+    cursor: pointer; transition: all 0.3s ease;
+    color: #64748b; background: white; text-align: center;
+}
+
+.modal-btn-secondary:hover {
+    background: #f8fafc; border-color: #cbd5e1; color: #1a202c;
+}
+
 @media (max-width: 768px) {
     .boost-container { padding: 0 1rem; }
     .tariffs-grid {
@@ -384,6 +483,7 @@
     .info-list { grid-template-columns: 1fr; }
     .boost-header h1 { font-size: 1.4rem; }
     .help-form-wrapper { padding: 1.75rem; }
+    .modal-box { padding: 1.5rem; }
 }
 </style>
 
@@ -409,6 +509,13 @@
         <span>Объявление: <strong>{{ $post->title }}</strong> (ID: {{ $post->id }})</span>
     </div>
     @endif
+
+    <div class="instruction-center">
+        <a href="{{ route('payment.instruction') }}" class="instruction-btn">
+            <svg viewBox="0 0 24 24"><path d="M11,9H13V7H11M12,20C7.59,20 4,16.41 4,12C4,7.59 7.59,4 12,4C16.41,4 20,7.59 20,12C20,16.41 16.41,20 12,20M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M11,17H13V11H11V17Z"/></svg>
+            Инструкция по оплате
+        </a>
+    </div>
 
     @if(session('error'))
         <div class="error-message">{{ session('error') }}</div>
@@ -584,7 +691,52 @@
 
 </div>
 
+{{-- Модалка: предложение изучить инструкцию --}}
+<div class="modal-overlay" id="paymentInterceptModal">
+    <div class="modal-box">
+        <button class="modal-close" onclick="document.getElementById('paymentInterceptModal').classList.remove('active')">&times;</button>
+        <div class="modal-title">У нас новая система оплаты</div>
+        <div class="modal-text">
+            Рекомендуем ознакомиться с инструкцией по оплате, чтобы понять как проходит процесс и избежать возможных ошибок.
+        </div>
+        <div class="modal-buttons">
+            <a href="{{ route('payment.instruction') }}" class="modal-btn-primary" style="text-decoration:none;">
+                <svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:white;"><path d="M11,9H13V7H11M12,20C7.59,20 4,16.41 4,12C4,7.59 7.59,4 12,4C16.41,4 20,7.59 20,12C20,16.41 16.41,20 12,20M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M11,17H13V11H11V17Z"/></svg>
+                Посмотреть инструкцию
+            </a>
+            <button type="button" class="modal-btn-secondary" id="proceedPaymentBtn">
+                Всё равно оплатить
+            </button>
+        </div>
+    </div>
+</div>
+
 <script>
+var sawInstruction = {{ ($user->saw_instruction ?? 0) ? 'true' : 'false' }};
+var pendingForm = null;
+
+document.querySelectorAll('.tariff-card form').forEach(function(form) {
+    form.addEventListener('submit', function(e) {
+        if (!sawInstruction) {
+            e.preventDefault();
+            pendingForm = form;
+            document.getElementById('paymentInterceptModal').classList.add('active');
+        }
+    });
+});
+
+document.getElementById('proceedPaymentBtn').addEventListener('click', function() {
+    document.getElementById('paymentInterceptModal').classList.remove('active');
+    if (pendingForm) {
+        sawInstruction = true;
+        pendingForm.submit();
+    }
+});
+
+document.getElementById('paymentInterceptModal').addEventListener('click', function(e) {
+    if (e.target === this) this.classList.remove('active');
+});
+
 document.getElementById('helpForm').addEventListener('submit', function(e) {
     e.preventDefault();
 
