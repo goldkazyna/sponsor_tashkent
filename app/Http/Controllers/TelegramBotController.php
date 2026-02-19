@@ -310,6 +310,66 @@ class TelegramBotController extends Controller
             return;
         }
 
+        // === МОИ ОБЪЯВЛЕНИЯ: callback-кнопки ===
+
+        // Поднять в ТОП (заглушка)
+        if (str_starts_with($data, 'mypost_top_')) {
+            $this->sendMessage($chatId, '🚀 Функция поднятия в ТОП будет доступна в следующем обновлении.');
+
+            return;
+        }
+
+        // Удалить объявление
+        if (str_starts_with($data, 'mypost_del_')) {
+            $postId = (int) str_replace('mypost_del_', '', $data);
+            $state = Cache::get("tg_state_{$telegramId}");
+
+            // Если ещё не подтвердил — спрашиваем
+            if (! $state || ($state['step'] ?? '') !== 'confirm_delete' || ($state['post_id'] ?? 0) !== $postId) {
+                Cache::put("tg_state_{$telegramId}", [
+                    'step' => 'confirm_delete',
+                    'post_id' => $postId,
+                ], now()->addMinutes(5));
+
+                $this->sendMessage($chatId, '⚠️ Вы уверены, что хотите удалить это объявление?', [
+                    'inline_keyboard' => [
+                        [
+                            ['text' => '✅ Да, удалить', 'callback_data' => "mypost_del_{$postId}"],
+                            ['text' => '❌ Нет', 'callback_data' => 'mypost_del_cancel'],
+                        ],
+                    ],
+                ]);
+
+                return;
+            }
+
+            // Подтверждено — удаляем (soft delete)
+            $user = DB::table('users')->where('telegram_id', $telegramId)->first();
+            $post = DB::table('post')->where('id', $postId)->where('del', 0)->first();
+
+            if (! $post || ! $user || ($post->email !== $user->email && (string) $post->telegram_id !== (string) $telegramId)) {
+                Cache::forget("tg_state_{$telegramId}");
+                $this->sendMessage($chatId, '❌ Объявление не найдено или у вас нет прав на удаление.');
+
+                return;
+            }
+
+            DB::table('post')->where('id', $postId)->update(['del' => 1]);
+            Cache::forget("tg_state_{$telegramId}");
+
+            $this->sendMessage($chatId, '✅ Объявление удалено.', $this->getAuthKeyboard());
+
+            return;
+        }
+
+        // Отмена удаления
+        if ($data === 'mypost_del_cancel') {
+            Cache::forget("tg_state_{$telegramId}");
+            $this->sendMessage($chatId, '👌 Удаление отменено.', $this->getAuthKeyboard());
+
+            return;
+        }
+
         if (in_array($data, ['sex_1', 'sex_2'])) {
             $state = Cache::get("tg_state_{$telegramId}");
 
@@ -416,7 +476,7 @@ class TelegramBotController extends Controller
                 break;
 
             case '📨 Мои объявления':
-                $this->sendMessage($chatId, 'Функция просмотра ваших объявлений будет доступна в следующем обновлении.');
+                $this->handleMyPosts($chatId, $telegramId);
                 break;
 
             case '📌 Купить статус':
@@ -812,6 +872,52 @@ class TelegramBotController extends Controller
         Cache::forget("tg_state_{$telegramId}");
 
         $this->sendMessage($chatId, '✅ Ваше объявление успешно опубликовано!', $this->getAuthKeyboard());
+    }
+
+    /**
+     * Мои объявления.
+     */
+    private function handleMyPosts(int $chatId, int $telegramId): void
+    {
+        $user = DB::table('users')->where('telegram_id', $telegramId)->first();
+
+        if (! $user) {
+            $this->sendMessage($chatId, '❌ Для просмотра объявлений необходимо авторизоваться.', $this->getGuestKeyboard());
+
+            return;
+        }
+
+        $posts = DB::table('post')
+            ->leftJoin('city', 'post.city', '=', 'city.id')
+            ->select('post.*', 'city.title as city_name')
+            ->where('post.del', 0)
+            ->where(function ($q) use ($user, $telegramId) {
+                $q->where('post.email', $user->email)
+                    ->orWhere('post.telegram_id', (string) $telegramId);
+            })
+            ->orderByDesc('post.date')
+            ->get();
+
+        if ($posts->isEmpty()) {
+            $this->sendMessage($chatId, '📭 У вас пока нет объявлений.', $this->getAuthKeyboard());
+
+            return;
+        }
+
+        $this->sendMessage($chatId, "📨 <b>Ваши объявления ({$posts->count()}):</b>");
+
+        foreach ($posts as $post) {
+            $text = $this->formatPost($post, $user);
+
+            $this->sendMessage($chatId, $text, [
+                'inline_keyboard' => [
+                    [
+                        ['text' => '🚀 Поднять в ТОП', 'callback_data' => "mypost_top_{$post->id}"],
+                        ['text' => '🗑 Удалить', 'callback_data' => "mypost_del_{$post->id}"],
+                    ],
+                ],
+            ]);
+        }
     }
 
     /**
