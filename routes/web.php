@@ -89,6 +89,25 @@ Route::get('/clear-cache-secret', function () {
 Route::post('/telegram/webhook', [TelegramBotController::class, 'webhook']);
 Route::get('/telegram/set-webhook', [TelegramBotController::class, 'setWebhook']);
 
+// Крон: проверка истёкших статусов и ТОП объявлений
+Route::get('/cron/check_date', function () {
+    $now = now();
+
+    // Снимаем верифицированный статус у пользователей с истёкшей prov_date
+    $usersUpdated = DB::table('users')
+        ->where('prov', 1)
+        ->whereNotNull('prov_date')
+        ->where('prov_date', '<', $now)
+        ->update(['prov' => 0]);
+
+    // Удаляем истёкшие ТОП объявления
+    $topDeleted = DB::table('top_post')
+        ->where('date_end', '<', $now)
+        ->delete();
+
+    return "OK. Users prov reset: {$usersUpdated}, Top posts removed: {$topDeleted}";
+});
+
 // Временно: последние ошибки из лога
 Route::get('/debug-log-secret', function () {
     $logFile = storage_path('logs/laravel.log');
