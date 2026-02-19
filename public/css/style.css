@@ -35,7 +35,7 @@
         /* Главное меню с логотипом и кнопками */
         .main-menu {
             background: #f8f9fa;
-            padding: 20px 0;
+            padding: 10px 0;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
         .main-menu .container {
