@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Log;
 class TelegramBotController extends Controller
 {
     private string $botToken;
+
     private string $apiUrl;
 
     public function __construct()
@@ -45,10 +46,11 @@ class TelegramBotController extends Controller
         // Обработка inline кнопок (callback_query)
         if (isset($update['callback_query'])) {
             $this->handleCallbackQuery($update['callback_query']);
+
             return response()->json(['ok' => true]);
         }
 
-        if (!isset($update['message'])) {
+        if (! isset($update['message'])) {
             return response()->json(['ok' => true]);
         }
 
@@ -61,6 +63,7 @@ class TelegramBotController extends Controller
         if ($text === '/start') {
             Cache::forget("tg_state_{$telegramId}");
             $this->handleStart($chatId, $telegramId, $username);
+
             return response()->json(['ok' => true]);
         }
 
@@ -81,7 +84,7 @@ class TelegramBotController extends Controller
      */
     private function handleStart(int $chatId, int $telegramId, ?string $username): void
     {
-        $this->sendMessage($chatId, "Добро пожаловать! Выберите действие:", $this->getGuestKeyboard());
+        $this->sendMessage($chatId, 'Добро пожаловать! Выберите действие:', $this->getGuestKeyboard());
     }
 
     /**
@@ -92,7 +95,17 @@ class TelegramBotController extends Controller
         // Отмена на любом шаге
         if ($text === '❌ Отмена') {
             Cache::forget("tg_state_{$telegramId}");
-            $this->sendMessage($chatId, "Действие отменено.", $this->getGuestKeyboard());
+            $user = DB::table('users')->where('telegram_id', $telegramId)->first();
+            $keyboard = $user ? $this->getAuthKeyboard() : $this->getGuestKeyboard();
+            $this->sendMessage($chatId, 'Действие отменено.', $keyboard);
+
+            return;
+        }
+
+        // === ДОБАВЛЕНИЕ ОБЪЯВЛЕНИЯ ===
+        if (str_starts_with($state['step'], 'post_')) {
+            $this->handlePostDialogFlow($chatId, $telegramId, $username, $text, $state);
+
             return;
         }
 
@@ -102,8 +115,9 @@ class TelegramBotController extends Controller
                 $email = trim(mb_strtolower($text));
                 $user = DB::table('users')->where('email', $email)->first();
 
-                if (!$user) {
+                if (! $user) {
                     $this->sendMessage($chatId, "❌ Пользователь с таким email не найден.\n\nПопробуйте ещё раз или нажмите «❌ Отмена»:");
+
                     return;
                 }
 
@@ -112,14 +126,15 @@ class TelegramBotController extends Controller
                     'user_id' => $user->id,
                 ], now()->addMinutes(10));
 
-                $this->sendMessage($chatId, "🔑 Введите пароль:");
+                $this->sendMessage($chatId, '🔑 Введите пароль:');
                 break;
 
             case 'login_password':
                 $user = DB::table('users')->where('id', $state['user_id'])->first();
 
-                if (!$user || $user->password !== sha1(md5($text))) {
+                if (! $user || $user->password !== sha1(md5($text))) {
                     $this->sendMessage($chatId, "❌ Неверный пароль.\n\nПопробуйте ещё раз или нажмите «❌ Отмена»:");
+
                     return;
                 }
 
@@ -129,21 +144,23 @@ class TelegramBotController extends Controller
                 ]);
 
                 Cache::forget("tg_state_{$telegramId}");
-                $this->sendMessage($chatId, "✅ Вы успешно авторизованы!", $this->getAuthKeyboard());
+                $this->sendMessage($chatId, '✅ Вы успешно авторизованы!', $this->getAuthKeyboard());
                 break;
 
-            // === РЕГИСТРАЦИЯ ===
+                // === РЕГИСТРАЦИЯ ===
             case 'register_email':
                 $email = trim(mb_strtolower($text));
 
-                if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                if (! filter_var($email, FILTER_VALIDATE_EMAIL)) {
                     $this->sendMessage($chatId, "❌ Некорректный email.\n\nПопробуйте ещё раз или нажмите «❌ Отмена»:");
+
                     return;
                 }
 
                 $exists = DB::table('users')->where('email', $email)->exists();
                 if ($exists) {
                     $this->sendMessage($chatId, "❌ Этот email уже зарегистрирован.\n\nПопробуйте другой или нажмите «❌ Отмена»:");
+
                     return;
                 }
 
@@ -152,7 +169,7 @@ class TelegramBotController extends Controller
                     'email' => $email,
                 ], now()->addMinutes(10));
 
-                $this->sendMessage($chatId, "👤 Выберите ваш пол:", [
+                $this->sendMessage($chatId, '👤 Выберите ваш пол:', [
                     'inline_keyboard' => [
                         [
                             ['text' => '👨 Мужчина', 'callback_data' => 'sex_1'],
@@ -186,6 +203,7 @@ class TelegramBotController extends Controller
             $cityId = (int) ($parts[1] ?? 0);
             $user = DB::table('users')->where('telegram_id', $telegramId)->first();
             $this->handleViewPosts($chatId, $user, $page, $cityId);
+
             return;
         }
 
@@ -193,15 +211,111 @@ class TelegramBotController extends Controller
         if ($data === 'back_to_menu') {
             $user = DB::table('users')->where('telegram_id', $telegramId)->first();
             $keyboard = $user ? $this->getAuthKeyboard() : $this->getGuestKeyboard();
-            $this->sendMessage($chatId, "📋 Главное меню:", $keyboard);
+            $this->sendMessage($chatId, '📋 Главное меню:', $keyboard);
+
+            return;
+        }
+
+        // === ДОБАВЛЕНИЕ ОБЪЯВЛЕНИЯ: callback-кнопки ===
+
+        // Выбор города
+        if (str_starts_with($data, 'post_city_')) {
+            $cityId = (int) str_replace('post_city_', '', $data);
+            $state = Cache::get("tg_state_{$telegramId}");
+            if (! $state || $state['step'] !== 'post_city') {
+                $this->sendMessage($chatId, '❌ Сессия истекла. Попробуйте заново.', $this->getAuthKeyboard());
+
+                return;
+            }
+
+            $state['post_data']['city'] = $cityId;
+            $state['step'] = 'post_whats';
+            Cache::put("tg_state_{$telegramId}", $state, now()->addMinutes(30));
+
+            $this->sendMessage($chatId, "📱 Введите номер WhatsApp:\n<i>Формат: +77001234567</i>", [
+                'inline_keyboard' => [
+                    [['text' => '⏩ Пропустить', 'callback_data' => 'post_skip_whats']],
+                ],
+            ]);
+
+            return;
+        }
+
+        // Пропуск телефона
+        if ($data === 'post_skip_phone') {
+            $state = Cache::get("tg_state_{$telegramId}");
+            if (! $state || $state['step'] !== 'post_phone') {
+                return;
+            }
+
+            $state['post_data']['phone'] = '';
+            $state['step'] = 'post_city';
+            Cache::put("tg_state_{$telegramId}", $state, now()->addMinutes(30));
+
+            $this->sendCityInlineKeyboard($chatId);
+
+            return;
+        }
+
+        // Пропуск WhatsApp
+        if ($data === 'post_skip_whats') {
+            $state = Cache::get("tg_state_{$telegramId}");
+            if (! $state || $state['step'] !== 'post_whats') {
+                return;
+            }
+
+            $state['post_data']['whats'] = '';
+            $state['step'] = 'post_telegram';
+            Cache::put("tg_state_{$telegramId}", $state, now()->addMinutes(30));
+
+            $this->sendMessage($chatId, "💬 Введите ваш Telegram:\n<i>Формат: @username</i>", [
+                'inline_keyboard' => [
+                    [['text' => '⏩ Пропустить', 'callback_data' => 'post_skip_telegram']],
+                ],
+            ]);
+
+            return;
+        }
+
+        // Пропуск Telegram
+        if ($data === 'post_skip_telegram') {
+            $state = Cache::get("tg_state_{$telegramId}");
+            if (! $state || $state['step'] !== 'post_telegram') {
+                return;
+            }
+
+            $state['post_data']['telegram'] = '';
+            $state['step'] = 'post_description';
+            Cache::put("tg_state_{$telegramId}", $state, now()->addMinutes(30));
+
+            $this->sendMessage($chatId, "💬 Введите описание объявления:\n<i>Расскажите о себе и о том, кого ищете...</i>");
+
+            return;
+        }
+
+        // Опубликовать
+        if ($data === 'post_publish') {
+            $this->publishPost($chatId, $telegramId, $username);
+
+            return;
+        }
+
+        // Отменить
+        if ($data === 'post_cancel') {
+            Cache::forget("tg_state_{$telegramId}");
+            $user = DB::table('users')->where('telegram_id', $telegramId)->first();
+            $keyboard = $user ? $this->getAuthKeyboard() : $this->getGuestKeyboard();
+            $this->sendMessage($chatId, '❌ Добавление объявления отменено.', $keyboard);
+
             return;
         }
 
         if (in_array($data, ['sex_1', 'sex_2'])) {
             $state = Cache::get("tg_state_{$telegramId}");
 
-            if (!$state || $state['step'] !== 'register_sex') {
-                $this->sendMessage($chatId, "❌ Сессия истекла. Начните регистрацию заново.", $this->getGuestKeyboard());
+            if (! $state || $state['step'] !== 'register_sex') {
+                $this->sendMessage($chatId, '❌ Сессия истекла. Начните регистрацию заново.', $this->getGuestKeyboard());
+
                 return;
             }
 
@@ -234,10 +348,10 @@ class TelegramBotController extends Controller
             $this->sendMessage(
                 $chatId,
                 "✅ Регистрация завершена!\n\n"
-                . "📧 Email: <b>{$email}</b>\n"
-                . "🔑 Пароль: <code>{$password}</code>\n"
-                . "👤 Пол: {$sexLabel}\n\n"
-                . "Сохраните пароль — он нужен для входа на сайте.",
+                ."📧 Email: <b>{$email}</b>\n"
+                ."🔑 Пароль: <code>{$password}</code>\n"
+                ."👤 Пол: {$sexLabel}\n\n"
+                .'Сохраните пароль — он нужен для входа на сайте.',
                 $this->getAuthKeyboard()
             );
         }
@@ -253,7 +367,8 @@ class TelegramBotController extends Controller
         switch ($text) {
             case '🖊 Авторизоваться':
                 if ($user) {
-                    $this->sendMessage($chatId, "Вы уже авторизованы!", $this->getAuthKeyboard());
+                    $this->sendMessage($chatId, 'Вы уже авторизованы!', $this->getAuthKeyboard());
+
                     return;
                 }
 
@@ -261,12 +376,13 @@ class TelegramBotController extends Controller
                     'step' => 'login_email',
                 ], now()->addMinutes(10));
 
-                $this->sendMessage($chatId, "📧 Введите ваш email:", $this->getCancelKeyboard());
+                $this->sendMessage($chatId, '📧 Введите ваш email:', $this->getCancelKeyboard());
                 break;
 
             case '💾 Зарегистрироваться':
                 if ($user) {
-                    $this->sendMessage($chatId, "Вы уже зарегистрированы!", $this->getAuthKeyboard());
+                    $this->sendMessage($chatId, 'Вы уже зарегистрированы!', $this->getAuthKeyboard());
+
                     return;
                 }
 
@@ -274,46 +390,46 @@ class TelegramBotController extends Controller
                     'step' => 'register_email',
                 ], now()->addMinutes(10));
 
-                $this->sendMessage($chatId, "📧 Введите ваш email:", $this->getCancelKeyboard());
+                $this->sendMessage($chatId, '📧 Введите ваш email:', $this->getCancelKeyboard());
                 break;
 
             case '🔍 Просмотреть объявления':
-                $this->sendMessage($chatId, "🏙 Выберите город или смотрите все объявления:", $this->getCityKeyboard());
+                $this->sendMessage($chatId, '🏙 Выберите город или смотрите все объявления:', $this->getCityKeyboard());
                 $this->handleViewPosts($chatId, $user, 1);
                 break;
 
             case '➕ Добавить объявление':
-                $this->sendMessage($chatId, "Функция добавления объявлений будет доступна в следующем обновлении.");
+                $this->handleAddPost($chatId, $telegramId);
                 break;
 
             case '💻 Написать админу':
-                $this->sendMessage($chatId, "Функция связи с админом будет доступна в следующем обновлении.");
+                $this->sendMessage($chatId, 'Функция связи с админом будет доступна в следующем обновлении.');
                 break;
 
             case '📄 Инструкция':
-                $this->sendMessage($chatId, "Инструкция будет доступна в следующем обновлении.");
+                $this->sendMessage($chatId, 'Инструкция будет доступна в следующем обновлении.');
                 break;
 
             case '🚀 Топ объявлений':
             case '🚀 Топ объявления':
-                $this->sendMessage($chatId, "Топ объявлений будет доступен в следующем обновлении.");
+                $this->sendMessage($chatId, 'Топ объявлений будет доступен в следующем обновлении.');
                 break;
 
             case '📨 Мои объявления':
-                $this->sendMessage($chatId, "Функция просмотра ваших объявлений будет доступна в следующем обновлении.");
+                $this->sendMessage($chatId, 'Функция просмотра ваших объявлений будет доступна в следующем обновлении.');
                 break;
 
             case '📌 Купить статус':
-                $this->sendMessage($chatId, "Функция покупки статуса будет доступна в следующем обновлении.");
+                $this->sendMessage($chatId, 'Функция покупки статуса будет доступна в следующем обновлении.');
                 break;
 
             case '❌ Выход':
-                $this->sendMessage($chatId, "👋 Вы вышли из аккаунта.", $this->getGuestKeyboard());
+                $this->sendMessage($chatId, '👋 Вы вышли из аккаунта.', $this->getGuestKeyboard());
                 break;
 
             case '🏠 Главное меню':
                 $keyboard = $user ? $this->getAuthKeyboard() : $this->getGuestKeyboard();
-                $this->sendMessage($chatId, "📋 Главное меню:", $keyboard);
+                $this->sendMessage($chatId, '📋 Главное меню:', $keyboard);
                 break;
 
             default:
@@ -325,7 +441,7 @@ class TelegramBotController extends Controller
                 }
 
                 $keyboard = $user ? $this->getAuthKeyboard() : $this->getGuestKeyboard();
-                $this->sendMessage($chatId, "Неизвестная команда. Выберите действие из меню:", $keyboard);
+                $this->sendMessage($chatId, 'Неизвестная команда. Выберите действие из меню:', $keyboard);
                 break;
         }
     }
@@ -360,7 +476,8 @@ class TelegramBotController extends Controller
             ->get();
 
         if ($posts->isEmpty()) {
-            $this->sendMessage($chatId, "📭 Объявлений в этом городе пока нет.");
+            $this->sendMessage($chatId, '📭 Объявлений в этом городе пока нет.');
+
             return;
         }
 
@@ -374,17 +491,17 @@ class TelegramBotController extends Controller
         }
 
         // Кнопки пагинации
-        $cityParam = $cityId > 0 ? "_{$cityId}" : "_0";
+        $cityParam = $cityId > 0 ? "_{$cityId}" : '_0';
         $buttons = [];
         if ($page > 1) {
-            $buttons[] = ['text' => '◀ Предыдущая страница', 'callback_data' => "posts_page_" . ($page - 1) . $cityParam];
+            $buttons[] = ['text' => '◀ Предыдущая страница', 'callback_data' => 'posts_page_'.($page - 1).$cityParam];
         }
         if ($page < $totalPages) {
-            $buttons[] = ['text' => '▶ Следующая страница', 'callback_data' => "posts_page_" . ($page + 1) . $cityParam];
+            $buttons[] = ['text' => '▶ Следующая страница', 'callback_data' => 'posts_page_'.($page + 1).$cityParam];
         }
 
         $inline = [];
-        if (!empty($buttons)) {
+        if (! empty($buttons)) {
             $inline[] = $buttons;
         }
         $inline[] = [['text' => '🔙 В главное меню', 'callback_data' => 'back_to_menu']];
@@ -406,7 +523,7 @@ class TelegramBotController extends Controller
             ->inRandomOrder()
             ->first();
 
-        if (!$topRecord) {
+        if (! $topRecord) {
             return;
         }
 
@@ -417,14 +534,14 @@ class TelegramBotController extends Controller
             ->where('post.del', 0)
             ->first();
 
-        if (!$post) {
+        if (! $post) {
             return;
         }
 
         // Увеличиваем count_view на 1
         DB::table('top_post')->where('id', $topRecord->id)->increment('count_view');
 
-        $text = "◆◆◆ТОП ОБЪЯВЛЕНИЕ◆◆◆\n" . $this->formatPost($post, $user);
+        $text = "◆◆◆ТОП ОБЪЯВЛЕНИЕ◆◆◆\n".$this->formatPost($post, $user);
 
         $this->sendMessage($chatId, $text);
     }
@@ -451,8 +568,8 @@ class TelegramBotController extends Controller
         if ($user) {
             $name = $post->fio ?: 'Не указано';
             $tg = $post->telegram ?: 'Не указан';
-            if ($tg !== 'Не указан' && !str_starts_with($tg, '@')) {
-                $tg = '@' . $tg;
+            if ($tg !== 'Не указан' && ! str_starts_with($tg, '@')) {
+                $tg = '@'.$tg;
             }
             $text .= "👤 Имя: {$name}\n";
             $text .= "📩 Telegram: {$tg}\n";
@@ -466,6 +583,235 @@ class TelegramBotController extends Controller
         $text .= "Просмотры: {$post->view}";
 
         return $text;
+    }
+
+    /**
+     * Начало добавления объявления.
+     */
+    private function handleAddPost(int $chatId, int $telegramId): void
+    {
+        $user = DB::table('users')->where('telegram_id', $telegramId)->first();
+
+        if (! $user) {
+            $this->sendMessage($chatId, '❌ Для добавления объявления необходимо авторизоваться или зарегистрироваться.', $this->getGuestKeyboard());
+
+            return;
+        }
+
+        // Мужчинам нужен статус проверенного
+        if ($user->sex == 1 && $user->prov != 1) {
+            $this->sendMessage($chatId, "❌ Мужчинам для подачи объявления необходимо приобрести статус проверенного пользователя.\n\nДевушки могут подавать объявления бесплатно.", $this->getAuthKeyboard());
+
+            return;
+        }
+
+        Cache::put("tg_state_{$telegramId}", [
+            'step' => 'post_title',
+            'post_data' => [],
+        ], now()->addMinutes(30));
+
+        $this->sendMessage($chatId, "📝 <b>Добавление объявления</b>\n\nВведите заголовок объявления:\n<i>Например: Ищу партнера для серьезных отношений</i>", $this->getCancelKeyboard());
+    }
+
+    /**
+     * Обработка шагов создания объявления.
+     */
+    private function handlePostDialogFlow(int $chatId, int $telegramId, ?string $username, string $text, array $state): void
+    {
+        switch ($state['step']) {
+            case 'post_title':
+                $title = trim($text);
+                if (mb_strlen($title) > 255) {
+                    $this->sendMessage($chatId, '❌ Заголовок слишком длинный (макс. 255 символов). Попробуйте короче:');
+
+                    return;
+                }
+                if (mb_strlen($title) < 2) {
+                    $this->sendMessage($chatId, '❌ Заголовок слишком короткий. Введите хотя бы 2 символа:');
+
+                    return;
+                }
+
+                $state['post_data']['title'] = $title;
+                $state['step'] = 'post_fio';
+                Cache::put("tg_state_{$telegramId}", $state, now()->addMinutes(30));
+
+                $this->sendMessage($chatId, '👤 Введите ваше ФИО или Имя:');
+                break;
+
+            case 'post_fio':
+                $fio = trim($text);
+                if (mb_strlen($fio) < 2) {
+                    $this->sendMessage($chatId, '❌ Имя слишком короткое. Введите хотя бы 2 символа:');
+
+                    return;
+                }
+
+                $state['post_data']['fio'] = $fio;
+                $state['step'] = 'post_phone';
+                Cache::put("tg_state_{$telegramId}", $state, now()->addMinutes(30));
+
+                $this->sendMessage($chatId, "📞 Введите номер телефона:\n<i>Формат: +77001234567</i>", [
+                    'inline_keyboard' => [
+                        [['text' => '⏩ Пропустить', 'callback_data' => 'post_skip_phone']],
+                    ],
+                ]);
+                break;
+
+            case 'post_phone':
+                $state['post_data']['phone'] = trim($text);
+                $state['step'] = 'post_city';
+                Cache::put("tg_state_{$telegramId}", $state, now()->addMinutes(30));
+
+                $this->sendCityInlineKeyboard($chatId);
+                break;
+
+            case 'post_whats':
+                $state['post_data']['whats'] = trim($text);
+                $state['step'] = 'post_telegram';
+                Cache::put("tg_state_{$telegramId}", $state, now()->addMinutes(30));
+
+                $this->sendMessage($chatId, "💬 Введите ваш Telegram:\n<i>Формат: @username</i>", [
+                    'inline_keyboard' => [
+                        [['text' => '⏩ Пропустить', 'callback_data' => 'post_skip_telegram']],
+                    ],
+                ]);
+                break;
+
+            case 'post_telegram':
+                $state['post_data']['telegram'] = trim($text);
+                $state['step'] = 'post_description';
+                Cache::put("tg_state_{$telegramId}", $state, now()->addMinutes(30));
+
+                $this->sendMessage($chatId, "💬 Введите описание объявления:\n<i>Расскажите о себе и о том, кого ищете...</i>");
+                break;
+
+            case 'post_description':
+                $desc = trim($text);
+                if (mb_strlen($desc) < 10) {
+                    $this->sendMessage($chatId, '❌ Описание слишком короткое. Напишите хотя бы 10 символов:');
+
+                    return;
+                }
+
+                $state['post_data']['discription'] = $desc;
+                $state['step'] = 'post_confirm';
+                Cache::put("tg_state_{$telegramId}", $state, now()->addMinutes(30));
+
+                $this->sendPostPreview($chatId, $telegramId, $state['post_data']);
+                break;
+        }
+    }
+
+    /**
+     * Inline-кнопки выбора города для объявления.
+     */
+    private function sendCityInlineKeyboard(int $chatId): void
+    {
+        $cities = DB::table('city')->orderBy('id')->get();
+        $rows = [];
+        $row = [];
+
+        foreach ($cities as $city) {
+            $row[] = ['text' => $city->title, 'callback_data' => "post_city_{$city->id}"];
+            if (count($row) === 2) {
+                $rows[] = $row;
+                $row = [];
+            }
+        }
+        if (! empty($row)) {
+            $rows[] = $row;
+        }
+
+        $this->sendMessage($chatId, '🏙 Выберите город:', [
+            'inline_keyboard' => $rows,
+        ]);
+    }
+
+    /**
+     * Превью объявления перед публикацией.
+     */
+    private function sendPostPreview(int $chatId, int $telegramId, array $data): void
+    {
+        $user = DB::table('users')->where('telegram_id', $telegramId)->first();
+        $cityName = '';
+        if (! empty($data['city'])) {
+            $city = DB::table('city')->where('id', $data['city'])->first();
+            $cityName = $city ? $city->title : '';
+        }
+
+        $sexLabel = $user->sex == 1 ? '👦 Мужчина' : '👩 Женщина';
+        $whoLabel = $user->sex == 1 ? '👩 Ищу: Женщину' : '👦 Ищу: Мужчину';
+
+        $text = "📋 <b>Проверьте ваше объявление:</b>\n\n";
+        $text .= "📌 <b>Заголовок:</b> {$data['title']}\n";
+        $text .= "👤 <b>Имя:</b> {$data['fio']}\n";
+        $text .= '📞 <b>Телефон:</b> '.($data['phone'] ?? 'Не указан')."\n";
+        $text .= "🏙 <b>Город:</b> {$cityName}\n";
+        $text .= '📱 <b>WhatsApp:</b> '.($data['whats'] ?? 'Не указан')."\n";
+        $text .= '💬 <b>Telegram:</b> '.($data['telegram'] ?? 'Не указан')."\n";
+        $text .= "👤 <b>Пол:</b> {$sexLabel}\n";
+        $text .= "{$whoLabel}\n\n";
+        $text .= "💬 <b>Описание:</b>\n{$data['discription']}\n";
+
+        $this->sendMessage($chatId, $text, [
+            'inline_keyboard' => [
+                [
+                    ['text' => '✅ Опубликовать', 'callback_data' => 'post_publish'],
+                    ['text' => '❌ Отменить', 'callback_data' => 'post_cancel'],
+                ],
+            ],
+        ]);
+    }
+
+    /**
+     * Публикация объявления в БД.
+     */
+    private function publishPost(int $chatId, int $telegramId, ?string $username): void
+    {
+        $state = Cache::get("tg_state_{$telegramId}");
+        if (! $state || $state['step'] !== 'post_confirm') {
+            $this->sendMessage($chatId, '❌ Сессия истекла. Попробуйте заново.');
+
+            return;
+        }
+
+        $user = DB::table('users')->where('telegram_id', $telegramId)->first();
+        if (! $user) {
+            $this->sendMessage($chatId, '❌ Пользователь не найден.', $this->getGuestKeyboard());
+            Cache::forget("tg_state_{$telegramId}");
+
+            return;
+        }
+
+        $data = $state['post_data'];
+
+        DB::table('post')->insert([
+            'title' => $data['title'],
+            'email' => $user->email ?? '',
+            'email_2' => $user->email ?? '',
+            'phone' => $data['phone'] ?? '',
+            'photo_view' => 0,
+            'whats' => $data['whats'] ?? '',
+            'telegram' => $data['telegram'] ?? '',
+            'date' => now(),
+            'fio' => $data['fio'],
+            'price' => '0',
+            'sex' => $user->sex,
+            'who' => $user->sex,
+            'country' => '1',
+            'city' => $data['city'],
+            'discription' => $data['discription'],
+            'ip' => '0.0.0.0',
+            'del' => 0,
+            'from_telegram' => 1,
+            'telegram_id' => (string) $telegramId,
+            'telegram_username' => $username ?? '',
+        ]);
+
+        Cache::forget("tg_state_{$telegramId}");
+
+        $this->sendMessage($chatId, '✅ Ваше объявление успешно опубликовано!', $this->getAuthKeyboard());
     }
 
     /**
@@ -536,7 +882,7 @@ class TelegramBotController extends Controller
                 $row = [];
             }
         }
-        if (!empty($row)) {
+        if (! empty($row)) {
             $keyboard[] = $row;
         }
 
