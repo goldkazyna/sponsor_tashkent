@@ -109,6 +109,13 @@ class TelegramBotController extends Controller
             return;
         }
 
+        // === КУПИТЬ СТАТУС: помощь ===
+        if ($state['step'] === 'buy_status_telegram') {
+            $this->sendBuyStatusHelp($chatId, $telegramId, $text);
+
+            return;
+        }
+
         switch ($state['step']) {
             // === АВТОРИЗАЦИЯ ===
             case 'login_email':
@@ -378,6 +385,19 @@ class TelegramBotController extends Controller
             return;
         }
 
+        // Помощь с покупкой статуса — запрашиваем Telegram для связи
+        if ($data === 'buy_status_help') {
+            $user = DB::table('users')->where('telegram_id', $telegramId)->first();
+
+            Cache::put("tg_state_{$telegramId}", [
+                'step' => 'buy_status_telegram',
+            ], now()->addMinutes(10));
+
+            $this->sendMessage($chatId, "💬 Введите ваш Telegram для связи:\n<i>Формат: @username</i>", $this->getCancelKeyboard());
+
+            return;
+        }
+
         if (in_array($data, ['sex_1', 'sex_2'])) {
             $state = Cache::get("tg_state_{$telegramId}");
 
@@ -488,7 +508,7 @@ class TelegramBotController extends Controller
                 break;
 
             case '📌 Купить статус':
-                $this->sendMessage($chatId, 'Функция покупки статуса будет доступна в следующем обновлении.');
+                $this->handleBuyStatus($chatId, $telegramId);
                 break;
 
             case '❌ Выход':
@@ -880,6 +900,88 @@ class TelegramBotController extends Controller
         Cache::forget("tg_state_{$telegramId}");
 
         $this->sendMessage($chatId, '✅ Ваше объявление успешно опубликовано!', $this->getAuthKeyboard());
+    }
+
+    /**
+     * Отправка заявки на покупку статуса админу.
+     */
+    private function sendBuyStatusHelp(int $chatId, int $telegramId, string $text): void
+    {
+        $tgContact = trim($text);
+        if (empty($tgContact)) {
+            $this->sendMessage($chatId, '❌ Введите ваш Telegram для связи:');
+
+            return;
+        }
+
+        $user = DB::table('users')->where('telegram_id', $telegramId)->first();
+
+        $adminMessage = "⭐ <b>Заявка на статус проверенного пользователя</b>\n\n";
+        $adminMessage .= '👤 <b>Имя:</b> '.($user->fio ?? 'Не указано')."\n";
+        $adminMessage .= '📧 <b>Email:</b> '.($user->email ?? 'Не указано')."\n";
+        $adminMessage .= "💬 <b>Telegram:</b> {$tgContact}\n";
+        $adminMessage .= "🆔 <b>Telegram ID:</b> {$telegramId}\n";
+
+        // Отправляем админу через бота уведомлений
+        $notifyToken = config('services.telegram.bot_token');
+        $notifyChatId = config('services.telegram.chat_id');
+
+        if ($notifyToken && $notifyChatId) {
+            Http::post("https://api.telegram.org/bot{$notifyToken}/sendMessage", [
+                'chat_id' => $notifyChatId,
+                'text' => $adminMessage,
+                'parse_mode' => 'HTML',
+            ]);
+        }
+
+        Cache::forget("tg_state_{$telegramId}");
+
+        $this->sendMessage($chatId, "✅ Ваша заявка отправлена!\n\nАдмин свяжется с вами в ближайшее время.", $this->getAuthKeyboard());
+    }
+
+    /**
+     * Купить статус проверенного пользователя.
+     */
+    private function handleBuyStatus(int $chatId, int $telegramId): void
+    {
+        $user = DB::table('users')->where('telegram_id', $telegramId)->first();
+
+        if (! $user) {
+            $this->sendMessage($chatId, '❌ Для покупки статуса необходимо авторизоваться или зарегистрироваться.', $this->getGuestKeyboard());
+
+            return;
+        }
+
+        if ($user->prov == 1) {
+            $provDate = $user->prov_date ? date('d.m.Y', strtotime($user->prov_date)) : '';
+            $text = '✅ У вас уже куплен статус проверенного пользователя!';
+            if ($provDate) {
+                $text .= "\n📅 Действует до: <b>{$provDate}</b>";
+            }
+            $this->sendMessage($chatId, $text, $this->getAuthKeyboard());
+
+            return;
+        }
+
+        $siteUrl = config('app.url', 'https://goldkazyna.kz');
+
+        $text = "📌 <b>Статус проверенного пользователя</b>\n\n";
+        $text .= "Со статусом вы получаете:\n";
+        $text .= "✅ Значок проверенного\n";
+        $text .= "✅ Повышенное доверие\n";
+        $text .= "✅ Больше откликов\n\n";
+        $text .= "💰 <b>Тарифы:</b>\n\n";
+        $text .= "🔹 <b>5 дней</b> — 7 592 ₸ (~$14)\n";
+        $text .= "🔹 <b>10 дней</b> — 10 846 ₸ (~$20)\n";
+        $text .= "🔹 <b>30 дней</b> — 16 268 ₸ (~$30) ⭐ Популярный\n\n";
+        $text .= 'Для оплаты перейдите на сайт:';
+
+        $this->sendMessage($chatId, $text, [
+            'inline_keyboard' => [
+                [['text' => '🌐 Перейти на сайт для оплаты', 'url' => "{$siteUrl}/become-verified"]],
+                [['text' => '💬 Написать админу для помощи', 'callback_data' => 'buy_status_help']],
+            ],
+        ]);
     }
 
     /**
