@@ -924,12 +924,21 @@ class TelegramBotController extends Controller
             ->limit($perPage)
             ->get();
 
-        $this->sendMessage($chatId, "📨 <b>Ваши объявления ({$total}):</b>");
+        // Удаляем старые сообщения предыдущей страницы
+        $oldMessages = Cache::get("tg_myposts_msgs_{$telegramId}", []);
+        if (! empty($oldMessages)) {
+            $this->deleteMessages($chatId, $oldMessages);
+            Cache::forget("tg_myposts_msgs_{$telegramId}");
+        }
+
+        $sentMessages = [];
+
+        $sentMessages[] = $this->sendMessage($chatId, "📨 <b>Ваши объявления ({$total}):</b>");
 
         foreach ($posts as $post) {
             $text = $this->formatPost($post, $user);
 
-            $this->sendMessage($chatId, $text, [
+            $sentMessages[] = $this->sendMessage($chatId, $text, [
                 'inline_keyboard' => [
                     [
                         ['text' => '🚀 Поднять в ТОП', 'callback_data' => "mypost_top_{$post->id}"],
@@ -954,15 +963,18 @@ class TelegramBotController extends Controller
         }
         $inline[] = [['text' => '🔙 В главное меню', 'callback_data' => 'back_to_menu']];
 
-        $this->sendMessage($chatId, "📄 Страница: {$page}/{$totalPages}", [
+        $sentMessages[] = $this->sendMessage($chatId, "📄 Страница: {$page}/{$totalPages}", [
             'inline_keyboard' => $inline,
         ]);
+
+        // Сохраняем ID сообщений для удаления при переключении страницы
+        Cache::put("tg_myposts_msgs_{$telegramId}", array_filter($sentMessages), now()->addMinutes(30));
     }
 
     /**
      * Отправка сообщения через Telegram Bot API.
      */
-    private function sendMessage(int $chatId, string $text, ?array $replyMarkup = null): void
+    private function sendMessage(int $chatId, string $text, ?array $replyMarkup = null): ?int
     {
         $params = [
             'chat_id' => $chatId,
@@ -974,7 +986,22 @@ class TelegramBotController extends Controller
             $params['reply_markup'] = json_encode($replyMarkup);
         }
 
-        Http::post("{$this->apiUrl}/sendMessage", $params);
+        $response = Http::post("{$this->apiUrl}/sendMessage", $params);
+
+        return $response->json('result.message_id');
+    }
+
+    /**
+     * Удаление сообщений по массиву ID.
+     */
+    private function deleteMessages(int $chatId, array $messageIds): void
+    {
+        foreach ($messageIds as $msgId) {
+            Http::post("{$this->apiUrl}/deleteMessage", [
+                'chat_id' => $chatId,
+                'message_id' => $msgId,
+            ]);
+        }
     }
 
     /**
