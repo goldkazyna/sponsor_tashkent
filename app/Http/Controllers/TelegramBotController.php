@@ -207,6 +207,14 @@ class TelegramBotController extends Controller
             return;
         }
 
+        // Пагинация моих объявлений: myposts_page_{page}
+        if (str_starts_with($data, 'myposts_page_')) {
+            $page = (int) str_replace('myposts_page_', '', $data);
+            $this->handleMyPosts($chatId, $telegramId, $page);
+
+            return;
+        }
+
         // Возврат в главное меню
         if ($data === 'back_to_menu') {
             $user = DB::table('users')->where('telegram_id', $telegramId)->first();
@@ -875,9 +883,9 @@ class TelegramBotController extends Controller
     }
 
     /**
-     * Мои объявления.
+     * Мои объявления с пагинацией.
      */
-    private function handleMyPosts(int $chatId, int $telegramId): void
+    private function handleMyPosts(int $chatId, int $telegramId, int $page = 1): void
     {
         $user = DB::table('users')->where('telegram_id', $telegramId)->first();
 
@@ -887,24 +895,36 @@ class TelegramBotController extends Controller
             return;
         }
 
-        $posts = DB::table('post')
-            ->leftJoin('city', 'post.city', '=', 'city.id')
-            ->select('post.*', 'city.title as city_name')
+        $perPage = 5;
+
+        $baseQuery = DB::table('post')
             ->where('post.del', 0)
             ->where(function ($q) use ($user, $telegramId) {
                 $q->where('post.email', $user->email)
                     ->orWhere('post.telegram_id', (string) $telegramId);
-            })
-            ->orderByDesc('post.date')
-            ->get();
+            });
 
-        if ($posts->isEmpty()) {
+        $total = (clone $baseQuery)->count();
+
+        if ($total === 0) {
             $this->sendMessage($chatId, '📭 У вас пока нет объявлений.', $this->getAuthKeyboard());
 
             return;
         }
 
-        $this->sendMessage($chatId, "📨 <b>Ваши объявления ({$posts->count()}):</b>");
+        $totalPages = max(1, ceil($total / $perPage));
+        $page = max(1, min($page, $totalPages));
+        $offset = ($page - 1) * $perPage;
+
+        $posts = (clone $baseQuery)
+            ->leftJoin('city', 'post.city', '=', 'city.id')
+            ->select('post.*', 'city.title as city_name')
+            ->orderByDesc('post.date')
+            ->offset($offset)
+            ->limit($perPage)
+            ->get();
+
+        $this->sendMessage($chatId, "📨 <b>Ваши объявления ({$total}):</b>");
 
         foreach ($posts as $post) {
             $text = $this->formatPost($post, $user);
@@ -918,6 +938,25 @@ class TelegramBotController extends Controller
                 ],
             ]);
         }
+
+        // Кнопки пагинации
+        $buttons = [];
+        if ($page > 1) {
+            $buttons[] = ['text' => '◀ Назад', 'callback_data' => 'myposts_page_'.($page - 1)];
+        }
+        if ($page < $totalPages) {
+            $buttons[] = ['text' => '▶ Далее', 'callback_data' => 'myposts_page_'.($page + 1)];
+        }
+
+        $inline = [];
+        if (! empty($buttons)) {
+            $inline[] = $buttons;
+        }
+        $inline[] = [['text' => '🔙 В главное меню', 'callback_data' => 'back_to_menu']];
+
+        $this->sendMessage($chatId, "📄 Страница: {$page}/{$totalPages}", [
+            'inline_keyboard' => $inline,
+        ]);
     }
 
     /**
