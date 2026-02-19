@@ -197,25 +197,38 @@
     <div class="instruction-card">
         <h2><span class="step-number">1</span> Выберите тариф</h2>
         <p>На странице оплаты выберите подходящий тариф (5, 10 или 30 дней) и нажмите кнопку <strong>«Оплатить»</strong>.</p>
-        {{-- <img src="{{ asset('images/instruction/step1.png') }}" alt="Шаг 1"> --}}
+        <img src="{{ asset('images/instruction/step1.PNG') }}" alt="Шаг 1 — Выбор тарифа">
     </div>
 
     <div class="instruction-card">
-        <h2><span class="step-number">2</span> Страница платёжной системы</h2>
-        <p>Вы будете перенаправлены на страницу платёжной системы. Следуйте инструкциям на экране.</p>
-        {{-- <img src="{{ asset('images/instruction/step2.png') }}" alt="Шаг 2"> --}}
+        <h2><span class="step-number">2</span> Дождитесь загрузки страницы оплаты</h2>
+        <p>Дождитесь когда система прогрузится. Оплата идёт только через <strong>Kaspi</strong>. Вам покажется страница с реквизитами — переведите деньги по указанному номеру и сумму которая указана выше.</p>
+        <div class="instruction-note" style="margin-top:1rem;">
+            <svg viewBox="0 0 24 24"><path d="M13,13H11V7H13M13,17H11V15H13M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2Z"/></svg>
+            <p><strong>Важно:</strong> сумма перевода должна точно совпадать с указанной суммой. Иначе платёж не будет засчитан.</p>
+        </div>
+        <img src="{{ asset('images/instruction/step2.png') }}" alt="Шаг 2 — Страница реквизитов">
     </div>
 
     <div class="instruction-card">
-        <h2><span class="step-number">3</span> Произведите оплату</h2>
-        <p>Выберите удобный способ оплаты и завершите платёж. После успешной оплаты вы будете перенаправлены обратно на сайт.</p>
-        {{-- <img src="{{ asset('images/instruction/step3.png') }}" alt="Шаг 3"> --}}
+        <h2><span class="step-number">3</span> Подтвердите оплату</h2>
+        <p>После того как вы перевели деньги, нажмите кнопку <strong>«Подтвердить»</strong>. Система проверит статус транзакции.</p>
+        <img src="{{ asset('images/instruction/step3.PNG') }}" alt="Шаг 3 — Подтверждение оплаты">
     </div>
 
     <div class="instruction-card">
-        <h2><span class="step-number">4</span> Статус активирован</h2>
-        <p>После подтверждения оплаты статус активируется автоматически. Вы увидите подтверждение на экране.</p>
-        {{-- <img src="{{ asset('images/instruction/step4.png') }}" alt="Шаг 4"> --}}
+        <h2><span class="step-number">4</span> Как перевести через Kaspi</h2>
+        <p>Если вы не знаете как сделать перевод, следуйте этим шагам:</p>
+        <ol style="color:#475569; font-size:0.95rem; line-height:2; padding-left:1.25rem; margin:0.75rem 0;">
+            <li>Зайдите в мобильное приложение <strong>Kaspi Bank</strong></li>
+            <li>Нажмите раздел <strong>«Переводы»</strong></li>
+            <li>Выберите <strong>«Международные переводы»</strong></li>
+            <li>Введите номер карты получателя</li>
+            <li>Введите ФИО получателя</li>
+            <li>Введите сумму перевода</li>
+            <li>Подтвердите перевод</li>
+        </ol>
+        <img src="{{ asset('images/instruction/step4.PNG') }}" alt="Шаг 4 — Инструкция Kaspi">
     </div>
 
     <div class="instruction-footer">
