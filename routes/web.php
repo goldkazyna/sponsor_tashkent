@@ -1,20 +1,24 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\ContactController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\ContactController;
 use App\Http\Controllers\TelegramBotController;
+use Illuminate\Support\Facades\Route;
 
 // Главная страница со списком объявлений
 Route::get('/', [PostController::class, 'index'])->name('home');
 
 // Редирект старых URL
-Route::get('/soderganki', function () { return redirect('/', 301); });
+Route::get('/soderganki', function () {
+    return redirect('/', 301);
+});
 
 // Правила сайта
-Route::get('/rules', function () { return view('rules'); })->name('rules');
+Route::get('/rules', function () {
+    return view('rules');
+})->name('rules');
 
 // Регистрация
 Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
@@ -44,23 +48,25 @@ Route::middleware(['web'])->group(function () {
     Route::get('/profile/posts', [ProfileController::class, 'myPosts'])->name('profile.posts');
     Route::get('/profile/settings', [ProfileController::class, 'settings'])->name('profile.settings');
     Route::get('/profile/pricing', [ProfileController::class, 'pricing'])->name('profile.pricing');
-    
+
     // Управление объявлениями
     Route::get('/profile/post/edit/{id}', [ProfileController::class, 'editPost'])->name('profile.post.edit');
     Route::post('/profile/post/update/{id}', [ProfileController::class, 'updatePost'])->name('profile.post.update');
     Route::post('/profile/post/delete/{id}', [ProfileController::class, 'deletePost'])->name('profile.post.delete');
     Route::post('/profile/photo/delete/{id}', [ProfileController::class, 'deletePhoto'])->name('profile.photo.delete');
-	Route::post('/profile/update', [ProfileController::class, 'updateProfile'])->name('profile.update');
-	Route::post('/profile/password/update', [ProfileController::class, 'updatePassword'])->name('profile.password.update');
-	// AJAX методы для сообщений
-	Route::get('/profile/messages', [ProfileController::class, 'messages'])->name('profile.messages');
-	Route::get('/profile/messages/chat/{id}', [ProfileController::class, 'messagesChat'])->name('profile.messages.chat');
-	Route::post('/profile/messages/send', [ProfileController::class, 'sendMessage'])->name('profile.messages.send');
-	Route::get('/profile/messages/new/{id}', [ProfileController::class, 'getNewMessages'])->name('profile.messages.new');
-	Route::get('/profile/messages/unread-count', [ProfileController::class, 'getUnreadCount'])->name('profile.messages.unread');
+    Route::post('/profile/update', [ProfileController::class, 'updateProfile'])->name('profile.update');
+    Route::post('/profile/password/update', [ProfileController::class, 'updatePassword'])->name('profile.password.update');
+    // AJAX методы для сообщений
+    Route::get('/profile/messages', [ProfileController::class, 'messages'])->name('profile.messages');
+    Route::get('/profile/messages/chat/{id}', [ProfileController::class, 'messagesChat'])->name('profile.messages.chat');
+    Route::post('/profile/messages/send', [ProfileController::class, 'sendMessage'])->name('profile.messages.send');
+    Route::get('/profile/messages/new/{id}', [ProfileController::class, 'getNewMessages'])->name('profile.messages.new');
+    Route::get('/profile/messages/unread-count', [ProfileController::class, 'getUnreadCount'])->name('profile.messages.unread');
 });
 
-Route::get('/pricing', function () {return view('pricing');})->name('pricing');
+Route::get('/pricing', function () {
+    return view('pricing');
+})->name('pricing');
 
 Route::get('/contact', [ContactController::class, 'show'])->name('contact');
 Route::post('/contact/send', [ContactController::class, 'send'])->name('contact.send');
@@ -82,6 +88,7 @@ Route::get('/clear-cache-secret', function () {
     Artisan::call('config:clear');
     Artisan::call('cache:clear');
     Artisan::call('view:clear');
+
     return 'Cache cleared!';
 });
 
@@ -89,11 +96,32 @@ Route::get('/clear-cache-secret', function () {
 Route::post('/telegram/webhook', [TelegramBotController::class, 'webhook']);
 Route::get('/telegram/set-webhook', [TelegramBotController::class, 'setWebhook']);
 
+// Автологин из Telegram бота (одноразовый токен)
+Route::get('/auto-login/{token}', function (string $token, Illuminate\Http\Request $request) {
+    $data = Illuminate\Support\Facades\Cache::pull("auto_login_{$token}");
+
+    if (! $data || ! isset($data['user_id'], $data['redirect'])) {
+        return redirect('/login')->with('error', 'Ссылка недействительна или истекла');
+    }
+
+    $user = DB::table('users')->where('id', $data['user_id'])->first();
+    if (! $user) {
+        return redirect('/login')->with('error', 'Пользователь не найден');
+    }
+
+    session(['user_id' => $user->id]);
+    session(['user_email' => $user->email]);
+    session(['user_sex' => $user->sex]);
+
+    return redirect($data['redirect']);
+})->name('auto.login');
+
 // Инструкция по оплате
 Route::get('/payment-instruction', function () {
     if (session('user_id')) {
         DB::table('users')->where('id', session('user_id'))->update(['saw_instruction' => 1]);
     }
+
     return view('payment-instruction');
 })->name('payment.instruction');
 
@@ -119,8 +147,11 @@ Route::get('/cron/check_date', function () {
 // Временно: последние ошибки из лога
 Route::get('/debug-log-secret', function () {
     $logFile = storage_path('logs/laravel.log');
-    if (!file_exists($logFile)) return 'No log file';
+    if (! file_exists($logFile)) {
+        return 'No log file';
+    }
     $lines = file($logFile);
     $last = array_slice($lines, -80);
-    return '<pre>' . htmlspecialchars(implode('', $last)) . '</pre>';
+
+    return '<pre>'.htmlspecialchars(implode('', $last)).'</pre>';
 });

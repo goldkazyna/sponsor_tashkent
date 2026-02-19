@@ -963,7 +963,14 @@ class TelegramBotController extends Controller
             return;
         }
 
-        $siteUrl = config('app.url', 'https://goldkazyna.kz');
+        // Генерируем одноразовый токен для автологина
+        $token = bin2hex(random_bytes(32));
+        Cache::put("auto_login_{$token}", [
+            'user_id' => $user->id,
+            'redirect' => '/become-verified',
+        ], now()->addMinutes(30));
+
+        $siteUrl = rtrim(config('app.url', 'https://goldkazyna.kz'), '/');
 
         $text = "📌 <b>Статус проверенного пользователя</b>\n\n";
         $text .= "Со статусом вы получаете:\n";
@@ -971,14 +978,14 @@ class TelegramBotController extends Controller
         $text .= "✅ Повышенное доверие\n";
         $text .= "✅ Больше откликов\n\n";
         $text .= "💰 <b>Тарифы:</b>\n\n";
-        $text .= "🔹 <b>5 дней</b> — 7 592 ₸ (~$14)\n";
-        $text .= "🔹 <b>10 дней</b> — 10 846 ₸ (~$20)\n";
-        $text .= "🔹 <b>30 дней</b> — 16 268 ₸ (~$30) ⭐ Популярный\n\n";
-        $text .= 'Для оплаты перейдите на сайт:';
+        $text .= "🔹 <b>5 дней</b> — 7 592 ₸ (~\$14)\n";
+        $text .= "🔹 <b>10 дней</b> — 10 846 ₸ (~\$20)\n";
+        $text .= "🔹 <b>30 дней</b> — 16 268 ₸ (~\$30) ⭐ Популярный\n\n";
+        $text .= 'Нажмите кнопку — вы автоматически войдёте на сайт и попадёте на страницу оплаты:';
 
         $this->sendMessage($chatId, $text, [
             'inline_keyboard' => [
-                [['text' => '🌐 Перейти на сайт для оплаты', 'url' => "{$siteUrl}/become-verified"]],
+                [['text' => '💳 Перейти к оплате', 'url' => "{$siteUrl}/auto-login/{$token}"]],
                 [['text' => '💬 Написать админу для помощи', 'callback_data' => 'buy_status_help']],
             ],
         ]);
