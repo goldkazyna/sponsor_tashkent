@@ -559,10 +559,10 @@
     </div>
 
     <div class="instruction-center">
-        <button type="button" class="instruction-btn" onclick="openInstruction()">
+        <a href="{{ route('payment.instruction') }}" class="instruction-btn">
             <svg viewBox="0 0 24 24"><path d="M11,9H13V7H11M12,20C7.59,20 4,16.41 4,12C4,7.59 7.59,4 12,4C16.41,4 20,7.59 20,12C20,16.41 16.41,20 12,20M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M11,17H13V11H11V17Z"/></svg>
             Инструкция по оплате
-        </button>
+        </a>
     </div>
 
     @if(session('error'))
@@ -737,39 +737,19 @@
 {{-- Модалка: предложение изучить инструкцию --}}
 <div class="modal-overlay" id="paymentInterceptModal">
     <div class="modal-box">
-        <button class="modal-close" onclick="closeModal('paymentInterceptModal')">&times;</button>
-        <div class="modal-title">Рекомендуем изучить инструкцию</div>
+        <button class="modal-close" onclick="document.getElementById('paymentInterceptModal').classList.remove('active')">&times;</button>
+        <div class="modal-title">У нас новая система оплаты</div>
         <div class="modal-text">
-            Перед оплатой рекомендуем ознакомиться с инструкцией, чтобы понять как проходит процесс оплаты и избежать возможных ошибок.
+            Рекомендуем ознакомиться с инструкцией по оплате, чтобы понять как проходит процесс и избежать возможных ошибок.
         </div>
         <div class="modal-buttons">
-            <button type="button" class="modal-btn-primary" onclick="closeModal('paymentInterceptModal'); openInstruction();">
+            <a href="{{ route('payment.instruction') }}" class="modal-btn-primary" style="text-decoration:none;">
                 <svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:white;"><path d="M11,9H13V7H11M12,20C7.59,20 4,16.41 4,12C4,7.59 7.59,4 12,4C16.41,4 20,7.59 20,12C20,16.41 16.41,20 12,20M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M11,17H13V11H11V17Z"/></svg>
                 Посмотреть инструкцию
-            </button>
+            </a>
             <button type="button" class="modal-btn-secondary" id="proceedPaymentBtn">
                 Всё равно оплатить
             </button>
-        </div>
-    </div>
-</div>
-
-{{-- Модалка: инструкция по оплате --}}
-<div class="modal-overlay" id="instructionModal">
-    <div class="modal-box">
-        <button class="modal-close" onclick="closeModal('instructionModal')">&times;</button>
-        <div class="modal-title">Инструкция по оплате</div>
-        <div class="modal-text">
-            <ol>
-                <li>Нажмите кнопку <strong>«Оплатить»</strong> напротив нужного тарифа.</li>
-                <li>Вы будете перенаправлены на страницу платёжной системы.</li>
-                <li>Выберите удобный способ оплаты и следуйте инструкциям на экране.</li>
-                <li>После успешной оплаты статус активируется автоматически.</li>
-                <li>Если возникли проблемы — напишите нам в Telegram: <a href="https://t.me/Sponsor_admin" target="_blank" style="color:#3b82f6;font-weight:600;">@Sponsor_admin</a></li>
-            </ol>
-        </div>
-        <div class="modal-buttons">
-            <button type="button" class="modal-btn-secondary" onclick="closeModal('instructionModal')">Закрыть</button>
         </div>
     </div>
 </div>
@@ -778,62 +758,26 @@
 var sawInstruction = {{ ($user->saw_instruction ?? 0) ? 'true' : 'false' }};
 var pendingForm = null;
 
-function openModal(id) {
-    document.getElementById(id).classList.add('active');
-}
-
-function closeModal(id) {
-    document.getElementById(id).classList.remove('active');
-}
-
-function openInstruction() {
-    openModal('instructionModal');
-    if (!sawInstruction) {
-        sawInstruction = true;
-        fetch('{{ route("instruction.seen") }}', {
-            method: 'POST',
-            headers: {
-                'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                'Accept': 'application/json'
-            }
-        });
-    }
-}
-
-// Перехватываем все формы оплаты
 document.querySelectorAll('.tariff-card form').forEach(function(form) {
     form.addEventListener('submit', function(e) {
         if (!sawInstruction) {
             e.preventDefault();
             pendingForm = form;
-            openModal('paymentInterceptModal');
+            document.getElementById('paymentInterceptModal').classList.add('active');
         }
     });
 });
 
-// Кнопка "Всё равно оплатить"
 document.getElementById('proceedPaymentBtn').addEventListener('click', function() {
-    closeModal('paymentInterceptModal');
+    document.getElementById('paymentInterceptModal').classList.remove('active');
     if (pendingForm) {
         sawInstruction = true;
-        fetch('{{ route("instruction.seen") }}', {
-            method: 'POST',
-            headers: {
-                'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                'Accept': 'application/json'
-            }
-        });
         pendingForm.submit();
     }
 });
 
-// Закрытие модалки по клику на оверлей
-document.querySelectorAll('.modal-overlay').forEach(function(overlay) {
-    overlay.addEventListener('click', function(e) {
-        if (e.target === overlay) {
-            overlay.classList.remove('active');
-        }
-    });
+document.getElementById('paymentInterceptModal').addEventListener('click', function(e) {
+    if (e.target === this) this.classList.remove('active');
 });
 
 document.getElementById('helpForm').addEventListener('submit', function(e) {
