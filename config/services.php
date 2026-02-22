@@ -46,4 +46,8 @@ return [
         'bot_token_interactive' => env('TELEGRAM_BOT_TOKEN_INTERACTIVE'),
     ],
 
+    'anthropic' => [
+        'api_key' => env('ANTHROPIC_API_KEY'),
+    ],
+
 ];

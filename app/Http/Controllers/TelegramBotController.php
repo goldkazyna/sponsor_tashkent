@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\AiModerationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -874,7 +875,7 @@ class TelegramBotController extends Controller
 
         $data = $state['post_data'];
 
-        DB::table('post')->insert([
+        $postId = DB::table('post')->insertGetId([
             'title' => $data['title'],
             'email' => $user->email ?? '',
             'email_2' => $user->email ?? '',
@@ -895,6 +896,13 @@ class TelegramBotController extends Controller
             'from_telegram' => 1,
             'telegram_id' => (string) $telegramId,
             'telegram_username' => $username ?? '',
+        ]);
+
+        // AI-модерация текста
+        $ai = AiModerationService::moderate($data['title'], $data['discription']);
+        DB::table('post')->where('id', $postId)->update([
+            'title_ai' => $ai['title_ai'],
+            'discription_ai' => $ai['discription_ai'],
         ]);
 
         Cache::forget("tg_state_{$telegramId}");

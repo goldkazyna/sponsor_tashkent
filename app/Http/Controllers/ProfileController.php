@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\AiModerationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -17,7 +18,7 @@ class ProfileController extends Controller
     public function myPosts()
     {
         // Проверяем авторизацию
-        if (!session('user_id')) {
+        if (! session('user_id')) {
             return redirect()->route('login')->with('error', 'Необходимо авторизоваться');
         }
 
@@ -51,105 +52,103 @@ class ProfileController extends Controller
             'user' => $user,
             'posts' => $posts,
             'activeSection' => 'posts',
-            'sectionTitle' => 'Мои объявления'
+            'sectionTitle' => 'Мои объявления',
         ]);
     }
 
-
-
     // Настройки профиля
-public function settings()
-{
-    // Проверяем авторизацию
-    if (!session('user_id')) {
-        return redirect()->route('login')->with('error', 'Необходимо авторизоваться');
+    public function settings()
+    {
+        // Проверяем авторизацию
+        if (! session('user_id')) {
+            return redirect()->route('login')->with('error', 'Необходимо авторизоваться');
+        }
+
+        $user = DB::table('users')->where('id', session('user_id'))->first();
+
+        return view('profile.settings', [
+            'user' => $user,
+            'activeSection' => 'settings',
+            'sectionTitle' => 'Настройки профиля',
+        ]);
     }
 
-    $user = DB::table('users')->where('id', session('user_id'))->first();
+    // Обновление профиля
+    public function updateProfile(Request $request)
+    {
+        // Проверяем авторизацию
+        if (! session('user_id')) {
+            return redirect()->route('login')->with('error', 'Необходимо авторизоваться');
+        }
 
-    return view('profile.settings', [
-        'user' => $user,
-        'activeSection' => 'settings',
-        'sectionTitle' => 'Настройки профиля'
-    ]);
-}
+        $request->validate([
+            'fio' => 'nullable|string|max:255',
+            'phone' => 'nullable|string|max:20',
+            'telegram_username' => 'nullable|string|max:100|regex:/^[a-zA-Z0-9_]+$/',
+        ], [
+            'fio.max' => 'ФИО не должно превышать 255 символов',
+            'phone.max' => 'Телефон не должен превышать 20 символов',
+            'telegram_username.max' => 'Telegram username не должен превышать 100 символов',
+            'telegram_username.regex' => 'Telegram username может содержать только буквы, цифры и подчеркивание',
+        ]);
 
-	// Обновление профиля
-	public function updateProfile(Request $request)
-	{
-		// Проверяем авторизацию
-		if (!session('user_id')) {
-			return redirect()->route('login')->with('error', 'Необходимо авторизоваться');
-		}
+        // Убираем @ если пользователь случайно добавил
+        $telegramUsername = $request->input('telegram_username');
+        if ($telegramUsername) {
+            $telegramUsername = ltrim($telegramUsername, '@');
+        }
 
-		$request->validate([
-			'fio' => 'nullable|string|max:255',
-			'phone' => 'nullable|string|max:20',
-			'telegram_username' => 'nullable|string|max:100|regex:/^[a-zA-Z0-9_]+$/'
-		], [
-			'fio.max' => 'ФИО не должно превышать 255 символов',
-			'phone.max' => 'Телефон не должен превышать 20 символов',
-			'telegram_username.max' => 'Telegram username не должен превышать 100 символов',
-			'telegram_username.regex' => 'Telegram username может содержать только буквы, цифры и подчеркивание'
-		]);
+        DB::table('users')
+            ->where('id', session('user_id'))
+            ->update([
+                'fio' => $request->input('fio'),
+                'phone' => $request->input('phone'),
+                'telegram_username' => $telegramUsername,
+            ]);
 
-		// Убираем @ если пользователь случайно добавил
-		$telegramUsername = $request->input('telegram_username');
-		if ($telegramUsername) {
-			$telegramUsername = ltrim($telegramUsername, '@');
-		}
+        return back()->with('success', 'Профиль успешно обновлён');
+    }
 
-		DB::table('users')
-			->where('id', session('user_id'))
-			->update([
-				'fio' => $request->input('fio'),
-				'phone' => $request->input('phone'),
-				'telegram_username' => $telegramUsername
-			]);
+    // Смена пароля
+    public function updatePassword(Request $request)
+    {
+        // Проверяем авторизацию
+        if (! session('user_id')) {
+            return redirect()->route('login')->with('error', 'Необходимо авторизоваться');
+        }
 
-		return back()->with('success', 'Профиль успешно обновлён');
-	}
+        $request->validate([
+            'current_password' => 'required',
+            'new_password' => 'required|min:6|confirmed',
+        ], [
+            'current_password.required' => 'Введите текущий пароль',
+            'new_password.required' => 'Введите новый пароль',
+            'new_password.min' => 'Новый пароль должен быть минимум 6 символов',
+            'new_password.confirmed' => 'Пароли не совпадают',
+        ]);
 
-	// Смена пароля
-	public function updatePassword(Request $request)
-	{
-		// Проверяем авторизацию
-		if (!session('user_id')) {
-			return redirect()->route('login')->with('error', 'Необходимо авторизоваться');
-		}
+        $user = DB::table('users')->where('id', session('user_id'))->first();
 
-		$request->validate([
-			'current_password' => 'required',
-			'new_password' => 'required|min:6|confirmed'
-		], [
-			'current_password.required' => 'Введите текущий пароль',
-			'new_password.required' => 'Введите новый пароль',
-			'new_password.min' => 'Новый пароль должен быть минимум 6 символов',
-			'new_password.confirmed' => 'Пароли не совпадают'
-		]);
+        // Проверяем текущий пароль
+        if ($user->password !== sha1(md5($request->input('current_password')))) {
+            return back()->withErrors(['current_password' => 'Неверный текущий пароль']);
+        }
 
-		$user = DB::table('users')->where('id', session('user_id'))->first();
+        // Обновляем пароль
+        DB::table('users')
+            ->where('id', session('user_id'))
+            ->update([
+                'password' => sha1(md5($request->input('new_password'))),
+            ]);
 
-		// Проверяем текущий пароль
-		if ($user->password !== sha1(md5($request->input('current_password')))) {
-			return back()->withErrors(['current_password' => 'Неверный текущий пароль']);
-		}
-
-		// Обновляем пароль
-		DB::table('users')
-			->where('id', session('user_id'))
-			->update([
-				'password' => sha1(md5($request->input('new_password')))
-			]);
-
-		return back()->with('success', 'Пароль успешно изменён');
-	}
+        return back()->with('success', 'Пароль успешно изменён');
+    }
 
     // Расценки сайта
     public function pricing()
     {
         // Проверяем авторизацию
-        if (!session('user_id')) {
+        if (! session('user_id')) {
             return redirect()->route('login')->with('error', 'Необходимо авторизоваться');
         }
 
@@ -158,7 +157,7 @@ public function settings()
         return view('profile.index', [
             'user' => $user,
             'activeSection' => 'pricing',
-            'sectionTitle' => 'Расценки сайта'
+            'sectionTitle' => 'Расценки сайта',
         ]);
     }
 
@@ -166,7 +165,7 @@ public function settings()
     public function editPost($id)
     {
         // Проверяем авторизацию
-        if (!session('user_id')) {
+        if (! session('user_id')) {
             return redirect()->route('login')->with('error', 'Необходимо авторизоваться');
         }
 
@@ -179,7 +178,7 @@ public function settings()
             ->first();
 
         // Проверяем что объявление существует и принадлежит пользователю
-        if (!$post) {
+        if (! $post) {
             return redirect()->route('profile.posts')->with('error', 'Объявление не найдено');
         }
 
@@ -196,7 +195,7 @@ public function settings()
             'user' => $user,
             'post' => $post,
             'cities' => $cities,
-            'photos' => $photos
+            'photos' => $photos,
         ]);
     }
 
@@ -204,7 +203,7 @@ public function settings()
     public function updatePost(Request $request, $id)
     {
         // Проверяем авторизацию
-        if (!session('user_id')) {
+        if (! session('user_id')) {
             return redirect()->route('login')->with('error', 'Необходимо авторизоваться');
         }
 
@@ -216,7 +215,7 @@ public function settings()
             ->where('email', $user->email)
             ->first();
 
-        if (!$post) {
+        if (! $post) {
             return redirect()->route('profile.posts')->with('error', 'Объявление не найдено');
         }
 
@@ -230,8 +229,15 @@ public function settings()
                 'city' => $request->input('city'),
                 'phone' => $request->input('phone') ?? '',
                 'telegram' => $request->input('telegram') ?? '',
-                'whats' => $request->input('whats') ?? ''
+                'whats' => $request->input('whats') ?? '',
             ]);
+
+        // AI-модерация текста
+        $ai = AiModerationService::moderate($request->input('title'), $request->input('discription'));
+        DB::table('post')->where('id', $id)->update([
+            'title_ai' => $ai['title_ai'],
+            'discription_ai' => $ai['discription_ai'],
+        ]);
 
         // Обрабатываем новые фото если есть
         if ($request->has('photos') && is_array($request->photos)) {
@@ -244,59 +250,61 @@ public function settings()
     // Обработка и сохранение фото (копия из PostController)
     private function processPhotos($photos, $postId)
     {
-        $uploadsPath = public_path('uploads/gallery/posts/' . $postId);
-        $thumbsPath = public_path('uploads/gallery/posts/' . $postId . '/thumbs');
-        
-        if (!file_exists($uploadsPath)) {
+        $uploadsPath = public_path('uploads/gallery/posts/'.$postId);
+        $thumbsPath = public_path('uploads/gallery/posts/'.$postId.'/thumbs');
+
+        if (! file_exists($uploadsPath)) {
             mkdir($uploadsPath, 0755, true);
         }
-        if (!file_exists($thumbsPath)) {
+        if (! file_exists($thumbsPath)) {
             mkdir($thumbsPath, 0755, true);
         }
-        
+
         foreach ($photos as $index => $photoData) {
-            if (empty($photoData)) continue;
-            
+            if (empty($photoData)) {
+                continue;
+            }
+
             try {
                 // Декодируем base64
                 $imageData = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $photoData));
-                
+
                 // Генерируем уникальное имя файла
-                $filename = time() . '_' . $index . '.webp';
-                
+                $filename = time().'_'.$index.'.webp';
+
                 // Используем GD для конвертации в WebP
                 $image = imagecreatefromstring($imageData);
-                
+
                 if ($image !== false) {
                     // Сохраняем оригинал
-                    $originalPath = $uploadsPath . '/' . $filename;
+                    $originalPath = $uploadsPath.'/'.$filename;
                     imagewebp($image, $originalPath, 85);
-                    
+
                     // Создаем миниатюру 193x193
                     $width = imagesx($image);
                     $height = imagesy($image);
                     $thumb = imagecreatetruecolor(193, 193);
-                    
+
                     // Обрезка по центру
                     $size = min($width, $height);
                     $x = ($width - $size) / 2;
                     $y = ($height - $size) / 2;
-                    
+
                     imagecopyresampled($thumb, $image, 0, 0, $x, $y, 193, 193, $size, $size);
-                    
-                    $thumbPath = $thumbsPath . '/' . $filename;
+
+                    $thumbPath = $thumbsPath.'/'.$filename;
                     imagewebp($thumb, $thumbPath, 80);
-                    
+
                     imagedestroy($image);
                     imagedestroy($thumb);
-                    
+
                     // Сохраняем информацию в БД
                     DB::table('gallery')->insert([
                         'id_post' => $postId,
-                        'original_webp' => 'uploads/gallery/posts/' . $postId . '/' . $filename,
-                        'thumb_webp' => 'uploads/gallery/posts/' . $postId . '/thumbs/' . $filename,
+                        'original_webp' => 'uploads/gallery/posts/'.$postId.'/'.$filename,
+                        'thumb_webp' => 'uploads/gallery/posts/'.$postId.'/thumbs/'.$filename,
                         'created_at' => now(),
-                        'updated_at' => now()
+                        'updated_at' => now(),
                     ]);
                 }
             } catch (\Exception $e) {
@@ -310,7 +318,7 @@ public function settings()
     public function deletePost($id)
     {
         // Проверяем авторизацию
-        if (!session('user_id')) {
+        if (! session('user_id')) {
             return response()->json(['error' => 'Необходимо авторизоваться'], 401);
         }
 
@@ -322,7 +330,7 @@ public function settings()
             ->where('email', $user->email)
             ->first();
 
-        if (!$post) {
+        if (! $post) {
             return response()->json(['error' => 'Объявление не найдено'], 404);
         }
 
@@ -338,7 +346,7 @@ public function settings()
     public function deletePhoto($id)
     {
         // Проверяем авторизацию
-        if (!session('user_id')) {
+        if (! session('user_id')) {
             return response()->json(['error' => 'Необходимо авторизоваться'], 401);
         }
 
@@ -347,7 +355,7 @@ public function settings()
         // Получаем фото
         $photo = DB::table('gallery')->where('id', $id)->first();
 
-        if (!$photo) {
+        if (! $photo) {
             return response()->json(['error' => 'Фото не найдено'], 404);
         }
 
@@ -357,15 +365,15 @@ public function settings()
             ->where('email', $user->email)
             ->first();
 
-        if (!$post) {
+        if (! $post) {
             return response()->json(['error' => 'Доступ запрещен'], 403);
         }
 
         // Удаляем физические файлы
-        if (!empty($photo->original_webp) && file_exists(public_path($photo->original_webp))) {
+        if (! empty($photo->original_webp) && file_exists(public_path($photo->original_webp))) {
             unlink(public_path($photo->original_webp));
         }
-        if (!empty($photo->thumb_webp) && file_exists(public_path($photo->thumb_webp))) {
+        if (! empty($photo->thumb_webp) && file_exists(public_path($photo->thumb_webp))) {
             unlink(public_path($photo->thumb_webp));
         }
 
@@ -374,18 +382,17 @@ public function settings()
 
         return response()->json(['success' => true, 'message' => 'Фото удалено']);
     }
-	
-	
-	public function messages()
-	{
-		if (!session('user_id')) {
-			return redirect()->route('login')->with('error', 'Необходимо авторизоваться');
-		}
 
-		$user = DB::table('users')->where('id', session('user_id'))->first();
+    public function messages()
+    {
+        if (! session('user_id')) {
+            return redirect()->route('login')->with('error', 'Необходимо авторизоваться');
+        }
 
-		// Получаем список уникальных собеседников
-		$conversations = DB::select("
+        $user = DB::table('users')->where('id', session('user_id'))->first();
+
+        // Получаем список уникальных собеседников
+        $conversations = DB::select('
 			SELECT
 				CASE
 					WHEN m.sender_id = ? THEN m.receiver_id
@@ -408,169 +415,169 @@ public function settings()
 			WHERE m.sender_id = ? OR m.receiver_id = ?
 			GROUP BY interlocutor_id
 			ORDER BY last_message_time DESC
-		", [
-			$user->id, $user->id, $user->id,
-			$user->id, $user->id, $user->id,
-			$user->id, $user->id
-		]);
+		', [
+            $user->id, $user->id, $user->id,
+            $user->id, $user->id, $user->id,
+            $user->id, $user->id,
+        ]);
 
-		// Получаем данные собеседников
-		foreach ($conversations as $conversation) {
-			$interlocutor = DB::table('users')
-				->where('id', $conversation->interlocutor_id)
-				->first();
+        // Получаем данные собеседников
+        foreach ($conversations as $conversation) {
+            $interlocutor = DB::table('users')
+                ->where('id', $conversation->interlocutor_id)
+                ->first();
 
-			$conversation->interlocutor = $interlocutor;
+            $conversation->interlocutor = $interlocutor;
 
-			if ($conversation->post_id) {
-				$conversation->post = DB::table('post')
-					->where('id', $conversation->post_id)
-					->first();
-			}
-		}
+            if ($conversation->post_id) {
+                $conversation->post = DB::table('post')
+                    ->where('id', $conversation->post_id)
+                    ->first();
+            }
+        }
 
-		return view('profile.messages', [
-			'user' => $user,
-			'conversations' => $conversations
-		]);
-	}
+        return view('profile.messages', [
+            'user' => $user,
+            'conversations' => $conversations,
+        ]);
+    }
 
-	public function messagesChat($interlocutorId)
-	{
-		if (!session('user_id')) {
-			return redirect()->route('login')->with('error', 'Необходимо авторизоваться');
-		}
+    public function messagesChat($interlocutorId)
+    {
+        if (! session('user_id')) {
+            return redirect()->route('login')->with('error', 'Необходимо авторизоваться');
+        }
 
-		$user = DB::table('users')->where('id', session('user_id'))->first();
+        $user = DB::table('users')->where('id', session('user_id'))->first();
 
-		$interlocutor = DB::table('users')->where('id', $interlocutorId)->first();
+        $interlocutor = DB::table('users')->where('id', $interlocutorId)->first();
 
-		if (!$interlocutor) {
-			return redirect()->route('profile.messages')->with('error', 'Пользователь не найден');
-		}
+        if (! $interlocutor) {
+            return redirect()->route('profile.messages')->with('error', 'Пользователь не найден');
+        }
 
-		$messages = DB::table('messages')
-			->where(function($query) use ($user, $interlocutorId) {
-				$query->where('sender_id', $user->id)
-					  ->where('receiver_id', $interlocutorId);
-			})
-			->orWhere(function($query) use ($user, $interlocutorId) {
-				$query->where('sender_id', $interlocutorId)
-					  ->where('receiver_id', $user->id);
-			})
-			->orderBy('created_at', 'asc')
-			->get();
+        $messages = DB::table('messages')
+            ->where(function ($query) use ($user, $interlocutorId) {
+                $query->where('sender_id', $user->id)
+                    ->where('receiver_id', $interlocutorId);
+            })
+            ->orWhere(function ($query) use ($user, $interlocutorId) {
+                $query->where('sender_id', $interlocutorId)
+                    ->where('receiver_id', $user->id);
+            })
+            ->orderBy('created_at', 'asc')
+            ->get();
 
-		DB::table('messages')
-			->where('sender_id', $interlocutorId)
-			->where('receiver_id', $user->id)
-			->where('is_read', 0)
-			->update([
-				'is_read' => 1,
-				'read_at' => now()
-			]);
+        DB::table('messages')
+            ->where('sender_id', $interlocutorId)
+            ->where('receiver_id', $user->id)
+            ->where('is_read', 0)
+            ->update([
+                'is_read' => 1,
+                'read_at' => now(),
+            ]);
 
-		$post = null;
-		if ($messages->isNotEmpty() && $messages->first()->post_id) {
-			$post = DB::table('post')
-				->where('id', $messages->first()->post_id)
-				->first();
-		}
+        $post = null;
+        if ($messages->isNotEmpty() && $messages->first()->post_id) {
+            $post = DB::table('post')
+                ->where('id', $messages->first()->post_id)
+                ->first();
+        }
 
-		return view('profile.chat', [
-			'user' => $user,
-			'interlocutor' => $interlocutor,
-			'messages' => $messages,
-			'post' => $post
-		]);
-	}
+        return view('profile.chat', [
+            'user' => $user,
+            'interlocutor' => $interlocutor,
+            'messages' => $messages,
+            'post' => $post,
+        ]);
+    }
 
-	public function sendMessage(Request $request)
-	{
-		if (!session('user_id')) {
-			return response()->json(['error' => 'Необходимо авторизоваться'], 401);
-		}
+    public function sendMessage(Request $request)
+    {
+        if (! session('user_id')) {
+            return response()->json(['error' => 'Необходимо авторизоваться'], 401);
+        }
 
-		$request->validate([
-			'receiver_id' => 'required|exists:users,id',
-			'message' => 'required|string|max:5000',
-			'post_id' => 'nullable|exists:post,id'
-		]);
+        $request->validate([
+            'receiver_id' => 'required|exists:users,id',
+            'message' => 'required|string|max:5000',
+            'post_id' => 'nullable|exists:post,id',
+        ]);
 
-		$user = DB::table('users')->where('id', session('user_id'))->first();
+        $user = DB::table('users')->where('id', session('user_id'))->first();
 
-		if ($user->id == $request->receiver_id) {
-			return response()->json(['error' => 'Нельзя отправить сообщение самому себе'], 400);
-		}
+        if ($user->id == $request->receiver_id) {
+            return response()->json(['error' => 'Нельзя отправить сообщение самому себе'], 400);
+        }
 
-		$messageId = DB::table('messages')->insertGetId([
-			'sender_id' => $user->id,
-			'receiver_id' => $request->receiver_id,
-			'post_id' => $request->post_id,
-			'message' => $request->message,
-			'is_read' => 0,
-			'created_at' => now(),
-			'updated_at' => now()
-		]);
+        $messageId = DB::table('messages')->insertGetId([
+            'sender_id' => $user->id,
+            'receiver_id' => $request->receiver_id,
+            'post_id' => $request->post_id,
+            'message' => $request->message,
+            'is_read' => 0,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
 
-		$message = DB::table('messages')->where('id', $messageId)->first();
+        $message = DB::table('messages')->where('id', $messageId)->first();
 
-		return response()->json([
-			'success' => true,
-			'message' => $message
-		]);
-	}
+        return response()->json([
+            'success' => true,
+            'message' => $message,
+        ]);
+    }
 
-	public function getNewMessages(Request $request, $interlocutorId)
-	{
-		if (!session('user_id')) {
-			return response()->json(['error' => 'Необходимо авторизоваться'], 401);
-		}
+    public function getNewMessages(Request $request, $interlocutorId)
+    {
+        if (! session('user_id')) {
+            return response()->json(['error' => 'Необходимо авторизоваться'], 401);
+        }
 
-		$user = DB::table('users')->where('id', session('user_id'))->first();
+        $user = DB::table('users')->where('id', session('user_id'))->first();
 
-		$lastMessageId = $request->input('last_message_id', 0);
+        $lastMessageId = $request->input('last_message_id', 0);
 
-		$newMessages = DB::table('messages')
-			->where('sender_id', $interlocutorId)
-			->where('receiver_id', $user->id)
-			->where('id', '>', $lastMessageId)
-			->orderBy('created_at', 'asc')
-			->get();
+        $newMessages = DB::table('messages')
+            ->where('sender_id', $interlocutorId)
+            ->where('receiver_id', $user->id)
+            ->where('id', '>', $lastMessageId)
+            ->orderBy('created_at', 'asc')
+            ->get();
 
-		if ($newMessages->isNotEmpty()) {
-			DB::table('messages')
-				->where('sender_id', $interlocutorId)
-				->where('receiver_id', $user->id)
-				->where('id', '>', $lastMessageId)
-				->update([
-					'is_read' => 1,
-					'read_at' => now()
-				]);
-		}
+        if ($newMessages->isNotEmpty()) {
+            DB::table('messages')
+                ->where('sender_id', $interlocutorId)
+                ->where('receiver_id', $user->id)
+                ->where('id', '>', $lastMessageId)
+                ->update([
+                    'is_read' => 1,
+                    'read_at' => now(),
+                ]);
+        }
 
-		return response()->json([
-			'success' => true,
-			'messages' => $newMessages
-		]);
-	}
+        return response()->json([
+            'success' => true,
+            'messages' => $newMessages,
+        ]);
+    }
 
-	public function getUnreadCount()
-	{
-		if (!session('user_id')) {
-			return response()->json(['error' => 'Необходимо авторизоваться'], 401);
-		}
+    public function getUnreadCount()
+    {
+        if (! session('user_id')) {
+            return response()->json(['error' => 'Необходимо авторизоваться'], 401);
+        }
 
-		$user = DB::table('users')->where('id', session('user_id'))->first();
+        $user = DB::table('users')->where('id', session('user_id'))->first();
 
-		$unreadCount = DB::table('messages')
-			->where('receiver_id', $user->id)
-			->where('is_read', 0)
-			->count();
+        $unreadCount = DB::table('messages')
+            ->where('receiver_id', $user->id)
+            ->where('is_read', 0)
+            ->count();
 
-		return response()->json([
-			'success' => true,
-			'unread_count' => $unreadCount
-		]);
-	}
+        return response()->json([
+            'success' => true,
+            'unread_count' => $unreadCount,
+        ]);
+    }
 }
