@@ -335,6 +335,12 @@
                 </div>
             </div>
 
+            @if($aiDelete)
+                <div style="background: #fef2f2; border: 2px solid #ef4444; border-radius: 10px; padding: 0.75rem 1rem; color: #dc2626; font-weight: 600; margin-bottom: 1rem; font-size: 0.95rem;">
+                    AI рекомендует УДАЛИТЬ это объявление (запрещённый контент)
+                </div>
+            @endif
+
             <div class="mod-actions">
                 {{-- Кнопка "Проверено" — сохраняет AI-версию в БД --}}
                 <form method="POST" action="/moderation-secret/approve">
@@ -344,6 +350,14 @@
                     <input type="hidden" name="ai_description" value="{{ $aiDescription }}">
                     <input type="hidden" name="ai_telegram" value="{{ $aiTelegram }}">
                     <button type="submit" class="mod-btn-approve">Проверено</button>
+                </form>
+
+                {{-- Кнопка "Удалить" --}}
+                <form method="POST" action="/moderation-secret/approve">
+                    @csrf
+                    <input type="hidden" name="post_id" value="{{ $post->id }}">
+                    <input type="hidden" name="delete" value="1">
+                    <button type="submit" style="background: #ef4444; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 10px; font-size: 0.95rem; font-weight: 600; cursor: pointer;">Удалить</button>
                 </form>
 
                 {{-- Кнопка "Пропустить" --}}

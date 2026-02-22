@@ -223,6 +223,9 @@ class PostController extends Controller
         if (! empty($ai['telegram_extracted'])) {
             $aiUpdate['telegram'] = $ai['telegram_extracted'];
         }
+        if ($ai['delete']) {
+            $aiUpdate['del'] = 1;
+        }
         DB::table('post')->where('id', $postId)->update($aiUpdate);
 
         // Обрабатываем фото если есть

@@ -10,7 +10,7 @@ class AiModerationService
     /**
      * Обработка текста объявления через Claude API.
      *
-     * @return array{title_ai: string, discription_ai: string, telegram_extracted: string}
+     * @return array{title_ai: string, discription_ai: string, telegram_extracted: string, delete: bool}
      */
     public static function moderate(string $title, string $description): array
     {
@@ -19,7 +19,7 @@ class AiModerationService
         if (empty($apiKey)) {
             Log::warning('AiModeration: ANTHROPIC_API_KEY not configured');
 
-            return ['title_ai' => '', 'discription_ai' => '', 'telegram_extracted' => ''];
+            return ['title_ai' => '', 'discription_ai' => '', 'telegram_extracted' => '', 'delete' => false];
         }
 
         try {
@@ -51,7 +51,7 @@ class AiModerationService
                     'body' => $response->body(),
                 ]);
 
-                return ['title_ai' => '', 'discription_ai' => '', 'telegram_extracted' => ''];
+                return ['title_ai' => '', 'discription_ai' => '', 'telegram_extracted' => '', 'delete' => false];
             }
 
             $content = $response->json('content.0.text', '');
@@ -60,7 +60,7 @@ class AiModerationService
         } catch (\Exception $e) {
             Log::error('AiModeration: Exception', ['message' => $e->getMessage()]);
 
-            return ['title_ai' => '', 'discription_ai' => '', 'telegram_extracted' => ''];
+            return ['title_ai' => '', 'discription_ai' => '', 'telegram_extracted' => '', 'delete' => false];
         }
     }
 
@@ -84,7 +84,10 @@ class AiModerationService
 
 ПРАВИЛА:
 {$rulesBlock}
+Если объявление нарушает правила настолько, что его нельзя исправить (например, запрещённая тематика) — верни DELETE: yes.
+
 Ответ дай СТРОГО в формате:
+DELETE: <yes или no>
 TITLE: <заголовок>
 DESCRIPTION: <описание>
 TELEGRAM: <извлечённый ник без @ или пусто>
@@ -99,6 +102,11 @@ PROMPT;
         $titleAi = '';
         $descriptionAi = '';
         $telegram = '';
+        $delete = false;
+
+        if (preg_match('/DELETE:\s*(yes|no)/i', $content, $m)) {
+            $delete = strtolower(trim($m[1])) === 'yes';
+        }
 
         if (preg_match('/TITLE:\s*(.+?)(?:\n|$)/s', $content, $m)) {
             $titleAi = trim($m[1]);
@@ -122,6 +130,7 @@ PROMPT;
             'title_ai' => $titleAi,
             'discription_ai' => $descriptionAi,
             'telegram_extracted' => $telegram,
+            'delete' => $delete,
         ];
     }
 }

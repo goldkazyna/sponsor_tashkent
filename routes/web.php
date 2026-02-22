@@ -160,6 +160,7 @@ Route::get('/moderation-secret', function () {
     $aiTitle = '';
     $aiDescription = '';
     $aiTelegram = '';
+    $aiDelete = false;
 
     if ($post) {
         if (!empty($post->title_ai)) {
@@ -175,18 +176,25 @@ Route::get('/moderation-secret', function () {
             $aiTitle = $result['title_ai'];
             $aiDescription = $result['discription_ai'];
             $aiTelegram = $result['telegram_extracted'];
+            $aiDelete = $result['delete'];
         }
     }
 
     $rulesFile = storage_path('app/ai_moderation_rules.txt');
     $rules = file_exists($rulesFile) ? array_filter(array_map('trim', file($rulesFile))) : [];
 
-    return view('moderation', compact('post', 'remaining', 'rules', 'aiTitle', 'aiDescription', 'aiTelegram'));
+    return view('moderation', compact('post', 'remaining', 'rules', 'aiTitle', 'aiDescription', 'aiTelegram', 'aiDelete'));
 });
 
 Route::post('/moderation-secret/approve', function (Illuminate\Http\Request $request) {
     $postId = $request->input('post_id');
     $skip = $request->input('skip');
+    $delete = $request->input('delete');
+
+    if ($delete) {
+        DB::table('post')->where('id', $postId)->update(['del' => 1, 'check' => 1]);
+        return redirect('/moderation-secret')->with('success', 'Объявление удалено');
+    }
 
     if (!$skip) {
         $update = ['check' => 1];
