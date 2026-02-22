@@ -43,7 +43,13 @@ class AuthController extends Controller
 			'ip' => $request->ip(),
 			'date' => now(),
 			'activate' => 1, // сразу активируем
-			'device_key' => uniqid('device_', true)
+			'device_key' => uniqid('device_', true),
+			'fio' => '',
+			'phone' => '',
+			'prov' => 0,
+			'restore_code' => '',
+			'telegram_id' => '',
+			'telegram_username' => '',
 		]);
 
 		return view('auth.register-success');
