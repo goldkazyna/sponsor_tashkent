@@ -190,10 +190,10 @@ Route::post('/moderation-secret/approve', function (Illuminate\Http\Request $req
 
     if (!$skip) {
         $update = ['check' => 1];
-        $update['title_ai'] = $request->input('ai_title', '');
-        $update['discription_ai'] = $request->input('ai_description', '');
+        $update['title_ai'] = $request->input('ai_title') ?? '';
+        $update['discription_ai'] = $request->input('ai_description') ?? '';
 
-        $aiTelegram = $request->input('ai_telegram', '');
+        $aiTelegram = $request->input('ai_telegram') ?? '';
         if ($aiTelegram !== '') {
             $update['telegram'] = $aiTelegram;
         }
