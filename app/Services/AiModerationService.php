@@ -66,16 +66,14 @@ class AiModerationService
 
     private static function buildPrompt(string $title, string $description): string
     {
-        $extraRules = '';
+        $rulesBlock = '';
         $rulesFile = storage_path('app/ai_moderation_rules.txt');
         if (file_exists($rulesFile)) {
             $lines = array_filter(array_map('trim', file($rulesFile)));
-            if (!empty($lines)) {
-                $i = 3;
-                foreach ($lines as $line) {
-                    $extraRules .= "\n{$i}. {$line}";
-                    $i++;
-                }
+            $i = 1;
+            foreach ($lines as $line) {
+                $rulesBlock .= "{$i}. {$line}\n";
+                $i++;
             }
         }
 
@@ -85,9 +83,7 @@ class AiModerationService
 Верни текст КАК ЕСТЬ, один в один. Не исправляй ошибки, не меняй стиль, не удаляй и не добавляй слова.
 
 ПРАВИЛА:
-1. Если в заголовке или описании есть Telegram-ник — убери его из текста, а вместо него напиши «Писать в телеграм». Сам ник верни в поле TELEGRAM. Ник может быть с @ (например @Fini2006) или без @ — просто слово на латинице (например hustlegag). Любое слово написанное латиницей которое похоже на username телеграма — считай ником.
-2. Если в заголовке или описании указана цена за встречу/час/ночь (например «За встречу от 100к», «50000 за ночь», «от 30к за встречу» и подобное) — замени весь заголовок на «Ищу мужчину», а из описания тоже убери упоминание цен за встречу.{$extraRules}
-
+{$rulesBlock}
 Ответ дай СТРОГО в формате:
 TITLE: <заголовок>
 DESCRIPTION: <описание>
