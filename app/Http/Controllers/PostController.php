@@ -216,10 +216,14 @@ class PostController extends Controller
 
         // AI-модерация текста
         $ai = AiModerationService::moderate($request->title, $request->discription);
-        DB::table('post')->where('id', $postId)->update([
+        $aiUpdate = [
             'title_ai' => $ai['title_ai'],
             'discription_ai' => $ai['discription_ai'],
-        ]);
+        ];
+        if (! empty($ai['telegram_extracted'])) {
+            $aiUpdate['telegram'] = $ai['telegram_extracted'];
+        }
+        DB::table('post')->where('id', $postId)->update($aiUpdate);
 
         // Обрабатываем фото если есть
         if ($request->has('photos') && is_array($request->photos)) {

@@ -10,7 +10,7 @@ class AiModerationService
     /**
      * Обработка текста объявления через Claude API.
      *
-     * @return array{title_ai: string, discription_ai: string}
+     * @return array{title_ai: string, discription_ai: string, telegram_extracted: string}
      */
     public static function moderate(string $title, string $description): array
     {
@@ -19,7 +19,7 @@ class AiModerationService
         if (empty($apiKey)) {
             Log::warning('AiModeration: ANTHROPIC_API_KEY not configured');
 
-            return ['title_ai' => '', 'discription_ai' => ''];
+            return ['title_ai' => '', 'discription_ai' => '', 'telegram_extracted' => ''];
         }
 
         try {
@@ -51,7 +51,7 @@ class AiModerationService
                     'body' => $response->body(),
                 ]);
 
-                return ['title_ai' => '', 'discription_ai' => ''];
+                return ['title_ai' => '', 'discription_ai' => '', 'telegram_extracted' => ''];
             }
 
             $content = $response->json('content.0.text', '');
@@ -60,7 +60,7 @@ class AiModerationService
         } catch (\Exception $e) {
             Log::error('AiModeration: Exception', ['message' => $e->getMessage()]);
 
-            return ['title_ai' => '', 'discription_ai' => ''];
+            return ['title_ai' => '', 'discription_ai' => '', 'telegram_extracted' => ''];
         }
     }
 
@@ -69,11 +69,15 @@ class AiModerationService
         return <<<PROMPT
 Ты — модератор сайта знакомств. Тебе дан заголовок и описание объявления.
 
-Верни текст КАК ЕСТЬ, один в один. Не исправляй ошибки, не меняй стиль, не удаляй и не добавляй слова. Просто скопируй текст без изменений.
+Верни текст КАК ЕСТЬ, один в один. Не исправляй ошибки, не меняй стиль, не удаляй и не добавляй слова.
+
+ПРАВИЛА:
+1. Если в заголовке или описании есть Telegram-ник (начинается с @, например @Fini2006) — убери его из текста, а вместо него напиши «Писать в телеграм». Сам ник верни в поле TELEGRAM.
 
 Ответ дай СТРОГО в формате:
-TITLE: <исправленный заголовок>
-DESCRIPTION: <исправленное описание>
+TITLE: <заголовок>
+DESCRIPTION: <описание>
+TELEGRAM: <извлечённый ник без @ или пусто>
 
 Заголовок: {$title}
 Описание: {$description}
@@ -84,16 +88,22 @@ PROMPT;
     {
         $titleAi = '';
         $descriptionAi = '';
+        $telegram = '';
 
         if (preg_match('/TITLE:\s*(.+?)(?:\n|$)/s', $content, $m)) {
             $titleAi = trim($m[1]);
         }
 
-        if (preg_match('/DESCRIPTION:\s*(.+)/s', $content, $m)) {
+        if (preg_match('/DESCRIPTION:\s*(.+?)(?:\nTELEGRAM:|$)/s', $content, $m)) {
             $descriptionAi = trim($m[1]);
         }
 
-        // Ограничиваем заголовок 255 символами
+        if (preg_match('/TELEGRAM:\s*(.+?)(?:\n|$)/s', $content, $m)) {
+            $telegram = trim($m[1]);
+            // Убираем @ если AI вернул с ним
+            $telegram = ltrim($telegram, '@');
+        }
+
         if (mb_strlen($titleAi) > 255) {
             $titleAi = mb_substr($titleAi, 0, 255);
         }
@@ -101,6 +111,7 @@ PROMPT;
         return [
             'title_ai' => $titleAi,
             'discription_ai' => $descriptionAi,
+            'telegram_extracted' => $telegram,
         ];
     }
 }

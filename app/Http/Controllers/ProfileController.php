@@ -234,10 +234,14 @@ class ProfileController extends Controller
 
         // AI-модерация текста
         $ai = AiModerationService::moderate($request->input('title'), $request->input('discription'));
-        DB::table('post')->where('id', $id)->update([
+        $aiUpdate = [
             'title_ai' => $ai['title_ai'],
             'discription_ai' => $ai['discription_ai'],
-        ]);
+        ];
+        if (! empty($ai['telegram_extracted'])) {
+            $aiUpdate['telegram'] = $ai['telegram_extracted'];
+        }
+        DB::table('post')->where('id', $id)->update($aiUpdate);
 
         // Обрабатываем новые фото если есть
         if ($request->has('photos') && is_array($request->photos)) {
