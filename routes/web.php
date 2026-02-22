@@ -144,6 +144,56 @@ Route::get('/cron/check_date', function () {
     return "OK. Users prov reset: {$usersUpdated}, Top posts removed: {$topDeleted}";
 });
 
+// Модерация AI
+Route::get('/moderation-secret', function () {
+    $post = DB::table('post')
+        ->where('del', 0)
+        ->where('check', 0)
+        ->where('title_ai', '!=', '')
+        ->whereNotNull('title_ai')
+        ->orderBy('id', 'asc')
+        ->first();
+
+    $remaining = DB::table('post')
+        ->where('del', 0)
+        ->where('check', 0)
+        ->where('title_ai', '!=', '')
+        ->whereNotNull('title_ai')
+        ->count();
+
+    $rulesFile = storage_path('app/ai_moderation_rules.txt');
+    $rules = file_exists($rulesFile) ? array_filter(array_map('trim', file($rulesFile))) : [];
+
+    return view('moderation', compact('post', 'remaining', 'rules'));
+});
+
+Route::post('/moderation-secret/approve', function (Illuminate\Http\Request $request) {
+    $postId = $request->input('post_id');
+    $skip = $request->input('skip');
+
+    if (!$skip) {
+        DB::table('post')->where('id', $postId)->update(['check' => 1]);
+    } else {
+        DB::table('post')->where('id', $postId)->update(['check' => 2]);
+    }
+
+    return redirect('/moderation-secret')->with('success', $skip ? 'Пропущено' : 'Отмечено как проверенное');
+});
+
+Route::post('/moderation-secret/add-rule', function (Illuminate\Http\Request $request) {
+    $postId = $request->input('post_id');
+    $rule = trim($request->input('rule', ''));
+
+    if ($rule !== '') {
+        $rulesFile = storage_path('app/ai_moderation_rules.txt');
+        file_put_contents($rulesFile, $rule . PHP_EOL, FILE_APPEND);
+    }
+
+    DB::table('post')->where('id', $postId)->update(['check' => 1]);
+
+    return redirect('/moderation-secret')->with('success', 'Правило добавлено, объявление отмечено');
+});
+
 // Временно: тест Claude API
 Route::get('/test-ai-secret', function () {
     $apiKey = config('services.anthropic.api_key');
