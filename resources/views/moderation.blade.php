@@ -325,17 +325,24 @@
                 <div class="mod-col mod-col-ai">
                     <div class="mod-col-label">AI версия</div>
                     <div class="mod-field-label">Заголовок</div>
-                    <div class="mod-field-value">{{ $post->title_ai ?? '' }}</div>
+                    <div class="mod-field-value">{{ $aiTitle }}</div>
                     <div class="mod-field-label">Описание</div>
-                    <div class="mod-field-value">{{ $post->discription_ai ?? '' }}</div>
+                    <div class="mod-field-value">{{ $aiDescription }}</div>
+                    @if($aiTelegram)
+                        <div class="mod-field-label">Telegram (извлечён)</div>
+                        <div class="mod-field-value">{{ $aiTelegram }}</div>
+                    @endif
                 </div>
             </div>
 
             <div class="mod-actions">
-                {{-- Кнопка "Проверено" --}}
+                {{-- Кнопка "Проверено" — сохраняет AI-версию в БД --}}
                 <form method="POST" action="/moderation-secret/approve">
                     @csrf
                     <input type="hidden" name="post_id" value="{{ $post->id }}">
+                    <input type="hidden" name="ai_title" value="{{ $aiTitle }}">
+                    <input type="hidden" name="ai_description" value="{{ $aiDescription }}">
+                    <input type="hidden" name="ai_telegram" value="{{ $aiTelegram }}">
                     <button type="submit" class="mod-btn-approve">Проверено</button>
                 </form>
 

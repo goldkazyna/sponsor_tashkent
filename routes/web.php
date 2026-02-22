@@ -149,22 +149,39 @@ Route::get('/moderation-secret', function () {
     $post = DB::table('post')
         ->where('del', 0)
         ->where('check', 0)
-        ->where('title_ai', '!=', '')
-        ->whereNotNull('title_ai')
         ->orderBy('id', 'desc')
         ->first();
 
     $remaining = DB::table('post')
         ->where('del', 0)
         ->where('check', 0)
-        ->where('title_ai', '!=', '')
-        ->whereNotNull('title_ai')
         ->count();
+
+    $aiTitle = '';
+    $aiDescription = '';
+    $aiTelegram = '';
+
+    if ($post) {
+        if (!empty($post->title_ai)) {
+            // AI уже обработал раньше
+            $aiTitle = $post->title_ai;
+            $aiDescription = $post->discription_ai ?? '';
+        } else {
+            // Прогоняем через AI прямо сейчас
+            $result = \App\Services\AiModerationService::moderate(
+                $post->title ?? '',
+                $post->discription ?? ''
+            );
+            $aiTitle = $result['title_ai'];
+            $aiDescription = $result['discription_ai'];
+            $aiTelegram = $result['telegram_extracted'];
+        }
+    }
 
     $rulesFile = storage_path('app/ai_moderation_rules.txt');
     $rules = file_exists($rulesFile) ? array_filter(array_map('trim', file($rulesFile))) : [];
 
-    return view('moderation', compact('post', 'remaining', 'rules'));
+    return view('moderation', compact('post', 'remaining', 'rules', 'aiTitle', 'aiDescription', 'aiTelegram'));
 });
 
 Route::post('/moderation-secret/approve', function (Illuminate\Http\Request $request) {
@@ -172,12 +189,21 @@ Route::post('/moderation-secret/approve', function (Illuminate\Http\Request $req
     $skip = $request->input('skip');
 
     if (!$skip) {
-        DB::table('post')->where('id', $postId)->update(['check' => 1]);
+        $update = ['check' => 1];
+        $update['title_ai'] = $request->input('ai_title', '');
+        $update['discription_ai'] = $request->input('ai_description', '');
+
+        $aiTelegram = $request->input('ai_telegram', '');
+        if ($aiTelegram !== '') {
+            $update['telegram'] = $aiTelegram;
+        }
+
+        DB::table('post')->where('id', $postId)->update($update);
     } else {
         DB::table('post')->where('id', $postId)->update(['check' => 2]);
     }
 
-    return redirect('/moderation-secret')->with('success', $skip ? 'Пропущено' : 'Отмечено как проверенное');
+    return redirect('/moderation-secret')->with('success', $skip ? 'Пропущено' : 'Проверено, AI-версия сохранена');
 });
 
 Route::post('/moderation-secret/add-rule', function (Illuminate\Http\Request $request) {
@@ -189,9 +215,9 @@ Route::post('/moderation-secret/add-rule', function (Illuminate\Http\Request $re
         file_put_contents($rulesFile, $rule . PHP_EOL, FILE_APPEND);
     }
 
-    DB::table('post')->where('id', $postId)->update(['check' => 1]);
+    DB::table('post')->where('id', $postId)->update(['check' => 2]);
 
-    return redirect('/moderation-secret')->with('success', 'Правило добавлено, объявление отмечено');
+    return redirect('/moderation-secret')->with('success', 'Правило добавлено, объявление пропущено');
 });
 
 // Временно: тест Claude API
