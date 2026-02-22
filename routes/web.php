@@ -152,8 +152,10 @@ Route::get('/test-ai-secret', function () {
     }
 
     $masked = substr($apiKey, 0, 10) . '...' . substr($apiKey, -4);
+    $keyLen = strlen($apiKey);
 
-    $response = Illuminate\Support\Facades\Http::withHeaders([
+    // Тест 1: claude-3-haiku
+    $r1 = Illuminate\Support\Facades\Http::withHeaders([
         'x-api-key' => $apiKey,
         'anthropic-version' => '2023-06-01',
         'content-type' => 'application/json',
@@ -163,10 +165,25 @@ Route::get('/test-ai-secret', function () {
         'messages' => [['role' => 'user', 'content' => 'Say hi']],
     ]);
 
+    // Тест 2: claude-3-5-haiku
+    $r2 = Illuminate\Support\Facades\Http::withHeaders([
+        'x-api-key' => $apiKey,
+        'anthropic-version' => '2023-06-01',
+        'content-type' => 'application/json',
+    ])->timeout(15)->post('https://api.anthropic.com/v1/messages', [
+        'model' => 'claude-3-5-haiku-20241022',
+        'max_tokens' => 10,
+        'messages' => [['role' => 'user', 'content' => 'Say hi']],
+    ]);
+
     return '<pre>'
-        . "Key: {$masked}\n"
-        . "Status: {$response->status()}\n"
-        . "Body: " . htmlspecialchars($response->body())
+        . "Key: {$masked} (length: {$keyLen})\n\n"
+        . "--- Test 1: claude-3-haiku ---\n"
+        . "Status: {$r1->status()}\n"
+        . "Body: " . htmlspecialchars($r1->body()) . "\n\n"
+        . "--- Test 2: claude-3-5-haiku ---\n"
+        . "Status: {$r2->status()}\n"
+        . "Body: " . htmlspecialchars($r2->body()) . "\n"
         . '</pre>';
 });
 
