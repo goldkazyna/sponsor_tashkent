@@ -144,6 +144,32 @@ Route::get('/cron/check_date', function () {
     return "OK. Users prov reset: {$usersUpdated}, Top posts removed: {$topDeleted}";
 });
 
+// Временно: тест Claude API
+Route::get('/test-ai-secret', function () {
+    $apiKey = config('services.anthropic.api_key');
+    if (empty($apiKey)) {
+        return 'API key not set. Check ANTHROPIC_API_KEY in .env';
+    }
+
+    $masked = substr($apiKey, 0, 10) . '...' . substr($apiKey, -4);
+
+    $response = Illuminate\Support\Facades\Http::withHeaders([
+        'x-api-key' => $apiKey,
+        'anthropic-version' => '2023-06-01',
+        'content-type' => 'application/json',
+    ])->timeout(15)->post('https://api.anthropic.com/v1/messages', [
+        'model' => 'claude-3-haiku-20240307',
+        'max_tokens' => 10,
+        'messages' => [['role' => 'user', 'content' => 'Say hi']],
+    ]);
+
+    return '<pre>'
+        . "Key: {$masked}\n"
+        . "Status: {$response->status()}\n"
+        . "Body: " . htmlspecialchars($response->body())
+        . '</pre>';
+});
+
 // Временно: последние ошибки из лога
 Route::get('/debug-log-secret', function () {
     $logFile = storage_path('logs/laravel.log');
