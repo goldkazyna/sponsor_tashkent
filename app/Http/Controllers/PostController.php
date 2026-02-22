@@ -214,25 +214,8 @@ class PostController extends Controller
             'ip' => $request->ip(),
         ]);
 
-        // AI-модерация текста
-        $ai = AiModerationService::moderate($request->title, $request->discription);
-        $aiUpdate = [
-            'title_ai' => $ai['title_ai'],
-            'discription_ai' => $ai['discription_ai'],
-        ];
-        if (! empty($ai['telegram_extracted'])) {
-            $aiUpdate['telegram'] = $ai['telegram_extracted'];
-        }
-        if (! empty($ai['phone_extracted'])) {
-            $aiUpdate['phone'] = $ai['phone_extracted'];
-        }
-        if (! empty($ai['whatsapp_extracted'])) {
-            $aiUpdate['whats'] = $ai['whatsapp_extracted'];
-        }
-        if ($ai['delete']) {
-            $aiUpdate['del'] = 1;
-        }
-        DB::table('post')->where('id', $postId)->update($aiUpdate);
+        // AI-модерация временно отключена — модерируем вручную через /moderation-secret
+        // $ai = AiModerationService::moderate($request->title, $request->discription);
 
         // Обрабатываем фото если есть
         if ($request->has('photos') && is_array($request->photos)) {
