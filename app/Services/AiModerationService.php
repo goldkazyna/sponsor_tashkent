@@ -116,8 +116,12 @@ PROMPT;
         }
 
         $changes = '';
-        if (preg_match('/CHANGES:\s*(.+?)(?:\nTITLE:|$)/s', $content, $m)) {
-            $changes = trim($m[1]);
+        if (preg_match('/CHANGES:\s*(.+?)(?:\n|$)/', $content, $m)) {
+            $val = trim($m[1]);
+            // Игнорируем если AI вернул пусто или начало другого поля
+            if ($val !== '' && !preg_match('/^(TITLE:|DESCRIPTION:|TELEGRAM:|DELETE)/i', $val)) {
+                $changes = $val;
+            }
         }
 
         if (preg_match('/TITLE:\s*(.+?)(?:\n|$)/s', $content, $m)) {
