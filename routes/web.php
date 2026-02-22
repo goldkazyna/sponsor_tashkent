@@ -151,7 +151,7 @@ Route::get('/moderation-secret', function () {
         ->where('check', 0)
         ->where('title_ai', '!=', '')
         ->whereNotNull('title_ai')
-        ->orderBy('id', 'asc')
+        ->orderBy('id', 'desc')
         ->first();
 
     $remaining = DB::table('post')
