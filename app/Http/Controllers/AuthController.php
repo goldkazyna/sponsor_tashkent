@@ -42,12 +42,15 @@ class AuthController extends Controller
 			'sex' => $request->sex,
 			'ip' => $request->ip(),
 			'date' => now(),
-			'activate' => 1, // сразу активируем
+			'activate' => 1,
+			'confirm' => 1,
+			'status' => 0,
 			'device_key' => uniqid('device_', true),
 			'fio' => '',
 			'phone' => '',
-			'prov' => 0,
+			'activate_code' => '',
 			'restore_code' => '',
+			'prov' => 0,
 			'telegram_id' => '',
 			'telegram_username' => '',
 		]);
