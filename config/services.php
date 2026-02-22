@@ -48,6 +48,7 @@ return [
 
     'anthropic' => [
         'api_key' => env('ANTHROPIC_API_KEY'),
+        'proxy' => env('ANTHROPIC_PROXY'),
     ],
 
 ];

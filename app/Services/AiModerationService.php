@@ -23,11 +23,18 @@ class AiModerationService
         }
 
         try {
-            $response = Http::withHeaders([
+            $httpClient = Http::withHeaders([
                 'x-api-key' => $apiKey,
                 'anthropic-version' => '2023-06-01',
                 'content-type' => 'application/json',
-            ])->timeout(30)->post('https://api.anthropic.com/v1/messages', [
+            ])->timeout(30);
+
+            $proxy = config('services.anthropic.proxy');
+            if (! empty($proxy)) {
+                $httpClient = $httpClient->withOptions(['proxy' => $proxy]);
+            }
+
+            $response = $httpClient->post('https://api.anthropic.com/v1/messages', [
                 'model' => 'claude-3-haiku-20240307',
                 'max_tokens' => 1024,
                 'messages' => [
