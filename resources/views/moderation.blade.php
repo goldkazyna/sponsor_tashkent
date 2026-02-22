@@ -332,6 +332,14 @@
                         <div class="mod-field-label">Telegram (извлечён)</div>
                         <div class="mod-field-value">{{ $aiTelegram }}</div>
                     @endif
+                    @if($aiPhone)
+                        <div class="mod-field-label">Телефон (извлечён)</div>
+                        <div class="mod-field-value">{{ $aiPhone }}</div>
+                    @endif
+                    @if($aiWhatsapp)
+                        <div class="mod-field-label">WhatsApp (извлечён)</div>
+                        <div class="mod-field-value">{{ $aiWhatsapp }}</div>
+                    @endif
                 </div>
             </div>
 
@@ -355,6 +363,8 @@
                     <input type="hidden" name="ai_title" value="{{ $aiTitle }}">
                     <input type="hidden" name="ai_description" value="{{ $aiDescription }}">
                     <input type="hidden" name="ai_telegram" value="{{ $aiTelegram }}">
+                    <input type="hidden" name="ai_phone" value="{{ $aiPhone }}">
+                    <input type="hidden" name="ai_whatsapp" value="{{ $aiWhatsapp }}">
                     <button type="submit" class="mod-btn-approve">Проверено</button>
                 </form>
 

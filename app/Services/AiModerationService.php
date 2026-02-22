@@ -89,10 +89,12 @@ DELETE: yes ставь ТОЛЬКО если в правилах прямо ск
 Ответ дай СТРОГО в формате:
 DELETE: <yes или no>
 DELETE_REASON: <если DELETE: yes — коротко напиши причину на русском, иначе пусто>
-CHANGES: <если ты что-то изменил — перечисли каждое изменение через « - » на русском. Если извлёк telegram-ник, напиши что он также добавлен в специальное поле Telegram. Если ничего не менял — пусто>
+CHANGES: <если ты что-то изменил — перечисли каждое изменение через « - » на русском. Если извлёк контакт, напиши что он добавлен в специальное поле. Если ничего не менял — пусто>
 TITLE: <заголовок>
 DESCRIPTION: <описание>
 TELEGRAM: <извлечённый ник без @ или пусто>
+PHONE: <извлечённый номер телефона или пусто>
+WHATSAPP: <номер для ватсап или пусто>
 
 Заголовок: {$title}
 Описание: {$description}
@@ -134,8 +136,17 @@ PROMPT;
 
         if (preg_match('/TELEGRAM:\s*(.+?)(?:\n|$)/s', $content, $m)) {
             $telegram = trim($m[1]);
-            // Убираем @ если AI вернул с ним
             $telegram = ltrim($telegram, '@');
+        }
+
+        $phone = '';
+        if (preg_match('/PHONE:\s*(.+?)(?:\n|$)/s', $content, $m)) {
+            $phone = trim($m[1]);
+        }
+
+        $whatsapp = '';
+        if (preg_match('/WHATSAPP:\s*(.+?)(?:\n|$)/s', $content, $m)) {
+            $whatsapp = trim($m[1]);
         }
 
         if (mb_strlen($titleAi) > 255) {
@@ -146,6 +157,8 @@ PROMPT;
             'title_ai' => $titleAi,
             'discription_ai' => $descriptionAi,
             'telegram_extracted' => $telegram,
+            'phone_extracted' => $phone,
+            'whatsapp_extracted' => $whatsapp,
             'delete' => $delete,
             'delete_reason' => $deleteReason,
             'changes' => $changes,

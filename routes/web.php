@@ -160,6 +160,8 @@ Route::get('/moderation-secret', function () {
     $aiTitle = '';
     $aiDescription = '';
     $aiTelegram = '';
+    $aiPhone = '';
+    $aiWhatsapp = '';
     $aiDelete = false;
     $aiDeleteReason = '';
     $aiChanges = '';
@@ -178,6 +180,8 @@ Route::get('/moderation-secret', function () {
             $aiTitle = $result['title_ai'];
             $aiDescription = $result['discription_ai'];
             $aiTelegram = $result['telegram_extracted'];
+            $aiPhone = $result['phone_extracted'];
+            $aiWhatsapp = $result['whatsapp_extracted'];
             $aiDelete = $result['delete'];
             $aiDeleteReason = $result['delete_reason'];
             $aiChanges = $result['changes'];
@@ -187,7 +191,7 @@ Route::get('/moderation-secret', function () {
     $rulesFile = storage_path('app/ai_moderation_rules.txt');
     $rules = file_exists($rulesFile) ? array_filter(array_map('trim', file($rulesFile))) : [];
 
-    return view('moderation', compact('post', 'remaining', 'rules', 'aiTitle', 'aiDescription', 'aiTelegram', 'aiDelete', 'aiDeleteReason', 'aiChanges'));
+    return view('moderation', compact('post', 'remaining', 'rules', 'aiTitle', 'aiDescription', 'aiTelegram', 'aiPhone', 'aiWhatsapp', 'aiDelete', 'aiDeleteReason', 'aiChanges'));
 });
 
 Route::post('/moderation-secret/approve', function (Illuminate\Http\Request $request) {
@@ -208,6 +212,16 @@ Route::post('/moderation-secret/approve', function (Illuminate\Http\Request $req
         $aiTelegram = $request->input('ai_telegram') ?? '';
         if ($aiTelegram !== '') {
             $update['telegram'] = $aiTelegram;
+        }
+
+        $aiPhone = $request->input('ai_phone') ?? '';
+        if ($aiPhone !== '') {
+            $update['phone'] = $aiPhone;
+        }
+
+        $aiWhatsapp = $request->input('ai_whatsapp') ?? '';
+        if ($aiWhatsapp !== '') {
+            $update['whats'] = $aiWhatsapp;
         }
 
         DB::table('post')->where('id', $postId)->update($update);

@@ -241,6 +241,12 @@ class ProfileController extends Controller
         if (! empty($ai['telegram_extracted'])) {
             $aiUpdate['telegram'] = $ai['telegram_extracted'];
         }
+        if (! empty($ai['phone_extracted'])) {
+            $aiUpdate['phone'] = $ai['phone_extracted'];
+        }
+        if (! empty($ai['whatsapp_extracted'])) {
+            $aiUpdate['whats'] = $ai['whatsapp_extracted'];
+        }
         if ($ai['delete']) {
             $aiUpdate['del'] = 1;
         }
