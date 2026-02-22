@@ -162,6 +162,7 @@ Route::get('/moderation-secret', function () {
     $aiTelegram = '';
     $aiDelete = false;
     $aiDeleteReason = '';
+    $aiChanges = '';
 
     if ($post) {
         if (!empty($post->title_ai)) {
@@ -179,13 +180,14 @@ Route::get('/moderation-secret', function () {
             $aiTelegram = $result['telegram_extracted'];
             $aiDelete = $result['delete'];
             $aiDeleteReason = $result['delete_reason'];
+            $aiChanges = $result['changes'];
         }
     }
 
     $rulesFile = storage_path('app/ai_moderation_rules.txt');
     $rules = file_exists($rulesFile) ? array_filter(array_map('trim', file($rulesFile))) : [];
 
-    return view('moderation', compact('post', 'remaining', 'rules', 'aiTitle', 'aiDescription', 'aiTelegram', 'aiDelete', 'aiDeleteReason'));
+    return view('moderation', compact('post', 'remaining', 'rules', 'aiTitle', 'aiDescription', 'aiTelegram', 'aiDelete', 'aiDeleteReason', 'aiChanges'));
 });
 
 Route::post('/moderation-secret/approve', function (Illuminate\Http\Request $request) {

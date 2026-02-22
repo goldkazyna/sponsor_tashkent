@@ -89,6 +89,7 @@ DELETE: yes ставь ТОЛЬКО если в правилах прямо ск
 Ответ дай СТРОГО в формате:
 DELETE: <yes или no>
 DELETE_REASON: <если DELETE: yes — коротко напиши причину на русском, иначе пусто>
+CHANGES: <если ты что-то изменил в тексте — коротко перечисли что и почему на русском, иначе пусто>
 TITLE: <заголовок>
 DESCRIPTION: <описание>
 TELEGRAM: <извлечённый ник без @ или пусто>
@@ -112,6 +113,11 @@ PROMPT;
 
         if (preg_match('/DELETE_REASON:\s*(.+?)(?:\n|$)/s', $content, $m)) {
             $deleteReason = trim($m[1]);
+        }
+
+        $changes = '';
+        if (preg_match('/CHANGES:\s*(.+?)(?:\nTITLE:|$)/s', $content, $m)) {
+            $changes = trim($m[1]);
         }
 
         if (preg_match('/TITLE:\s*(.+?)(?:\n|$)/s', $content, $m)) {
@@ -138,6 +144,7 @@ PROMPT;
             'telegram_extracted' => $telegram,
             'delete' => $delete,
             'delete_reason' => $deleteReason,
+            'changes' => $changes,
         ];
     }
 }

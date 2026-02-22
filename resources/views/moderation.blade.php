@@ -335,6 +335,12 @@
                 </div>
             </div>
 
+            @if($aiChanges)
+                <div style="background: #fff7ed; border: 2px solid #f97316; border-radius: 10px; padding: 0.75rem 1rem; color: #c2410c; font-weight: 600; margin-bottom: 1rem; font-size: 0.9rem;">
+                    Изменения: {{ $aiChanges }}
+                </div>
+            @endif
+
             @if($aiDelete)
                 <div style="background: #fef2f2; border: 2px solid #ef4444; border-radius: 10px; padding: 0.75rem 1rem; color: #dc2626; font-weight: 600; margin-bottom: 1rem; font-size: 0.95rem;">
                     AI рекомендует УДАЛИТЬ: {{ $aiDeleteReason ?: 'запрещённый контент' }}
