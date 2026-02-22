@@ -135,18 +135,26 @@ PROMPT;
         }
 
         if (preg_match('/TELEGRAM:\s*(.+?)(?:\n|$)/s', $content, $m)) {
-            $telegram = trim($m[1]);
-            $telegram = ltrim($telegram, '@');
+            $val = trim($m[1]);
+            if ($val !== '' && !preg_match('/^(PHONE:|WHATSAPP:|TITLE:|DESCRIPTION:|DELETE|CHANGES:)/i', $val)) {
+                $telegram = ltrim($val, '@');
+            }
         }
 
         $phone = '';
         if (preg_match('/PHONE:\s*(.+?)(?:\n|$)/s', $content, $m)) {
-            $phone = trim($m[1]);
+            $val = trim($m[1]);
+            if ($val !== '' && !preg_match('/^(WHATSAPP:|TELEGRAM:|TITLE:|DESCRIPTION:|DELETE|CHANGES:)/i', $val)) {
+                $phone = $val;
+            }
         }
 
         $whatsapp = '';
         if (preg_match('/WHATSAPP:\s*(.+?)(?:\n|$)/s', $content, $m)) {
-            $whatsapp = trim($m[1]);
+            $val = trim($m[1]);
+            if ($val !== '' && !preg_match('/^(PHONE:|TELEGRAM:|TITLE:|DESCRIPTION:|DELETE|CHANGES:)/i', $val)) {
+                $whatsapp = $val;
+            }
         }
 
         if (mb_strlen($titleAi) > 255) {
