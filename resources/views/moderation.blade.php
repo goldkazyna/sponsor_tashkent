@@ -345,7 +345,10 @@
 
             @if($aiChanges)
                 <div style="background: #fff7ed; border: 2px solid #f97316; border-radius: 10px; padding: 0.75rem 1rem; color: #c2410c; font-weight: 600; margin-bottom: 1rem; font-size: 0.9rem;">
-                    Изменения: {{ $aiChanges }}
+                    Изменения:
+                    @foreach(preg_split('/\s*-\s+/', $aiChanges, -1, PREG_SPLIT_NO_EMPTY) as $change)
+                        <div style="margin-left: 0.5rem;">— {{ trim($change) }}</div>
+                    @endforeach
                 </div>
             @endif
 
