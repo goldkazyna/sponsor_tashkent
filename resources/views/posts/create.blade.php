@@ -150,6 +150,34 @@
         </button>
     </form>
 </div>
+@if(!empty($nextAt))
+<div id="limitModal" style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:1rem;">
+    <div style="background:white;border-radius:16px;padding:2rem;max-width:450px;width:100%;position:relative;text-align:center;">
+        <div style="font-size:3rem;margin-bottom:1rem;">⏳</div>
+        <div style="font-size:1.3rem;font-weight:700;color:#1a202c;margin-bottom:1rem;">Лимит объявлений</div>
+        <div style="color:#475569;font-size:0.95rem;line-height:1.7;margin-bottom:1.5rem;">
+            Вы можете подавать только <strong>1 объявление в сутки</strong>.<br>
+            Следующее объявление можно будет подать через:
+        </div>
+        <div id="countdown" style="font-size:1.5rem;font-weight:700;color:#f97316;margin-bottom:1.5rem;"></div>
+        <a href="/" style="display:inline-block;padding:0.75rem 2rem;background:#10b981;color:white;border-radius:10px;font-weight:600;text-decoration:none;">На главную</a>
+    </div>
+</div>
+<script>
+(function(){
+    var target = new Date("{{ $nextAt->toIso8601String() }}").getTime();
+    function update(){
+        var diff = target - Date.now();
+        if(diff <= 0){ document.getElementById('countdown').textContent = 'Уже можно!'; location.reload(); return; }
+        var h = Math.floor(diff/3600000), m = Math.floor((diff%3600000)/60000), s = Math.floor((diff%60000)/1000);
+        document.getElementById('countdown').textContent = (h > 0 ? h + ' ч. ' : '') + m + ' мин. ' + s + ' сек.';
+    }
+    update();
+    setInterval(update, 1000);
+})();
+</script>
+@endif
+
 @endsection
 <script>
 let uploadedPhotos = [];

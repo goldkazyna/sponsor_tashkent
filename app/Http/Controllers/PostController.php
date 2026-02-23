@@ -159,6 +159,21 @@ class PostController extends Controller
             return view('posts.need-status', compact('user'));
         }
 
+        // Лимит: 1 объявление в сутки
+        $lastPost = DB::table('post')
+            ->where('email', $user->email)
+            ->where('del', 0)
+            ->where('date', '>=', now()->subDay())
+            ->orderByDesc('date')
+            ->first(['date']);
+
+        if ($lastPost) {
+            $nextAt = \Carbon\Carbon::parse($lastPost->date)->addDay();
+            $cities = DB::table('city')->orderBy('id')->get();
+
+            return view('posts.create', compact('cities', 'user', 'nextAt'));
+        }
+
         // Получаем список городов
         $cities = DB::table('city')->orderBy('id')->get();
 
@@ -177,6 +192,17 @@ class PostController extends Controller
 
         // Мужчина без статуса — блокируем
         if ($user->sex == 1 && $user->prov != 1) {
+            return redirect()->route('post.create');
+        }
+
+        // Лимит: 1 объявление в сутки
+        $lastPost = DB::table('post')
+            ->where('email', $user->email)
+            ->where('del', 0)
+            ->where('date', '>=', now()->subDay())
+            ->first();
+
+        if ($lastPost) {
             return redirect()->route('post.create');
         }
 

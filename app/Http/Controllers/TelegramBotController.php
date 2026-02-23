@@ -694,6 +694,24 @@ class TelegramBotController extends Controller
             return;
         }
 
+        // Лимит: 1 объявление в сутки
+        $lastPost = DB::table('post')
+            ->where('email', $user->email)
+            ->where('del', 0)
+            ->where('date', '>=', now()->subDay())
+            ->orderByDesc('date')
+            ->first(['date']);
+
+        if ($lastPost) {
+            $nextAt = \Carbon\Carbon::parse($lastPost->date)->addDay();
+            $hours = (int) now()->diffInHours($nextAt);
+            $minutes = (int) now()->diffInMinutes($nextAt) % 60;
+            $timeLeft = $hours > 0 ? "{$hours} ч. {$minutes} мин." : "{$minutes} мин.";
+            $this->sendMessage($chatId, "⏳ Вы уже добавили объявление сегодня.\n\nСледующее объявление можно подать через <b>{$timeLeft}</b>", $this->getAuthKeyboard());
+
+            return;
+        }
+
         Cache::put("tg_state_{$telegramId}", [
             'step' => 'post_title',
             'post_data' => [],
