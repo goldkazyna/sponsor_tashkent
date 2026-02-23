@@ -5,6 +5,7 @@ use App\Http\Controllers\ContactController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TelegramBotController;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 
 // Главная страница со списком объявлений
@@ -90,6 +91,31 @@ Route::get('/clear-cache-secret', function () {
     Artisan::call('view:clear');
 
     return 'Cache cleared!';
+});
+
+Route::get('/apply-ai-secret', function () {
+    $posts = DB::table('post')
+        ->where('check', 1)
+        ->whereNotNull('title_ai')
+        ->where('title_ai', '!=', '')
+        ->get(['id', 'title', 'title_ai', 'discription', 'discription_ai']);
+
+    if ($posts->isEmpty()) {
+        return 'Нет объявлений для обновления.';
+    }
+
+    $result = [];
+    foreach ($posts as $post) {
+        DB::table('post')->where('id', $post->id)->update([
+            'title' => $post->title_ai,
+            'discription' => $post->discription_ai ?? '',
+            'title_ai' => '',
+            'discription_ai' => '',
+        ]);
+        $result[] = "#{$post->id}: «{$post->title}» → «{$post->title_ai}»";
+    }
+
+    return 'Обновлено: ' . count($result) . '<br>' . implode('<br>', $result);
 });
 
 // Telegram Bot
