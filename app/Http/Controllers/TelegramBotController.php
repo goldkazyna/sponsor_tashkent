@@ -117,6 +117,13 @@ class TelegramBotController extends Controller
             return;
         }
 
+        // === НАПИСАТЬ АДМИНУ ===
+        if ($state['step'] === 'admin_message') {
+            $this->sendAdminMessage($chatId, $telegramId, $text);
+
+            return;
+        }
+
         switch ($state['step']) {
             // === АВТОРИЗАЦИЯ ===
             case 'login_email':
@@ -492,7 +499,16 @@ class TelegramBotController extends Controller
                 break;
 
             case '💻 Написать админу':
-                $this->sendMessage($chatId, 'Функция связи с админом будет доступна в следующем обновлении.');
+                if (! $user) {
+                    $this->sendMessage($chatId, '❌ Для связи с админом необходимо авторизоваться.', $this->getGuestKeyboard());
+                    break;
+                }
+
+                Cache::put("tg_state_{$telegramId}", [
+                    'step' => 'admin_message',
+                ], now()->addMinutes(10));
+
+                $this->sendMessage($chatId, '💬 Напишите ваше сообщение админу:', $this->getCancelKeyboard());
                 break;
 
             case '📄 Инструкция':
@@ -1015,6 +1031,51 @@ class TelegramBotController extends Controller
         Cache::forget("tg_state_{$telegramId}");
 
         $this->sendMessage($chatId, "✅ Ваша заявка отправлена!\n\nАдмин свяжется с вами в ближайшее время.", $this->getAuthKeyboard());
+    }
+
+    /**
+     * Отправка сообщения админу.
+     */
+    private function sendAdminMessage(int $chatId, int $telegramId, string $text): void
+    {
+        $message = trim($text);
+        if (empty($message)) {
+            $this->sendMessage($chatId, '❌ Сообщение не может быть пустым. Напишите ваше сообщение:');
+
+            return;
+        }
+
+        $user = DB::table('users')->where('telegram_id', $telegramId)->first();
+
+        $username = $user->telegram_username ?? null;
+        $tgLink = $username ? "@{$username}" : "ID: {$telegramId}";
+
+        $adminMessage = "🔔 <b>Новое сообщение из Telegram бота</b>\n\n";
+        $adminMessage .= '📧 <b>Email:</b> ' . ($user->email ?? 'Не указано') . "\n";
+        $adminMessage .= "💬 <b>Telegram:</b> {$tgLink}\n";
+        $adminMessage .= "🆔 <b>Telegram ID:</b> {$telegramId}\n";
+        $adminMessage .= "\n💌 <b>Сообщение:</b>\n{$message}";
+
+        $notifyToken = config('services.telegram.bot_token');
+        $notifyChatId = config('services.telegram.chat_id');
+
+        $sent = false;
+        if ($notifyToken && $notifyChatId) {
+            $response = Http::post("https://api.telegram.org/bot{$notifyToken}/sendMessage", [
+                'chat_id' => $notifyChatId,
+                'text' => $adminMessage,
+                'parse_mode' => 'HTML',
+            ]);
+            $sent = $response->successful();
+        }
+
+        Cache::forget("tg_state_{$telegramId}");
+
+        if ($sent) {
+            $this->sendMessage($chatId, "✅ Сообщение отправлено!\n\nАдмин свяжется с вами в ближайшее время.", $this->getAuthKeyboard());
+        } else {
+            $this->sendMessage($chatId, '❌ Ошибка отправки. Попробуйте позже.', $this->getAuthKeyboard());
+        }
     }
 
     /**
