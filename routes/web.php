@@ -324,3 +324,19 @@ Route::get('/debug-log-secret', function () {
 
     return '<pre>'.htmlspecialchars(implode('', $last)).'</pre>';
 });
+
+// Telegram бот: логи
+Route::get('/debug-telegram-secret', function () {
+    // daily-канал создаёт файлы вида telegram-2026-02-24.log
+    $pattern = storage_path('logs/telegram-*.log');
+    $files = glob($pattern);
+    if (empty($files)) {
+        return 'No telegram log files';
+    }
+    // Берём последний файл (самый свежий)
+    $logFile = end($files);
+    $lines = file($logFile);
+    $last = array_slice($lines, -100);
+
+    return '<pre>'.htmlspecialchars(implode('', $last)).'</pre>';
+});

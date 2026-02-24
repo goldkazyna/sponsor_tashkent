@@ -42,12 +42,12 @@ class TelegramBotController extends Controller
     {
         $update = $request->all();
 
-        Log::info('Telegram webhook received', $update);
+        Log::channel('telegram')->info('Webhook received', $update);
 
         try {
             $this->processUpdate($update);
         } catch (\Throwable $e) {
-            Log::error('Telegram bot error', [
+            Log::channel('telegram')->error('Bot error', [
                 'message' => $e->getMessage(),
                 'file' => $e->getFile() . ':' . $e->getLine(),
                 'update' => $update,
