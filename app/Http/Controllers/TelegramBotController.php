@@ -88,6 +88,11 @@ class TelegramBotController extends Controller
         $telegramId = $message['from']['id'];
         $username = $message['from']['username'] ?? null;
 
+        // TODO: убрать после теста
+        if ($text === 'test_error') {
+            throw new \RuntimeException('Тестовая ошибка для проверки логирования');
+        }
+
         if ($text === '/start') {
             Cache::forget("tg_state_{$telegramId}");
             $this->handleStart($chatId, $telegramId, $username);
