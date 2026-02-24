@@ -217,7 +217,7 @@ class TelegramBotController extends Controller
             $page = (int) ($parts[0] ?? 1);
             $cityId = (int) ($parts[1] ?? 0);
             $user = DB::table('users')->where('telegram_id', $telegramId)->first();
-            $this->handleViewPosts($chatId, $telegramId, $user, $page, $cityId);
+            $this->handleViewPosts($chatId, $user, $page, $cityId);
 
             return;
         }
@@ -491,7 +491,7 @@ class TelegramBotController extends Controller
 
             case '🔍 Просмотреть объявления':
                 $this->sendMessage($chatId, '🏙 Выберите город или смотрите все объявления:', $this->getCityKeyboard());
-                $this->handleViewPosts($chatId, $telegramId, $user, 1);
+                $this->handleViewPosts($chatId, $user, 1);
                 break;
 
             case '➕ Добавить объявление':
@@ -556,7 +556,7 @@ class TelegramBotController extends Controller
                 // Проверяем, не город ли это
                 $city = DB::table('city')->where('title', $text)->first();
                 if ($city) {
-                    $this->handleViewPosts($chatId, $telegramId, $user, 1, $city->id);
+                    $this->handleViewPosts($chatId, $user, 1, $city->id);
                     break;
                 }
 
@@ -569,7 +569,7 @@ class TelegramBotController extends Controller
     /**
      * Просмотр объявлений с пагинацией.
      */
-    private function handleViewPosts(int $chatId, int $telegramId, ?object $user, int $page, int $cityId = 0): void
+    private function handleViewPosts(int $chatId, ?object $user, int $page, int $cityId = 0): void
     {
         $perPage = 10;
 
@@ -595,31 +595,19 @@ class TelegramBotController extends Controller
             ->limit($perPage)
             ->get();
 
-        // Удаляем старые сообщения предыдущей страницы
-        $oldMessages = Cache::get("tg_posts_msgs_{$telegramId}", []);
-        if (! empty($oldMessages)) {
-            $this->deleteMessages($chatId, $oldMessages);
-            Cache::forget("tg_posts_msgs_{$telegramId}");
-        }
-
         if ($posts->isEmpty()) {
             $this->sendMessage($chatId, '📭 Объявлений в этом городе пока нет.');
 
             return;
         }
 
-        $sentMessages = [];
-
         // ТОП объявление на первой странице
         if ($page === 1) {
-            $topMsgId = $this->showTopPost($chatId, $user);
-            if ($topMsgId) {
-                $sentMessages[] = $topMsgId;
-            }
+            $this->showTopPost($chatId, $user);
         }
 
         foreach ($posts as $post) {
-            $sentMessages[] = $this->sendMessage($chatId, $this->formatPost($post, $user));
+            $this->sendMessage($chatId, $this->formatPost($post, $user));
         }
 
         // Кнопки пагинации
@@ -638,18 +626,15 @@ class TelegramBotController extends Controller
         }
         $inline[] = [['text' => '🔙 В главное меню', 'callback_data' => 'back_to_menu']];
 
-        $sentMessages[] = $this->sendMessage($chatId, "📄 Страница: {$page}/{$totalPages}", [
+        $this->sendMessage($chatId, "📄 Страница: {$page}/{$totalPages}", [
             'inline_keyboard' => $inline,
         ]);
-
-        // Сохраняем ID сообщений для удаления при переключении страницы
-        Cache::put("tg_posts_msgs_{$telegramId}", array_filter($sentMessages), now()->addMinutes(30));
     }
 
     /**
      * Показать ТОП объявление.
      */
-    private function showTopPost(int $chatId, ?object $user): ?int
+    private function showTopPost(int $chatId, ?object $user): void
     {
         // Берём с наименьшим count_view, если одинаковы — рандом
         $topRecord = DB::table('top_post')
@@ -659,7 +644,7 @@ class TelegramBotController extends Controller
             ->first();
 
         if (! $topRecord) {
-            return null;
+            return;
         }
 
         $post = DB::table('post')
@@ -670,7 +655,7 @@ class TelegramBotController extends Controller
             ->first();
 
         if (! $post) {
-            return null;
+            return;
         }
 
         // Увеличиваем count_view на 1
@@ -678,7 +663,7 @@ class TelegramBotController extends Controller
 
         $text = "◆◆◆ТОП ОБЪЯВЛЕНИЕ◆◆◆\n".$this->formatPost($post, $user);
 
-        return $this->sendMessage($chatId, $text);
+        $this->sendMessage($chatId, $text);
     }
 
     /**
