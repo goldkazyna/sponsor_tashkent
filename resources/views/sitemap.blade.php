@@ -9,7 +9,7 @@
 @endforeach
 @foreach($cities as $city)
     <url>
-        <loc>{{ $baseUrl . '/?city=' . urlencode($city) }}</loc>
+        <loc>{{ $baseUrl . '/?city=' . $city->id }}</loc>
         <changefreq>daily</changefreq>
         <priority>0.8</priority>
     </url>

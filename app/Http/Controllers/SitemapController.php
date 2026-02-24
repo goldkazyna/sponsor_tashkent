@@ -22,7 +22,7 @@ class SitemapController extends Controller
         ];
 
         // Города — фильтрованные главные страницы
-        $cities = DB::table('city')->orderBy('id')->pluck('title');
+        $cities = DB::table('city')->orderBy('id')->get(['id']);
 
         // Активные объявления
         $posts = DB::table('post')
