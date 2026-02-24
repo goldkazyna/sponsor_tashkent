@@ -335,9 +335,10 @@ class TelegramBotController extends Controller
 
         // === МОИ ОБЪЯВЛЕНИЯ: callback-кнопки ===
 
-        // Поднять в ТОП (заглушка)
+        // Поднять в ТОП
         if (str_starts_with($data, 'mypost_top_')) {
-            $this->sendMessage($chatId, '🚀 Функция поднятия в ТОП будет доступна в следующем обновлении.');
+            $postId = (int) str_replace('mypost_top_', '', $data);
+            $this->handleBoostTop($chatId, $telegramId, $postId);
 
             return;
         }
@@ -1076,6 +1077,64 @@ class TelegramBotController extends Controller
         } else {
             $this->sendMessage($chatId, '❌ Ошибка отправки. Попробуйте позже.', $this->getAuthKeyboard());
         }
+    }
+
+    /**
+     * Поднять объявление в ТОП.
+     */
+    private function handleBoostTop(int $chatId, int $telegramId, int $postId): void
+    {
+        $user = DB::table('users')->where('telegram_id', $telegramId)->first();
+
+        if (! $user) {
+            $this->sendMessage($chatId, '❌ Для этого необходимо авторизоваться.', $this->getGuestKeyboard());
+
+            return;
+        }
+
+        // Проверяем что объявление принадлежит пользователю
+        $post = DB::table('post')->where('id', $postId)->where('del', 0)->first();
+        if (! $post || ($post->email !== $user->email && (string) $post->telegram_id !== (string) $telegramId)) {
+            $this->sendMessage($chatId, '❌ Объявление не найдено.', $this->getAuthKeyboard());
+
+            return;
+        }
+
+        // Проверяем, не в ТОПе ли уже
+        $existingTop = DB::table('top_post')
+            ->where('id_post', $postId)
+            ->where('date_end', '>=', now())
+            ->first();
+
+        if ($existingTop) {
+            $dateEnd = date('d.m.Y', strtotime($existingTop->date_end));
+            $this->sendMessage($chatId, "⭐ Это объявление уже в ТОПе!\n📅 Действует до: <b>{$dateEnd}</b>", $this->getAuthKeyboard());
+
+            return;
+        }
+
+        // Генерируем автологин-ссылку на страницу оплаты ТОП
+        $token = bin2hex(random_bytes(32));
+        Cache::put("auto_login_{$token}", [
+            'user_id' => $user->id,
+            'redirect' => "/boost-top?post_id={$postId}",
+        ], now()->addMinutes(30));
+
+        $siteUrl = rtrim(config('app.url', 'https://goldkazyna.kz'), '/');
+
+        $text = "🚀 <b>Поднять в ТОП: «{$post->title}»</b>\n\n";
+        $text .= "Ваше объявление будет показываться первым на главной странице.\n\n";
+        $text .= "💰 <b>Тарифы:</b>\n\n";
+        $text .= "🔹 <b>5 дней</b> — 7 592 ₸ (~\$14)\n";
+        $text .= "🔹 <b>10 дней</b> — 10 846 ₸ (~\$20)\n";
+        $text .= "🔹 <b>30 дней</b> — 16 268 ₸ (~\$30) ⭐ Популярный\n\n";
+        $text .= 'Нажмите кнопку — вы автоматически войдёте на сайт и попадёте на страницу оплаты:';
+
+        $this->sendMessage($chatId, $text, [
+            'inline_keyboard' => [
+                [['text' => '💳 Перейти к оплате', 'url' => "{$siteUrl}/auto-login/{$token}"]],
+            ],
+        ]);
     }
 
     /**
