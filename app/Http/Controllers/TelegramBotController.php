@@ -516,7 +516,7 @@ class TelegramBotController extends Controller
 
             case '🚀 Топ объявлений':
             case '🚀 Топ объявления':
-                $this->sendMessage($chatId, 'Топ объявлений будет доступен в следующем обновлении.');
+                $this->handleTopPosts($chatId, $user);
                 break;
 
             case '📨 Мои объявления':
@@ -648,6 +648,47 @@ class TelegramBotController extends Controller
         $text = "◆◆◆ТОП ОБЪЯВЛЕНИЕ◆◆◆\n".$this->formatPost($post, $user);
 
         $this->sendMessage($chatId, $text);
+    }
+
+    /**
+     * Показать все ТОП объявления.
+     */
+    private function handleTopPosts(int $chatId, ?object $user): void
+    {
+        $topRecords = DB::table('top_post')
+            ->where('date_end', '>=', now())
+            ->orderBy('count_view', 'asc')
+            ->get();
+
+        if ($topRecords->isEmpty()) {
+            $this->sendMessage($chatId, '📭 Топ объявлений пока нет.');
+
+            return;
+        }
+
+        $count = 0;
+        foreach ($topRecords as $topRecord) {
+            $post = DB::table('post')
+                ->leftJoin('city', 'post.city', '=', 'city.id')
+                ->select('post.*', 'city.title as city_name')
+                ->where('post.id', $topRecord->id_post)
+                ->where('post.del', 0)
+                ->first();
+
+            if (! $post) {
+                continue;
+            }
+
+            DB::table('top_post')->where('id', $topRecord->id)->increment('count_view');
+
+            $text = "⭐ ТОП ОБЪЯВЛЕНИЕ ⭐\n" . $this->formatPost($post, $user);
+            $this->sendMessage($chatId, $text);
+            $count++;
+        }
+
+        if ($count === 0) {
+            $this->sendMessage($chatId, '📭 Топ объявлений пока нет.');
+        }
     }
 
     /**
