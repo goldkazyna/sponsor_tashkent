@@ -1,2 +1,19 @@
 User-agent: *
-Disallow:
+Allow: /
+Disallow: /profile/
+Disallow: /auto-login/
+Disallow: /payment/
+Disallow: /result_url_new
+Disallow: /success_url
+Disallow: /fail
+Disallow: /telegram/
+Disallow: /clear-cache-secret
+Disallow: /apply-ai-secret
+Disallow: /moderation-secret
+Disallow: /test-ai-secret
+Disallow: /debug-log-secret
+Disallow: /cron/
+Disallow: /password/
+Disallow: /payment-instruction
+
+Sitemap: https://xn--4-ytbcbcjcd6g.org/sitemap.xml

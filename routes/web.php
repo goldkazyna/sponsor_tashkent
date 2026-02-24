@@ -4,9 +4,13 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\TelegramBotController;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
+
+// Карта сайта
+Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap');
 
 // Главная страница со списком объявлений
 Route::get('/', [PostController::class, 'index'])->name('home');
