@@ -44,15 +44,42 @@ class TelegramBotController extends Controller
 
         Log::info('Telegram webhook received', $update);
 
+        try {
+            $this->processUpdate($update);
+        } catch (\Throwable $e) {
+            Log::error('Telegram bot error', [
+                'message' => $e->getMessage(),
+                'file' => $e->getFile() . ':' . $e->getLine(),
+                'update' => $update,
+            ]);
+
+            // Пытаемся отправить пользователю сообщение об ошибке
+            $chatId = $update['callback_query']['message']['chat']['id']
+                ?? $update['message']['chat']['id']
+                ?? null;
+
+            if ($chatId) {
+                $this->sendMessage($chatId, '❌ Произошла ошибка. Попробуйте позже или нажмите /start');
+            }
+        }
+
+        return response()->json(['ok' => true]);
+    }
+
+    /**
+     * Обработка входящего обновления.
+     */
+    private function processUpdate(array $update): void
+    {
         // Обработка inline кнопок (callback_query)
         if (isset($update['callback_query'])) {
             $this->handleCallbackQuery($update['callback_query']);
 
-            return response()->json(['ok' => true]);
+            return;
         }
 
         if (! isset($update['message'])) {
-            return response()->json(['ok' => true]);
+            return;
         }
 
         $message = $update['message'];
@@ -65,7 +92,7 @@ class TelegramBotController extends Controller
             Cache::forget("tg_state_{$telegramId}");
             $this->handleStart($chatId, $telegramId, $username);
 
-            return response()->json(['ok' => true]);
+            return;
         }
 
         // Проверяем состояние диалога (авторизация/регистрация)
@@ -76,8 +103,6 @@ class TelegramBotController extends Controller
         } else {
             $this->handleTextButton($chatId, $telegramId, $text);
         }
-
-        return response()->json(['ok' => true]);
     }
 
     /**
