@@ -207,6 +207,7 @@ Route::get('/moderation-secret', function () {
                 $post->title ?? '',
                 $post->discription ?? ''
             );
+            \Illuminate\Support\Facades\Log::channel('telegram')->info('AiModeration result', $result);
             $aiTitle = $result['title_ai'];
             $aiDescription = $result['discription_ai'];
             $aiTelegram = $result['telegram_extracted'];
