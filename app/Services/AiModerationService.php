@@ -19,7 +19,7 @@ class AiModerationService
         if (empty($apiKey)) {
             Log::warning('AiModeration: ANTHROPIC_API_KEY not configured');
 
-            return ['title_ai' => '', 'discription_ai' => '', 'telegram_extracted' => '', 'delete' => false];
+            return ['title_ai' => '', 'discription_ai' => '', 'telegram_extracted' => '', 'phone_extracted' => '', 'whatsapp_extracted' => '', 'delete' => false, 'delete_reason' => '', 'changes' => ''];
         }
 
         try {
@@ -51,7 +51,7 @@ class AiModerationService
                     'body' => $response->body(),
                 ]);
 
-                return ['title_ai' => '', 'discription_ai' => '', 'telegram_extracted' => '', 'delete' => false];
+                return ['title_ai' => '', 'discription_ai' => '', 'telegram_extracted' => '', 'phone_extracted' => '', 'whatsapp_extracted' => '', 'delete' => false, 'delete_reason' => '', 'changes' => ''];
             }
 
             $content = $response->json('content.0.text', '');
@@ -60,7 +60,7 @@ class AiModerationService
         } catch (\Exception $e) {
             Log::error('AiModeration: Exception', ['message' => $e->getMessage()]);
 
-            return ['title_ai' => '', 'discription_ai' => '', 'telegram_extracted' => '', 'delete' => false];
+            return ['title_ai' => '', 'discription_ai' => '', 'telegram_extracted' => '', 'phone_extracted' => '', 'whatsapp_extracted' => '', 'delete' => false, 'delete_reason' => '', 'changes' => ''];
         }
     }
 
