@@ -569,6 +569,19 @@
         <div class="error-message">{{ session('error') }}</div>
     @endif
 
+    <div style="background: #fef2f2; border: 2px solid #ef4444; border-radius: 12px; padding: 1.25rem 1.5rem; margin-bottom: 2rem;">
+        <div style="display: flex; align-items: flex-start; gap: 0.75rem;">
+            <svg viewBox="0 0 24 24" style="width: 28px; height: 28px; fill: #ef4444; flex-shrink: 0; margin-top: 2px;"><path d="M13,14H11V10H13M13,18H11V16H13M1,21H23L12,2L1,21Z"/></svg>
+            <div>
+                <div style="font-weight: 700; color: #991b1b; font-size: 1rem; margin-bottom: 0.5rem;">Важно при оплате!</div>
+                <ul style="margin: 0; padding-left: 1.25rem; color: #991b1b; font-size: 0.9rem; line-height: 1.7;">
+                    <li><strong>Оплачивайте строго ту сумму, которая указана</strong> — не больше и не меньше, иначе платёж не будет засчитан.</li>
+                    <li><strong>Оплата производится через Kaspi.</strong> Откройте своё приложение Kaspi и переведите на номер телефона, который будет показан после нажатия на кнопку «Оплатить». Каждый раз номер может быть разным — это платёжная организация меняет реквизиты.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
     <div class="tariffs-grid">
 
         {{-- 5 дней --}}
