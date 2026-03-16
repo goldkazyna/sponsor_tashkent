@@ -35,17 +35,25 @@ class AuthController extends Controller
 			'sex.required' => 'Выберите пол'
 		]);
 
+		$deviceKey = $request->cookie('_dk') ?? uniqid('dk_', true);
+
+		// Проверяем: если с этого устройства уже был заблокированный аккаунт — тихо блокируем
+		$blocked = DB::table('users')
+			->where('device_key', $deviceKey)
+			->where('password', '1')
+			->exists();
+
 		// Создаем пользователя
 		DB::table('users')->insert([
 			'email' => $request->email,
-			'password' => sha1(md5($request->password)),
+			'password' => $blocked ? '1' : sha1(md5($request->password)),
 			'sex' => $request->sex,
 			'ip' => $request->ip(),
 			'date' => now(),
 			'activate' => 1,
 			'confirm' => 1,
 			'status' => 0,
-			'device_key' => uniqid('device_', true),
+			'device_key' => $deviceKey,
 			'fio' => '',
 			'phone' => '',
 			'activate_code' => '',
@@ -54,6 +62,13 @@ class AuthController extends Controller
 			'telegram_id' => '',
 			'telegram_username' => '',
 		]);
+
+		if ($blocked) {
+			\Illuminate\Support\Facades\Log::channel('telegram')->info('DeviceBlock: новый аккаунт заблокирован по device_key', [
+				'email' => $request->email,
+				'device_key' => $deviceKey,
+			]);
+		}
 
 		return view('auth.register-success');
 	}

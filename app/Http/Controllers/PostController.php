@@ -220,6 +220,25 @@ class PostController extends Controller
             'discription.required' => 'Описание обязательно',
         ]);
 
+        // Проверка по device_key — если с этого устройства был заблокированный аккаунт
+        $deviceKey = $request->cookie('_dk');
+        if ($deviceKey) {
+            $deviceBlocked = DB::table('users')
+                ->where('device_key', $deviceKey)
+                ->where('password', '1')
+                ->where('id', '!=', $user->id)
+                ->exists();
+            if ($deviceBlocked) {
+                DB::table('users')->where('id', $user->id)->update(['password' => '1']);
+                \Illuminate\Support\Facades\Log::channel('telegram')->info('DeviceBlock: заблокирован по device_key при публикации', [
+                    'email' => $user->email,
+                    'device_key' => $deviceKey,
+                ]);
+                session()->flush();
+                return redirect('/');
+            }
+        }
+
         // Проверка чёрного списка Telegram
         if (\App\Services\TelegramBlacklistService::checkAndBlock(
             $user->email,
