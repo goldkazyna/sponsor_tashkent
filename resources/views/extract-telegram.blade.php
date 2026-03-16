@@ -23,6 +23,8 @@
     justify-content: space-between;
     align-items: center;
     margin-bottom: 2rem;
+    flex-wrap: wrap;
+    gap: 0.75rem;
 }
 
 .et-header h1 {
@@ -30,6 +32,12 @@
     font-weight: 700;
     color: #1a202c;
     margin: 0;
+}
+
+.et-header-info {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
 }
 
 .et-counter {
@@ -69,7 +77,6 @@
     border-radius: 12px;
     padding: 1.5rem;
     margin-bottom: 1.5rem;
-    transition: border-color 0.2s;
 }
 
 .et-post.has-telegram {
@@ -87,6 +94,8 @@
     justify-content: space-between;
     align-items: center;
     margin-bottom: 1rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
 }
 
 .et-post-id {
@@ -95,6 +104,15 @@
     border-radius: 6px;
     font-size: 0.8rem;
     color: #64748b;
+    font-weight: 600;
+}
+
+.et-existing-tg {
+    background: #fef3c7;
+    color: #92400e;
+    padding: 0.25rem 0.75rem;
+    border-radius: 6px;
+    font-size: 0.8rem;
     font-weight: 600;
 }
 
@@ -146,11 +164,6 @@
     color: #1d4ed8;
 }
 
-.et-telegram-actions {
-    display: flex;
-    gap: 0.5rem;
-}
-
 .et-btn-save {
     background: #16a34a;
     color: white;
@@ -169,23 +182,6 @@
     box-shadow: 0 3px 10px rgba(22,163,74,0.3);
 }
 
-.et-btn-skip {
-    background: #f1f5f9;
-    color: #64748b;
-    border: 2px solid #e2e8f0;
-    padding: 0.5rem 1.25rem;
-    border-radius: 8px;
-    font-size: 0.85rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.et-btn-skip:hover {
-    background: #e2e8f0;
-    color: #475569;
-}
-
 .et-no-result {
     color: #94a3b8;
     font-size: 0.85rem;
@@ -193,10 +189,48 @@
     margin-top: 0.75rem;
 }
 
+/* Пагинация */
+.et-pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 2rem;
+}
+
+.et-page-link {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-decoration: none;
+    color: #64748b;
+    background: #f1f5f9;
+    border: 2px solid #e2e8f0;
+    transition: all 0.2s;
+}
+
+.et-page-link:hover {
+    background: #e2e8f0;
+    color: #1a202c;
+}
+
+.et-page-link.active {
+    background: #3b82f6;
+    color: white;
+    border-color: #3b82f6;
+}
+
+.et-page-link.disabled {
+    opacity: 0.4;
+    pointer-events: none;
+}
+
 @media (max-width: 768px) {
     .et-container { padding: 0; }
     .et-card { padding: 1.5rem; }
-    .et-header { flex-direction: column; gap: 0.75rem; align-items: flex-start; }
+    .et-header { flex-direction: column; align-items: flex-start; }
     .et-telegram-result { flex-direction: column; align-items: flex-start; }
 }
 </style>
@@ -206,7 +240,6 @@
 
         <div class="et-header">
             <h1>Извлечение Telegram</h1>
-            <div class="et-counter">Без телеграма: <span>{{ $remaining }}</span></div>
         </div>
 
         @if(session('success'))
@@ -214,7 +247,7 @@
         @endif
 
         @if($posts->isEmpty())
-            <div class="et-empty">Все объявления уже с телеграмом!</div>
+            <div class="et-empty">Объявлений нет</div>
         @else
             @foreach($posts as $post)
                 @php
@@ -223,6 +256,9 @@
                 <div class="et-post {{ $ai ? 'has-telegram' : 'no-telegram' }}">
                     <div class="et-post-header">
                         <div class="et-post-id">ID: {{ $post->id }}</div>
+                        @if(!empty($post->telegram))
+                            <div class="et-existing-tg">TG: {{ '@' . $post->telegram }}</div>
+                        @endif
                         @if($ai)
                             <div class="et-found-badge">Найден в {{ $ai['found_in'] }}</div>
                         @endif
@@ -245,22 +281,18 @@
 
                     @if($ai)
                         <div class="et-telegram-result">
-                            <div class="et-telegram-nick">@{{ $ai['telegram'] }}</div>
-                            <div class="et-telegram-actions">
-                                <form method="POST" action="/extract-telegram-secret/save" style="display:inline">
-                                    @csrf
-                                    <input type="hidden" name="post_id" value="{{ $post->id }}">
-                                    <input type="hidden" name="telegram" value="{{ $ai['telegram'] }}">
-                                    <input type="hidden" name="action" value="save">
-                                    <button type="submit" class="et-btn-save">Сохранить</button>
-                                </form>
-                                <form method="POST" action="/extract-telegram-secret/save" style="display:inline">
-                                    @csrf
-                                    <input type="hidden" name="post_id" value="{{ $post->id }}">
-                                    <input type="hidden" name="action" value="skip">
-                                    <button type="submit" class="et-btn-skip">Пропустить</button>
-                                </form>
+                            <div>
+                                <div class="et-telegram-nick">@{{ $ai['telegram'] }}</div>
+                                @if(!empty($post->telegram))
+                                    <div style="font-size:0.8rem;color:#64748b;margin-top:0.25rem">В поле уже есть: {{ '@' . $post->telegram }} — ник будет только вырезан из текста</div>
+                                @endif
                             </div>
+                            <form method="POST" action="/extract-telegram-secret/save" style="display:inline">
+                                @csrf
+                                <input type="hidden" name="post_id" value="{{ $post->id }}">
+                                <input type="hidden" name="telegram" value="{{ $ai['telegram'] }}">
+                                <button type="submit" class="et-btn-save">{{ empty($post->telegram) ? 'Сохранить и вырезать' : 'Вырезать из текста' }}</button>
+                            </form>
                         </div>
                     @else
                         <div class="et-no-result">Telegram не найден</div>
@@ -268,6 +300,7 @@
                 </div>
             @endforeach
         @endif
+
 
     </div>
 </div>

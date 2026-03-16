@@ -279,76 +279,58 @@ Route::post('/moderation-secret/add-rule', function (Illuminate\Http\Request $re
 
 // Извлечение Telegram-ников из текстов объявлений
 Route::get('/extract-telegram-secret', function () {
-    // Берём 5 объявлений без телеграма, где есть текст
     $posts = DB::table('post')
         ->where('del', 0)
-        ->where(function ($q) {
-            $q->whereNull('telegram')->orWhere('telegram', '');
-        })
-        ->where(function ($q) {
-            $q->whereNotNull('title')->orWhereNotNull('fio')->orWhereNotNull('discription');
-        })
         ->orderBy('id', 'desc')
         ->limit(5)
         ->get();
-
-    $remaining = DB::table('post')
-        ->where('del', 0)
-        ->where(function ($q) {
-            $q->whereNull('telegram')->orWhere('telegram', '');
-        })
-        ->where(function ($q) {
-            $q->whereNotNull('title')->orWhereNotNull('fio')->orWhereNotNull('discription');
-        })
-        ->count();
 
     $aiResults = [];
     if ($posts->isNotEmpty()) {
         $aiResults = \App\Services\AiModerationService::extractTelegram($posts->all());
     }
 
-    return view('extract-telegram', compact('posts', 'remaining', 'aiResults'));
+    return view('extract-telegram', compact('posts', 'aiResults'));
 });
 
 Route::post('/extract-telegram-secret/save', function (Illuminate\Http\Request $request) {
     $postId = $request->input('post_id');
     $telegram = trim($request->input('telegram', ''));
-    $action = $request->input('action'); // 'save' или 'skip'
-
-    if ($action === 'save' && $telegram !== '') {
-        // Сохраняем телеграм в поле и убираем из текстовых полей
+    if ($telegram !== '') {
         $post = DB::table('post')->where('id', $postId)->first();
         if ($post) {
-            $update = ['telegram' => $telegram];
+            $update = [];
 
-            // Убираем ник из текстов (с @ и без)
+            // Если поле telegram пустое — записываем туда
+            if (empty($post->telegram)) {
+                $update['telegram'] = $telegram;
+            }
+
+            // Вырезаем ник из текстовых полей (с @ и без)
             $patterns = ['@' . $telegram, $telegram];
             foreach ($patterns as $pattern) {
-                if (!empty($post->title) && stripos($post->title, $pattern) !== false) {
-                    $update['title'] = str_ireplace($pattern, '', $post->title);
-                    $update['title'] = trim(preg_replace('/\s{2,}/', ' ', $update['title']));
+                $titleField = $update['title'] ?? $post->title ?? '';
+                if ($titleField !== '' && stripos($titleField, $pattern) !== false) {
+                    $update['title'] = trim(preg_replace('/\s{2,}/', ' ', str_ireplace($pattern, '', $titleField)));
                 }
                 $descField = $update['discription'] ?? $post->discription ?? '';
-                if (!empty($descField) && stripos($descField, $pattern) !== false) {
-                    $update['discription'] = str_ireplace($pattern, '', $descField);
-                    $update['discription'] = trim(preg_replace('/\s{2,}/', ' ', $update['discription']));
+                if ($descField !== '' && stripos($descField, $pattern) !== false) {
+                    $update['discription'] = trim(preg_replace('/\s{2,}/', ' ', str_ireplace($pattern, '', $descField)));
                 }
                 $fioField = $update['fio'] ?? $post->fio ?? '';
-                if (!empty($fioField) && stripos($fioField, $pattern) !== false) {
-                    $update['fio'] = str_ireplace($pattern, '', $fioField);
-                    $update['fio'] = trim(preg_replace('/\s{2,}/', ' ', $update['fio']));
+                if ($fioField !== '' && stripos($fioField, $pattern) !== false) {
+                    $update['fio'] = trim(preg_replace('/\s{2,}/', ' ', str_ireplace($pattern, '', $fioField)));
                 }
             }
 
-            DB::table('post')->where('id', $postId)->update($update);
+            if (!empty($update)) {
+                DB::table('post')->where('id', $postId)->update($update);
+            }
         }
-    } elseif ($action === 'skip') {
-        // Ничего не делаем, но помечаем как просмотренное (пишем пробел чтобы не выбирать снова)
-        // Нет, лучше не трогать — пользователь решит вручную
     }
 
     return redirect('/extract-telegram-secret')->with('success',
-        $action === 'save' ? "Telegram @{$telegram} сохранён для объявления #{$postId}" : 'Пропущено'
+        "Telegram @{$telegram} обработан для объявления #{$postId}"
     );
 });
 
