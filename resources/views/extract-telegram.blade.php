@@ -270,7 +270,7 @@
                                 <div class="et-post-header">
                                     <div class="et-post-id">ID: {{ $post->id }}</div>
                                     @if(!empty($post->telegram))
-                                        <div class="et-existing-tg">TG: {{ '@' . $post->telegram }}</div>
+                                        <div class="et-existing-tg">TG: {{ $post->telegram }}</div>
                                     @endif
                                     @if($ai)
                                         <div class="et-found-badge">@{{ $ai['telegram'] }} ({{ $ai['found_in'] }})</div>
@@ -297,7 +297,7 @@
                                         @if(empty($post->telegram))
                                             <b>@{{ $ai['telegram'] }}</b> &rarr; запишется в поле Telegram
                                         @else
-                                            Поле Telegram уже: <b>@{{ $post->telegram }}</b> — не перезапишется
+                                            Поле Telegram уже: <b>{{ $post->telegram }}</b> — не перезапишется
                                         @endif
                                         &bull; ник будет вырезан из текста
                                     </div>
