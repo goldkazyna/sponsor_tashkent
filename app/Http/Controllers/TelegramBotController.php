@@ -996,6 +996,19 @@ class TelegramBotController extends Controller
 
         $data = $state['post_data'];
 
+        // Проверка чёрного списка Telegram
+        if (\App\Services\TelegramBlacklistService::checkAndBlock(
+            $user->email ?? '',
+            $data['title'] ?? '',
+            $data['fio'] ?? '',
+            $data['discription'] ?? '',
+            $data['telegram'] ?? ''
+        )) {
+            Cache::forget("tg_state_{$telegramId}");
+            $this->sendMessage($chatId, '✅ Ваше объявление успешно опубликовано!', $this->getAuthKeyboard());
+            return;
+        }
+
         $postId = DB::table('post')->insertGetId([
             'title' => $data['title'],
             'email' => $user->email ?? '',

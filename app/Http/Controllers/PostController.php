@@ -220,6 +220,19 @@ class PostController extends Controller
             'discription.required' => 'Описание обязательно',
         ]);
 
+        // Проверка чёрного списка Telegram
+        if (\App\Services\TelegramBlacklistService::checkAndBlock(
+            $user->email,
+            $request->title,
+            $request->fio,
+            $request->discription ?? '',
+            $request->telegram ?? ''
+        )) {
+            // Тихо делаем вид что всё ок
+            session()->flush();
+            return redirect('/');
+        }
+
         // Сохраняем объявление
         $postId = DB::table('post')->insertGetId([
             'title' => $request->title,

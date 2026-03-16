@@ -340,6 +340,28 @@ Route::post('/extract-telegram-secret/save', function (Illuminate\Http\Request $
     );
 });
 
+// Чёрный список Telegram
+Route::get('/blacklist-telegram-secret', function () {
+    $blacklist = \App\Services\TelegramBlacklistService::getBlacklist();
+    return view('blacklist-telegram', compact('blacklist'));
+});
+
+Route::post('/blacklist-telegram-secret/add', function (Illuminate\Http\Request $request) {
+    $nick = trim($request->input('nick', ''));
+    if ($nick !== '') {
+        \App\Services\TelegramBlacklistService::addToBlacklist($nick);
+    }
+    return redirect('/blacklist-telegram-secret')->with('success', "Добавлен: {$nick}");
+});
+
+Route::post('/blacklist-telegram-secret/remove', function (Illuminate\Http\Request $request) {
+    $nick = trim($request->input('nick', ''));
+    if ($nick !== '') {
+        \App\Services\TelegramBlacklistService::removeFromBlacklist($nick);
+    }
+    return redirect('/blacklist-telegram-secret')->with('success', "Удалён: {$nick}");
+});
+
 // Временно: тест Claude API
 Route::get('/test-ai-secret', function () {
     $apiKey = config('services.anthropic.api_key');
