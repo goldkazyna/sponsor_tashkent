@@ -282,55 +282,61 @@ Route::get('/extract-telegram-secret', function () {
     $posts = DB::table('post')
         ->where('del', 0)
         ->orderBy('id', 'desc')
-        ->limit(5)
+        ->limit(30)
         ->get();
 
     $aiResults = [];
     if ($posts->isNotEmpty()) {
-        $aiResults = \App\Services\AiModerationService::extractTelegram($posts->all());
+        // Батчим по 10 чтобы не превысить токены
+        foreach (array_chunk($posts->all(), 10) as $chunk) {
+            $aiResults += \App\Services\AiModerationService::extractTelegram($chunk);
+        }
     }
 
     return view('extract-telegram', compact('posts', 'aiResults'));
 });
 
 Route::post('/extract-telegram-secret/save', function (Illuminate\Http\Request $request) {
-    $postId = $request->input('post_id');
-    $telegram = trim($request->input('telegram', ''));
-    if ($telegram !== '') {
+    $items = $request->input('items', []);
+    $processed = 0;
+
+    foreach ($items as $postId => $telegram) {
+        $telegram = trim($telegram);
+        if ($telegram === '') continue;
+
         $post = DB::table('post')->where('id', $postId)->first();
-        if ($post) {
-            $update = [];
+        if (!$post) continue;
 
-            // Если поле telegram пустое — записываем туда
-            if (empty($post->telegram)) {
-                $update['telegram'] = $telegram;
-            }
+        $update = [];
 
-            // Вырезаем ник из текстовых полей (с @ и без)
-            $patterns = ['@' . $telegram, $telegram];
-            foreach ($patterns as $pattern) {
-                $titleField = $update['title'] ?? $post->title ?? '';
-                if ($titleField !== '' && stripos($titleField, $pattern) !== false) {
-                    $update['title'] = trim(preg_replace('/\s{2,}/', ' ', str_ireplace($pattern, '', $titleField)));
-                }
-                $descField = $update['discription'] ?? $post->discription ?? '';
-                if ($descField !== '' && stripos($descField, $pattern) !== false) {
-                    $update['discription'] = trim(preg_replace('/\s{2,}/', ' ', str_ireplace($pattern, '', $descField)));
-                }
-                $fioField = $update['fio'] ?? $post->fio ?? '';
-                if ($fioField !== '' && stripos($fioField, $pattern) !== false) {
-                    $update['fio'] = trim(preg_replace('/\s{2,}/', ' ', str_ireplace($pattern, '', $fioField)));
-                }
-            }
+        if (empty($post->telegram)) {
+            $update['telegram'] = $telegram;
+        }
 
-            if (!empty($update)) {
-                DB::table('post')->where('id', $postId)->update($update);
+        $patterns = ['@' . $telegram, $telegram];
+        foreach ($patterns as $pattern) {
+            $titleField = $update['title'] ?? $post->title ?? '';
+            if ($titleField !== '' && stripos($titleField, $pattern) !== false) {
+                $update['title'] = trim(preg_replace('/\s{2,}/', ' ', str_ireplace($pattern, '', $titleField)));
             }
+            $descField = $update['discription'] ?? $post->discription ?? '';
+            if ($descField !== '' && stripos($descField, $pattern) !== false) {
+                $update['discription'] = trim(preg_replace('/\s{2,}/', ' ', str_ireplace($pattern, '', $descField)));
+            }
+            $fioField = $update['fio'] ?? $post->fio ?? '';
+            if ($fioField !== '' && stripos($fioField, $pattern) !== false) {
+                $update['fio'] = trim(preg_replace('/\s{2,}/', ' ', str_ireplace($pattern, '', $fioField)));
+            }
+        }
+
+        if (!empty($update)) {
+            DB::table('post')->where('id', $postId)->update($update);
+            $processed++;
         }
     }
 
     return redirect('/extract-telegram-secret')->with('success',
-        "Telegram @{$telegram} обработан для объявления #{$postId}"
+        "Обработано объявлений: {$processed}"
     );
 });
 
