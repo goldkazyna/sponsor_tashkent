@@ -35,13 +35,18 @@ class AuthController extends Controller
 			'sex.required' => 'Выберите пол'
 		]);
 
-		$deviceKey = $request->cookie('_dk') ?? uniqid('dk_', true);
+		$cookieKey = $request->cookie('_dk');
+		$deviceKey = $cookieKey ?? uniqid('dk_', true);
 
 		// Проверяем: если с этого устройства уже был заблокированный аккаунт — тихо блокируем
-		$blocked = DB::table('users')
-			->where('device_key', $deviceKey)
-			->where('password', '1')
-			->exists();
+		// Только если cookie реально пришла (не сгенерированная на лету)
+		$blocked = false;
+		if ($cookieKey) {
+			$blocked = DB::table('users')
+				->where('device_key', $cookieKey)
+				->where('password', '1')
+				->exists();
+		}
 
 		// Создаем пользователя
 		DB::table('users')->insert([
