@@ -151,7 +151,7 @@
             <ul class="bl-list">
                 @foreach($blacklist as $nick)
                     <li class="bl-item">
-                        <span class="bl-nick">@{{ $nick }}</span>
+                        <span class="bl-nick">{{ $nick }}</span>
                         <form method="POST" action="/blacklist-telegram-secret/remove" style="display:inline">
                             @csrf
                             <input type="hidden" name="nick" value="{{ $nick }}">
