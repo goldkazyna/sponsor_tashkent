@@ -5,6 +5,7 @@ namespace App\Services;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
+// тест — этот коммит не должен затереть telegram_blacklist.txt на сервере
 class TelegramBlacklistService
 {
     /**
