@@ -64,6 +64,109 @@ class AiModerationService
         }
     }
 
+    /**
+     * Извлечение Telegram-ников из полей объявлений (батч до 5 шт.).
+     *
+     * @param  array  $posts  — массив объектов с полями id, title, fio, discription
+     * @return array<int, array{telegram: string, found_in: string}>  ключ = post id
+     */
+    public static function extractTelegram(array $posts): array
+    {
+        $apiKey = config('services.anthropic.api_key');
+
+        if (empty($apiKey) || empty($posts)) {
+            return [];
+        }
+
+        $postLines = '';
+        foreach ($posts as $post) {
+            $id = $post->id;
+            $title = $post->title ?? '';
+            $fio = $post->fio ?? '';
+            $desc = $post->discription ?? '';
+            $postLines .= "---\nID: {$id}\nTITLE: {$title}\nFIO: {$fio}\nDESCRIPTION: {$desc}\n";
+        }
+
+        $prompt = <<<PROMPT
+Ты — помощник модератора. Тебе даны объявления. Для каждого найди Telegram-ник (username) если он есть в полях TITLE, FIO или DESCRIPTION.
+
+Telegram-ник — это:
+- @username или просто username рядом со словами "телеграм", "тг", "tg", "telegram", "t.me"
+- Ссылка t.me/username
+- Замаскированные ники: буквы через точки, пробелы, нижние подчёркивания (например "t.e.l.e.g.r" или "T i 0 5 0")
+- Просто username если по контексту очевидно что это ник мессенджера
+
+НЕ путай с именами людей, городами, обычными словами.
+
+Для КАЖДОГО объявления выведи строку в формате:
+ID: <число> | TELEGRAM: <ник без @ или пусто> | FOUND_IN: <в каком поле нашёл: title/fio/description или пусто>
+
+Только этот формат, ничего больше.
+
+{$postLines}
+PROMPT;
+
+        try {
+            $httpClient = Http::withHeaders([
+                'x-api-key' => $apiKey,
+                'anthropic-version' => '2023-06-01',
+                'content-type' => 'application/json',
+            ])->timeout(30);
+
+            $proxy = config('services.anthropic.proxy');
+            if (! empty($proxy)) {
+                $httpClient = $httpClient->withOptions(['proxy' => $proxy]);
+            }
+
+            $response = $httpClient->post('https://api.anthropic.com/v1/messages', [
+                'model' => 'claude-haiku-4-5-20251001',
+                'max_tokens' => 1024,
+                'messages' => [
+                    ['role' => 'user', 'content' => $prompt],
+                ],
+            ]);
+
+            if (! $response->successful()) {
+                Log::error('ExtractTelegram: API error', ['status' => $response->status(), 'body' => $response->body()]);
+                return [];
+            }
+
+            $content = $response->json('content.0.text', '');
+            Log::channel('telegram')->info('ExtractTelegram AI response', ['content' => $content]);
+
+            return self::parseExtractTelegramResponse($content);
+        } catch (\Exception $e) {
+            Log::error('ExtractTelegram: Exception', ['message' => $e->getMessage()]);
+            return [];
+        }
+    }
+
+    private static function parseExtractTelegramResponse(string $content): array
+    {
+        $results = [];
+
+        if (preg_match_all('/ID:\s*(\d+)\s*\|\s*TELEGRAM:\s*(.*?)\s*\|\s*FOUND_IN:\s*(.*?)(?:\n|$)/i', $content, $matches, PREG_SET_ORDER)) {
+            foreach ($matches as $m) {
+                $id = (int) $m[1];
+                $telegram = trim($m[2]);
+                $foundIn = trim($m[3]);
+
+                // Убираем @ и "пусто"
+                $telegram = ltrim($telegram, '@');
+                if (mb_strtolower($telegram) === 'пусто' || $telegram === '' || $telegram === '-') {
+                    continue;
+                }
+
+                $results[$id] = [
+                    'telegram' => $telegram,
+                    'found_in' => $foundIn,
+                ];
+            }
+        }
+
+        return $results;
+    }
+
     private static function buildPrompt(string $title, string $description): string
     {
         $rulesBlock = '';

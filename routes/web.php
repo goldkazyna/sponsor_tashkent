@@ -277,6 +277,81 @@ Route::post('/moderation-secret/add-rule', function (Illuminate\Http\Request $re
     return redirect('/moderation-secret')->with('success', 'Правило добавлено, объявление пропущено');
 });
 
+// Извлечение Telegram-ников из текстов объявлений
+Route::get('/extract-telegram-secret', function () {
+    // Берём 5 объявлений без телеграма, где есть текст
+    $posts = DB::table('post')
+        ->where('del', 0)
+        ->where(function ($q) {
+            $q->whereNull('telegram')->orWhere('telegram', '');
+        })
+        ->where(function ($q) {
+            $q->whereNotNull('title')->orWhereNotNull('fio')->orWhereNotNull('discription');
+        })
+        ->orderBy('id', 'desc')
+        ->limit(5)
+        ->get();
+
+    $remaining = DB::table('post')
+        ->where('del', 0)
+        ->where(function ($q) {
+            $q->whereNull('telegram')->orWhere('telegram', '');
+        })
+        ->where(function ($q) {
+            $q->whereNotNull('title')->orWhereNotNull('fio')->orWhereNotNull('discription');
+        })
+        ->count();
+
+    $aiResults = [];
+    if ($posts->isNotEmpty()) {
+        $aiResults = \App\Services\AiModerationService::extractTelegram($posts->all());
+    }
+
+    return view('extract-telegram', compact('posts', 'remaining', 'aiResults'));
+});
+
+Route::post('/extract-telegram-secret/save', function (Illuminate\Http\Request $request) {
+    $postId = $request->input('post_id');
+    $telegram = trim($request->input('telegram', ''));
+    $action = $request->input('action'); // 'save' или 'skip'
+
+    if ($action === 'save' && $telegram !== '') {
+        // Сохраняем телеграм в поле и убираем из текстовых полей
+        $post = DB::table('post')->where('id', $postId)->first();
+        if ($post) {
+            $update = ['telegram' => $telegram];
+
+            // Убираем ник из текстов (с @ и без)
+            $patterns = ['@' . $telegram, $telegram];
+            foreach ($patterns as $pattern) {
+                if (!empty($post->title) && stripos($post->title, $pattern) !== false) {
+                    $update['title'] = str_ireplace($pattern, '', $post->title);
+                    $update['title'] = trim(preg_replace('/\s{2,}/', ' ', $update['title']));
+                }
+                $descField = $update['discription'] ?? $post->discription ?? '';
+                if (!empty($descField) && stripos($descField, $pattern) !== false) {
+                    $update['discription'] = str_ireplace($pattern, '', $descField);
+                    $update['discription'] = trim(preg_replace('/\s{2,}/', ' ', $update['discription']));
+                }
+                $fioField = $update['fio'] ?? $post->fio ?? '';
+                if (!empty($fioField) && stripos($fioField, $pattern) !== false) {
+                    $update['fio'] = str_ireplace($pattern, '', $fioField);
+                    $update['fio'] = trim(preg_replace('/\s{2,}/', ' ', $update['fio']));
+                }
+            }
+
+            DB::table('post')->where('id', $postId)->update($update);
+        }
+    } elseif ($action === 'skip') {
+        // Ничего не делаем, но помечаем как просмотренное (пишем пробел чтобы не выбирать снова)
+        // Нет, лучше не трогать — пользователь решит вручную
+    }
+
+    return redirect('/extract-telegram-secret')->with('success',
+        $action === 'save' ? "Telegram @{$telegram} сохранён для объявления #{$postId}" : 'Пропущено'
+    );
+});
+
 // Временно: тест Claude API
 Route::get('/test-ai-secret', function () {
     $apiKey = config('services.anthropic.api_key');
