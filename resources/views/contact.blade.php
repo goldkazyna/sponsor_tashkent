@@ -284,21 +284,20 @@
 
             <!-- WhatsApp / Telegram -->
             <div class="form-group">
-                <label class="form-label">Контакт для связи (опционально)</label>
+                <p style="color: #dc2626; font-size: 0.85rem; font-weight: 500; margin: 0 0 0.5rem 0;">Пожалуйста, оставьте Telegram или WhatsApp для связи, чтобы мы могли с вами связаться быстро!</p>
+                <label class="form-label">Контакт для связи</label>
                 <div class="contact-type-wrapper">
                     <select name="contact_type" class="form-select">
-                        <option value="">Выберите</option>
                         <option value="telegram">Telegram</option>
                         <option value="whatsapp">WhatsApp</option>
                     </select>
-                    <input 
-                        type="text" 
-                        name="contact_value" 
-                        class="form-input" 
-                        placeholder="@username или +7..."
+                    <input
+                        type="text"
+                        name="contact_value"
+                        class="form-input"
+                        placeholder="@username или +77001234567"
                     >
                 </div>
-                <div class="form-helper">Укажите ваш Telegram или WhatsApp для быстрой связи</div>
             </div>
 
             <!-- Сообщение -->
