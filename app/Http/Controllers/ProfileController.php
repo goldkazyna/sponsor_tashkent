@@ -151,7 +151,9 @@ class ProfileController extends Controller
             return redirect()->route('login');
         }
 
-        DB::table('users')->where('id', session('user_id'))->update(['del' => 1]);
+        $user = DB::table('users')->where('id', session('user_id'))->first();
+        DB::table('users')->where('id', $user->id)->update(['del' => 1]);
+        DB::table('post')->where('email', $user->email)->update(['del' => 1]);
         session()->flush();
 
         return response()->json(['success' => true]);
