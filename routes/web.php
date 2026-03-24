@@ -287,14 +287,21 @@ Route::get('/extract-telegram-secret', function () {
         ->get();
 
     $aiResults = [];
-    if ($posts->isNotEmpty()) {
+    $debugInfo = '';
+    $apiKey = config('services.anthropic.api_key');
+    if (empty($apiKey)) {
+        $debugInfo = 'ANTHROPIC_API_KEY не задан в .env';
+    } elseif ($posts->isNotEmpty()) {
         // Батчим по 10 чтобы не превысить токены
         foreach (array_chunk($posts->all(), 10) as $chunk) {
             $aiResults += \App\Services\AiModerationService::extractTelegram($chunk);
         }
+        if (empty($aiResults)) {
+            $debugInfo = 'API вернул пустой результат. Проверьте storage/logs/telegram-*.log';
+        }
     }
 
-    return view('extract-telegram', compact('posts', 'aiResults'));
+    return view('extract-telegram', compact('posts', 'aiResults', 'debugInfo'));
 });
 
 Route::post('/extract-telegram-secret/save', function (Illuminate\Http\Request $request) {

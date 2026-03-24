@@ -251,6 +251,12 @@
             <div class="et-success">{{ session('success') }}</div>
         @endif
 
+        @if(!empty($debugInfo))
+            <div style="background: #fef2f2; border: 1px solid #fca5a5; border-radius: 10px; padding: 1rem; margin-bottom: 1.5rem; color: #991b1b; font-weight: 500;">
+                ⚠️ {{ $debugInfo }}
+            </div>
+        @endif
+
         @if($posts->isEmpty())
             <div class="et-empty">Объявлений нет</div>
         @else
