@@ -137,12 +137,6 @@
     min-height: 150px;
 }
 
-.contact-type-wrapper {
-    display: grid;
-    grid-template-columns: 120px 1fr;
-    gap: 0.75rem;
-}
-
 .form-helper {
     font-size: 0.8rem;
     color: #94a3b8;
@@ -210,10 +204,6 @@
 
     .form-header h1 {
         font-size: 1.5rem;
-    }
-
-    .contact-type-wrapper {
-        grid-template-columns: 1fr;
     }
 }
 </style>
@@ -284,20 +274,17 @@
 
             <!-- WhatsApp / Telegram -->
             <div class="form-group">
-                <p style="color: #dc2626; font-size: 0.85rem; font-weight: 500; margin: 0 0 0.5rem 0;">Пожалуйста, оставьте Telegram или WhatsApp для связи, чтобы мы могли с вами связаться быстро!</p>
-                <label class="form-label">Контакт для связи</label>
-                <div class="contact-type-wrapper">
-                    <select name="contact_type" class="form-select">
-                        <option value="telegram">Telegram</option>
-                        <option value="whatsapp">WhatsApp</option>
-                    </select>
-                    <input
-                        type="text"
-                        name="contact_value"
-                        class="form-input"
-                        placeholder="@username или +77001234567"
-                    >
+                <div style="background: #fef2f2; border: 1px solid #fca5a5; border-radius: 10px; padding: 0.85rem 1rem; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.6rem;">
+                    <span style="font-size: 1.2rem;">⚠️</span>
+                    <span style="color: #991b1b; font-size: 0.88rem; font-weight: 500;">Пожалуйста, оставьте Telegram или WhatsApp, чтобы мы могли с вами связаться быстро!</span>
                 </div>
+                <label class="form-label">Контакт для связи</label>
+                <input
+                    type="text"
+                    name="contact_value"
+                    class="form-input"
+                    placeholder="Telegram (@username) или WhatsApp (+77001234567)"
+                >
             </div>
 
             <!-- Сообщение -->
@@ -346,7 +333,6 @@ document.getElementById('contactForm').addEventListener('submit', function(e) {
     const data = {
         name: document.querySelector('[name="name"]').value,
         email: document.querySelector('[name="email"]').value,
-        contact_type: document.querySelector('[name="contact_type"]').value,
         contact_value: document.querySelector('[name="contact_value"]').value,
         message: document.querySelector('[name="message"]').value,
     };

@@ -28,7 +28,6 @@ class ContactController extends Controller
         $request->validate([
             'name' => 'nullable|string|max:255',
             'email' => 'required|email',
-            'contact_type' => 'nullable|in:whatsapp,telegram',
             'contact_value' => 'nullable|string|max:255',
             'message' => 'required|string|min:10|max:2000',
         ], [
@@ -48,9 +47,8 @@ class ContactController extends Controller
         
         $telegramMessage .= "📧 <b>Email:</b> {$request->email}\n";
         
-        if ($request->contact_type && $request->contact_value) {
-            $contactLabel = $request->contact_type == 'whatsapp' ? '📱 WhatsApp' : '💬 Telegram';
-            $telegramMessage .= "{$contactLabel}: {$request->contact_value}\n";
+        if ($request->contact_value) {
+            $telegramMessage .= "💬 <b>Контакт:</b> {$request->contact_value}\n";
         }
         
         $telegramMessage .= "\n💌 <b>Сообщение:</b>\n{$request->message}";
