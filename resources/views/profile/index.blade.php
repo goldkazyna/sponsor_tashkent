@@ -22,6 +22,7 @@
         <div class="welcome-actions">
             <button class="action-btn cabinet-btn-primary" onclick="window.location.href='{{ route('post.create') }}'">+ Добавить объявление</button>
             <button class="action-btn cabinet-btn-secondary" onclick="window.location.href='{{ route('profile.settings') }}'">⚙️ Настройки</button>
+            <button class="action-btn" style="background: #fee2e2; color: #dc2626; border: 1px solid #fca5a5;" onclick="if(confirm('Вы уверены, что хотите удалить аккаунт? Это действие необратимо.')) { fetch('{{ route('profile.delete') }}', { method: 'POST', headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' } }).then(() => window.location.href = '/') }">🗑 Удалить аккаунт</button>
         </div>
     </div>
     

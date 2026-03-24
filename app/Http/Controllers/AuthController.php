@@ -98,6 +98,10 @@ class AuthController extends Controller
 
         $user = DB::table('users')->where('email', $request->email)->first();
 
+        if ($user && !empty($user->del)) {
+            return back()->withErrors(['email' => 'Этот аккаунт был удалён'])->withInput();
+        }
+
         if ($user && $user->password === sha1(md5($request->password))) {
             // Успешный вход
             session(['user_id' => $user->id]);

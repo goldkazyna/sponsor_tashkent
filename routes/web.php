@@ -61,6 +61,7 @@ Route::middleware(['web'])->group(function () {
     Route::post('/profile/photo/delete/{id}', [ProfileController::class, 'deletePhoto'])->name('profile.photo.delete');
     Route::post('/profile/update', [ProfileController::class, 'updateProfile'])->name('profile.update');
     Route::post('/profile/password/update', [ProfileController::class, 'updatePassword'])->name('profile.password.update');
+    Route::post('/profile/delete', [ProfileController::class, 'deleteAccount'])->name('profile.delete');
     // AJAX методы для сообщений
     Route::get('/profile/messages', [ProfileController::class, 'messages'])->name('profile.messages');
     Route::get('/profile/messages/chat/{id}', [ProfileController::class, 'messagesChat'])->name('profile.messages.chat');

@@ -144,6 +144,19 @@ class ProfileController extends Controller
         return back()->with('success', 'Пароль успешно изменён');
     }
 
+    // Удаление аккаунта
+    public function deleteAccount()
+    {
+        if (! session('user_id')) {
+            return redirect()->route('login');
+        }
+
+        DB::table('users')->where('id', session('user_id'))->update(['del' => 1]);
+        session()->flush();
+
+        return response()->json(['success' => true]);
+    }
+
     // Расценки сайта
     public function pricing()
     {
