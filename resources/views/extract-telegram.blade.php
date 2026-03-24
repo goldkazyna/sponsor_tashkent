@@ -252,8 +252,9 @@
         @endif
 
         @if(!empty($debugInfo))
-            <div style="background: #fef2f2; border: 1px solid #fca5a5; border-radius: 10px; padding: 1rem; margin-bottom: 1.5rem; color: #991b1b; font-weight: 500;">
-                ⚠️ {{ $debugInfo }}
+            <div style="background: #fef2f2; border: 1px solid #fca5a5; border-radius: 10px; padding: 1rem; margin-bottom: 1.5rem; color: #991b1b;">
+                <div style="font-weight: 500; margin-bottom: 0.5rem;">⚠️ Диагностика</div>
+                <pre style="font-size: 0.75rem; white-space: pre-wrap; word-break: break-all; margin: 0; max-height: 300px; overflow-y: auto;">{{ $debugInfo }}</pre>
             </div>
         @endif
 

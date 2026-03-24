@@ -129,7 +129,7 @@ PROMPT;
             ]);
 
             if (! $response->successful()) {
-                Log::error('ExtractTelegram: API error', ['status' => $response->status(), 'body' => $response->body()]);
+                Log::channel('telegram')->error('ExtractTelegram: API error', ['status' => $response->status(), 'body' => $response->body()]);
                 return [];
             }
 
@@ -138,7 +138,7 @@ PROMPT;
 
             return self::parseExtractTelegramResponse($content);
         } catch (\Exception $e) {
-            Log::error('ExtractTelegram: Exception', ['message' => $e->getMessage()]);
+            Log::channel('telegram')->error('ExtractTelegram: Exception', ['message' => $e->getMessage()]);
             return [];
         }
     }

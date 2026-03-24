@@ -297,7 +297,14 @@ Route::get('/extract-telegram-secret', function () {
             $aiResults += \App\Services\AiModerationService::extractTelegram($chunk);
         }
         if (empty($aiResults)) {
-            $debugInfo = 'API вернул пустой результат. Проверьте storage/logs/telegram-*.log';
+            // Показать последние строки из telegram-лога
+            $logFile = storage_path('logs/telegram-' . date('Y-m-d') . '.log');
+            $logTail = '';
+            if (file_exists($logFile)) {
+                $lines = file($logFile);
+                $logTail = implode('', array_slice($lines, -20));
+            }
+            $debugInfo = 'API вернул пустой результат. Лог:' . "\n" . $logTail;
         }
     }
 
