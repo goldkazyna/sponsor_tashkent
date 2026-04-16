@@ -433,10 +433,15 @@ class ProfileController extends Controller
         ]);
 
         // Получаем данные собеседников
-        foreach ($conversations as $conversation) {
+        foreach ($conversations as $key => $conversation) {
             $interlocutor = DB::table('users')
                 ->where('id', $conversation->interlocutor_id)
                 ->first();
+
+            if (! $interlocutor) {
+                unset($conversations[$key]);
+                continue;
+            }
 
             $conversation->interlocutor = $interlocutor;
 
