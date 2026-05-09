@@ -191,7 +191,13 @@ class ContactController extends Controller
 		}
 		
 		try {
-			$response = Http::withoutVerifying()->post("https://api.telegram.org/bot{$botToken}/sendMessage", [
+			$proxy = config('services.telegram.proxy');
+			$client = Http::withoutVerifying();
+			if ($proxy) {
+				$client = $client->withOptions(['proxy' => $proxy]);
+			}
+
+			$response = $client->post("https://api.telegram.org/bot{$botToken}/sendMessage", [
 				'chat_id' => $chatId,
 				'text' => $message,
 				'parse_mode' => 'HTML'

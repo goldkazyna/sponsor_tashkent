@@ -28,7 +28,7 @@ class TelegramBotController extends Controller
     {
         $url = url('/telegram/webhook');
 
-        $response = Http::post("{$this->apiUrl}/setWebhook", [
+        $response = $this->telegramHttp()->post("{$this->apiUrl}/setWebhook", [
             'url' => $url,
         ]);
 
@@ -43,6 +43,15 @@ class TelegramBotController extends Controller
         $update = $request->all();
 
         Log::channel('telegram')->info('Webhook received', $update);
+
+        // Сразу отдаём Telegram 200 OK, чтобы он не ретраил при долгой обработке.
+        // Дальнейшая логика выполняется уже после закрытия HTTP-ответа.
+        if (function_exists('fastcgi_finish_request')) {
+            response()->json(['ok' => true])->send();
+            fastcgi_finish_request();
+        } else {
+            ignore_user_abort(true);
+        }
 
         try {
             $this->processUpdate($update);
@@ -237,7 +246,7 @@ class TelegramBotController extends Controller
         $data = $callback['data'];
 
         // Подтверждаем нажатие
-        Http::post("{$this->apiUrl}/answerCallbackQuery", [
+        $this->telegramHttp()->post("{$this->apiUrl}/answerCallbackQuery", [
             'callback_query_id' => $callback['id'],
         ]);
 
@@ -1065,7 +1074,7 @@ class TelegramBotController extends Controller
         $notifyChatId = config('services.telegram.chat_id');
 
         if ($notifyToken && $notifyChatId) {
-            Http::post("https://api.telegram.org/bot{$notifyToken}/sendMessage", [
+            $this->telegramHttp()->post("https://api.telegram.org/bot{$notifyToken}/sendMessage", [
                 'chat_id' => $notifyChatId,
                 'text' => $adminMessage,
                 'parse_mode' => 'HTML',
@@ -1105,7 +1114,7 @@ class TelegramBotController extends Controller
 
         $sent = false;
         if ($notifyToken && $notifyChatId) {
-            $response = Http::post("https://api.telegram.org/bot{$notifyToken}/sendMessage", [
+            $response = $this->telegramHttp()->post("https://api.telegram.org/bot{$notifyToken}/sendMessage", [
                 'chat_id' => $notifyChatId,
                 'text' => $adminMessage,
                 'parse_mode' => 'HTML',
@@ -1336,9 +1345,27 @@ class TelegramBotController extends Controller
             $params['reply_markup'] = json_encode($replyMarkup);
         }
 
-        $response = Http::post("{$this->apiUrl}/sendMessage", $params);
+        $response = $this->telegramHttp()->post("{$this->apiUrl}/sendMessage", $params);
 
         return $response->json('result.message_id');
+    }
+
+    /**
+     * HTTP-клиент с прокси для запросов к Telegram API.
+     */
+    private function telegramHttp(): \Illuminate\Http\Client\PendingRequest
+    {
+        $proxy = config('services.telegram.proxy');
+
+        $client = Http::asForm()
+            ->connectTimeout(5)
+            ->timeout(10);
+
+        if ($proxy) {
+            $client = $client->withOptions(['proxy' => $proxy]);
+        }
+
+        return $client;
     }
 
     /**
@@ -1347,7 +1374,7 @@ class TelegramBotController extends Controller
     private function deleteMessages(int $chatId, array $messageIds): void
     {
         foreach ($messageIds as $msgId) {
-            Http::post("{$this->apiUrl}/deleteMessage", [
+            $this->telegramHttp()->post("{$this->apiUrl}/deleteMessage", [
                 'chat_id' => $chatId,
                 'message_id' => $msgId,
             ]);

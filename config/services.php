@@ -44,6 +44,7 @@ return [
         'bot_token' => env('TELEGRAM_BOT_TOKEN'),
         'chat_id' => env('TELEGRAM_CHAT_ID'),
         'bot_token_interactive' => env('TELEGRAM_BOT_TOKEN_INTERACTIVE'),
+        'proxy' => env('TELEGRAM_PROXY'),
     ],
 
     'anthropic' => [
