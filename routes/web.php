@@ -426,6 +426,33 @@ Route::get('/debug-log-secret', function () {
     return '<pre>'.htmlspecialchars(implode('', $last)).'</pre>';
 });
 
+// Telegram бот: getWebhookInfo через прокси — диагностика webhook со стороны Telegram
+Route::get('/debug-tg-info-secret', function () {
+    $token = config('services.telegram.bot_token_interactive');
+    $proxy = config('services.telegram.proxy');
+
+    $client = \Illuminate\Support\Facades\Http::asForm()
+        ->connectTimeout(5)
+        ->timeout(10);
+
+    if ($proxy) {
+        $client = $client->withOptions(['proxy' => $proxy]);
+    }
+
+    try {
+        $info = $client->get("https://api.telegram.org/bot{$token}/getWebhookInfo")->json();
+        $me = $client->get("https://api.telegram.org/bot{$token}/getMe")->json();
+    } catch (\Throwable $e) {
+        return '<pre>ERROR: '.htmlspecialchars($e->getMessage()).
+            "\nproxy_set: ".($proxy ? 'yes' : 'no').'</pre>';
+    }
+
+    return '<pre>proxy_set: '.($proxy ? 'yes ('.parse_url($proxy, PHP_URL_HOST).':'.parse_url($proxy, PHP_URL_PORT).')' : 'NO').
+        "\n\ngetMe:\n".htmlspecialchars(json_encode($me, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)).
+        "\n\ngetWebhookInfo:\n".htmlspecialchars(json_encode($info, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)).
+        '</pre>';
+});
+
 // Telegram бот: логи
 Route::get('/debug-telegram-secret', function () {
     // daily-канал создаёт файлы вида telegram-2026-02-24.log
