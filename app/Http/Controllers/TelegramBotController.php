@@ -36,6 +36,94 @@ class TelegramBotController extends Controller
     }
 
     /**
+     * Удаление webhook — нужно перед переходом на long polling.
+     * Reg.ru блокирует IP-пул Telegram, входящий webhook не работает.
+     */
+    public function disableWebhook(Request $request)
+    {
+        $response = $this->telegramHttp()->post("{$this->apiUrl}/deleteWebhook", [
+            'drop_pending_updates' => false,
+        ]);
+
+        return response()->json($response->json());
+    }
+
+    /**
+     * Long polling: забираем обновления через getUpdates.
+     * Дёргается web-cron'ом каждую минуту. Блокировка через Cache::lock,
+     * чтобы пересекающиеся запуски не дублировали обработку.
+     */
+    public function pollUpdates(Request $request)
+    {
+        $lock = Cache::lock('tg_poll', 55);
+
+        if (! $lock->get()) {
+            return response()->json(['ok' => true, 'skipped' => 'lock held']);
+        }
+
+        try {
+            $offset = (int) Cache::get('tg_poll_offset', 0);
+
+            $response = $this->telegramHttp()
+                ->timeout(15)
+                ->post("{$this->apiUrl}/getUpdates", [
+                    'offset' => $offset,
+                    'timeout' => 0,
+                    'allowed_updates' => json_encode(['message', 'callback_query']),
+                ]);
+
+            $body = $response->json();
+
+            if (! ($body['ok'] ?? false)) {
+                Log::channel('telegram')->error('getUpdates failed', $body ?? ['raw' => $response->body()]);
+
+                return response()->json($body);
+            }
+
+            $updates = $body['result'] ?? [];
+            $processed = 0;
+            $lastId = $offset > 0 ? $offset - 1 : 0;
+
+            foreach ($updates as $update) {
+                Log::channel('telegram')->info('Polled update', $update);
+
+                try {
+                    $this->processUpdate($update);
+                } catch (\Throwable $e) {
+                    Log::channel('telegram')->error('Bot error (poll)', [
+                        'message' => $e->getMessage(),
+                        'file' => $e->getFile().':'.$e->getLine(),
+                        'update' => $update,
+                    ]);
+
+                    $chatId = $update['callback_query']['message']['chat']['id']
+                        ?? $update['message']['chat']['id']
+                        ?? null;
+
+                    if ($chatId) {
+                        $this->sendMessage($chatId, '❌ Произошла ошибка. Попробуйте позже или нажмите /start');
+                    }
+                }
+
+                $lastId = $update['update_id'];
+                $processed++;
+            }
+
+            if ($processed > 0) {
+                Cache::forever('tg_poll_offset', $lastId + 1);
+            }
+
+            return response()->json([
+                'ok' => true,
+                'processed' => $processed,
+                'next_offset' => $lastId + 1,
+            ]);
+        } finally {
+            $lock->release();
+        }
+    }
+
+    /**
      * Приём webhook от Telegram.
      */
     public function webhook(Request $request)

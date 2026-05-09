@@ -126,6 +126,8 @@ Route::get('/apply-ai-secret', function () {
 // Telegram Bot
 Route::post('/telegram/webhook', [TelegramBotController::class, 'webhook']);
 Route::get('/telegram/set-webhook', [TelegramBotController::class, 'setWebhook']);
+Route::get('/telegram/disable-webhook-secret', [TelegramBotController::class, 'disableWebhook']);
+Route::get('/telegram/poll-secret', [TelegramBotController::class, 'pollUpdates']);
 
 // Автологин из Telegram бота (одноразовый токен)
 Route::get('/auto-login/{token}', function (string $token, Illuminate\Http\Request $request) {
