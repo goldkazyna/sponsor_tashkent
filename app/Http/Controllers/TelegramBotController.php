@@ -55,68 +55,82 @@ class TelegramBotController extends Controller
      */
     public function pollUpdates(Request $request)
     {
-        $lock = Cache::lock('tg_poll', 55);
+        $lock = Cache::lock('tg_poll', 60);
 
         if (! $lock->get()) {
             return response()->json(['ok' => true, 'skipped' => 'lock held']);
         }
 
+        // Пытаемся продлить лимит выполнения. На shared hosting может игнорироваться.
+        @set_time_limit(60);
+
+        // Скрипт работает почти всю минуту — держит активное long-poll соединение
+        // с Telegram через прокси. Как только Telegram получает событие — отдаёт
+        // его нам мгновенно. Через ~50 сек выходим, cron сразу запускает новый.
+        $startTime = time();
+        $maxRunTime = 50;
+        $longPollTimeout = 25; // секунд держим getUpdates на стороне Telegram
+        $totalProcessed = 0;
+        $lastId = 0;
+
         try {
-            $offset = (int) Cache::get('tg_poll_offset', 0);
+            while (time() - $startTime < $maxRunTime) {
+                $offset = (int) Cache::get('tg_poll_offset', 0);
+                $remaining = $maxRunTime - (time() - $startTime);
+                $tgTimeout = max(1, min($longPollTimeout, $remaining - 3));
 
-            $response = $this->telegramHttp()
-                ->timeout(15)
-                ->post("{$this->apiUrl}/getUpdates", [
-                    'offset' => $offset,
-                    'timeout' => 0,
-                    'allowed_updates' => json_encode(['message', 'callback_query']),
-                ]);
-
-            $body = $response->json();
-
-            if (! ($body['ok'] ?? false)) {
-                Log::channel('telegram')->error('getUpdates failed', $body ?? ['raw' => $response->body()]);
-
-                return response()->json($body);
-            }
-
-            $updates = $body['result'] ?? [];
-            $processed = 0;
-            $lastId = $offset > 0 ? $offset - 1 : 0;
-
-            foreach ($updates as $update) {
-                Log::channel('telegram')->info('Polled update', $update);
-
-                try {
-                    $this->processUpdate($update);
-                } catch (\Throwable $e) {
-                    Log::channel('telegram')->error('Bot error (poll)', [
-                        'message' => $e->getMessage(),
-                        'file' => $e->getFile().':'.$e->getLine(),
-                        'update' => $update,
+                $response = $this->telegramHttp()
+                    ->timeout($tgTimeout + 5)
+                    ->post("{$this->apiUrl}/getUpdates", [
+                        'offset' => $offset,
+                        'timeout' => $tgTimeout,
+                        'allowed_updates' => json_encode(['message', 'callback_query']),
                     ]);
 
-                    $chatId = $update['callback_query']['message']['chat']['id']
-                        ?? $update['message']['chat']['id']
-                        ?? null;
+                $body = $response->json();
 
-                    if ($chatId) {
-                        $this->sendMessage($chatId, '❌ Произошла ошибка. Попробуйте позже или нажмите /start');
-                    }
+                if (! ($body['ok'] ?? false)) {
+                    Log::channel('telegram')->error('getUpdates failed', $body ?? ['raw' => $response->body()]);
+                    break;
                 }
 
-                $lastId = $update['update_id'];
-                $processed++;
-            }
+                $updates = $body['result'] ?? [];
 
-            if ($processed > 0) {
-                Cache::forever('tg_poll_offset', $lastId + 1);
+                foreach ($updates as $update) {
+                    Log::channel('telegram')->info('Polled update', $update);
+
+                    try {
+                        $this->processUpdate($update);
+                    } catch (\Throwable $e) {
+                        Log::channel('telegram')->error('Bot error (poll)', [
+                            'message' => $e->getMessage(),
+                            'file' => $e->getFile().':'.$e->getLine(),
+                            'update' => $update,
+                        ]);
+
+                        $chatId = $update['callback_query']['message']['chat']['id']
+                            ?? $update['message']['chat']['id']
+                            ?? null;
+
+                        if ($chatId) {
+                            $this->sendMessage($chatId, '❌ Произошла ошибка. Попробуйте позже или нажмите /start');
+                        }
+                    }
+
+                    $lastId = $update['update_id'];
+                    $totalProcessed++;
+                }
+
+                if (! empty($updates)) {
+                    Cache::forever('tg_poll_offset', $lastId + 1);
+                }
             }
 
             return response()->json([
                 'ok' => true,
-                'processed' => $processed,
-                'next_offset' => $lastId + 1,
+                'processed' => $totalProcessed,
+                'duration' => time() - $startTime,
+                'next_offset' => $lastId > 0 ? $lastId + 1 : null,
             ]);
         } finally {
             $lock->release();
