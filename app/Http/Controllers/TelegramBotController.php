@@ -1267,26 +1267,16 @@ class TelegramBotController extends Controller
             return;
         }
 
-        // Генерируем автологин-ссылку на страницу оплаты ТОП
-        $token = bin2hex(random_bytes(32));
-        Cache::put("auto_login_{$token}", [
-            'user_id' => $user->id,
-            'redirect' => "/boost-top?post_id={$postId}",
-        ], now()->addMinutes(30));
-
-        $siteUrl = rtrim(config('app.url', 'https://goldkazyna.kz'), '/');
-
+        // Онлайн-оплата временно отключена — только ручной перевод через админа
         $text = "🚀 <b>Поднять в ТОП: «{$post->title}»</b>\n\n";
         $text .= "Ваше объявление будет показываться первым на главной странице.\n\n";
-        $text .= "💰 <b>Тарифы:</b>\n\n";
-        $text .= "🔹 <b>5 дней</b> — 7 592 ₸ (~\$14)\n";
-        $text .= "🔹 <b>10 дней</b> — 10 846 ₸ (~\$20)\n";
-        $text .= "🔹 <b>30 дней</b> — 16 268 ₸ (~\$30) ⭐ Популярный\n\n";
-        $text .= 'Нажмите кнопку — вы автоматически войдёте на сайт и попадёте на страницу оплаты:';
+        $text .= "💳 <b>ОПЛАТА ТОЛЬКО РУЧНЫМ ПЕРЕВОДОМ</b>\n\n";
+        $text .= "Онлайн-оплата временно не работает.\n";
+        $text .= "Напишите мне — оплатить можно <b>криптовалютой</b> или <b>переводом на карту</b>.";
 
         $this->sendMessage($chatId, $text, [
             'inline_keyboard' => [
-                [['text' => '💳 Перейти к оплате', 'url' => "{$siteUrl}/auto-login/{$token}"]],
+                [['text' => '✉️ Написать @Sponsor_admin', 'url' => 'https://t.me/Sponsor_admin']],
             ],
         ]);
     }
@@ -1315,29 +1305,19 @@ class TelegramBotController extends Controller
             return;
         }
 
-        // Генерируем одноразовый токен для автологина
-        $token = bin2hex(random_bytes(32));
-        Cache::put("auto_login_{$token}", [
-            'user_id' => $user->id,
-            'redirect' => '/become-verified',
-        ], now()->addMinutes(30));
-
-        $siteUrl = rtrim(config('app.url', 'https://goldkazyna.kz'), '/');
-
+        // Онлайн-оплата временно отключена — только ручной перевод через админа
         $text = "📌 <b>Статус проверенного пользователя</b>\n\n";
         $text .= "Со статусом вы получаете:\n";
         $text .= "✅ Значок проверенного\n";
         $text .= "✅ Повышенное доверие\n";
         $text .= "✅ Больше откликов\n\n";
-        $text .= "💰 <b>Тарифы:</b>\n\n";
-        $text .= "🔹 <b>5 дней</b> — 7 592 ₸ (~\$14)\n";
-        $text .= "🔹 <b>10 дней</b> — 10 846 ₸ (~\$20)\n";
-        $text .= "🔹 <b>30 дней</b> — 16 268 ₸ (~\$30) ⭐ Популярный\n\n";
-        $text .= 'Нажмите кнопку — вы автоматически войдёте на сайт и попадёте на страницу оплаты:';
+        $text .= "💳 <b>ОПЛАТА ТОЛЬКО РУЧНЫМ ПЕРЕВОДОМ</b>\n\n";
+        $text .= "Онлайн-оплата временно не работает.\n";
+        $text .= "Напишите мне — оплатить можно <b>криптовалютой</b> или <b>переводом на карту</b>.";
 
         $this->sendMessage($chatId, $text, [
             'inline_keyboard' => [
-                [['text' => '💳 Перейти к оплате', 'url' => "{$siteUrl}/auto-login/{$token}"]],
+                [['text' => '✉️ Написать @Sponsor_admin', 'url' => 'https://t.me/Sponsor_admin']],
                 [['text' => '💬 Написать админу для помощи', 'callback_data' => 'buy_status_help']],
             ],
         ]);
