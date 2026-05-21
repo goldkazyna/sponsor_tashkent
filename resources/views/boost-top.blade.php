@@ -521,7 +521,17 @@
         <div class="error-message">{{ session('error') }}</div>
     @endif
 
-    <div class="tariffs-grid">
+    {{-- Баннер: онлайн-оплата временно недоступна --}}
+    <div style="background:#fffbeb; border:2px solid #f59e0b; border-radius:12px; padding:1.25rem 1.5rem; margin-bottom:1.5rem; text-align:center;">
+        <div style="font-weight:700; color:#92400e; font-size:1.05rem; margin-bottom:0.4rem;">⚠️ Онлайн-оплата временно недоступна</div>
+        <div style="color:#92400e; font-size:0.92rem; line-height:1.6;">
+            Этот способ оплаты пока не работает. Чтобы поднять объявление в ТОП, заполните форму «Нужна помощь с оплатой?» ниже или напишите нам в Telegram —
+            <a href="https://t.me/Sponsor_admin" target="_blank" style="color:#b45309; font-weight:700; text-decoration:none;">@Sponsor_admin</a>.
+        </div>
+    </div>
+
+    {{-- Тарифы временно неактивны (онлайн-оплата отключена) --}}
+    <div class="tariffs-grid" style="opacity:0.55; filter:grayscale(1); pointer-events:none; user-select:none;">
 
         {{-- 5 дней --}}
         <div class="tariff-card">
@@ -549,7 +559,7 @@
                 <input type="hidden" name="days" value="5">
                 <input type="hidden" name="service" value="top_post">
                 <input type="hidden" name="post_id" value="{{ $post->id ?? '' }}">
-                <button type="submit" class="tariff-btn">Оплатить</button>
+                <button type="submit" class="tariff-btn" disabled>Оплатить</button>
             </form>
         </div>
 
@@ -579,7 +589,7 @@
                 <input type="hidden" name="days" value="10">
                 <input type="hidden" name="service" value="top_post">
                 <input type="hidden" name="post_id" value="{{ $post->id ?? '' }}">
-                <button type="submit" class="tariff-btn">Оплатить</button>
+                <button type="submit" class="tariff-btn" disabled>Оплатить</button>
             </form>
         </div>
 
@@ -610,7 +620,7 @@
                 <input type="hidden" name="days" value="30">
                 <input type="hidden" name="service" value="top_post">
                 <input type="hidden" name="post_id" value="{{ $post->id ?? '' }}">
-                <button type="submit" class="tariff-btn">Оплатить</button>
+                <button type="submit" class="tariff-btn" disabled>Оплатить</button>
             </form>
         </div>
 

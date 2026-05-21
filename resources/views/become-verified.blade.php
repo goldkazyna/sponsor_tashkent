@@ -569,6 +569,8 @@
         <div class="error-message">{{ session('error') }}</div>
     @endif
 
+    {{-- Блок «Важно при оплате» (Kaspi) скрыт, пока онлайн-оплата не работает. Восстановить — раскомментировать. --}}
+    {{--
     <div style="background: #fef2f2; border: 2px solid #ef4444; border-radius: 12px; padding: 1.25rem 1.5rem; margin-bottom: 2rem;">
         <div style="display: flex; align-items: flex-start; gap: 0.75rem;">
             <svg viewBox="0 0 24 24" style="width: 28px; height: 28px; fill: #ef4444; flex-shrink: 0; margin-top: 2px;"><path d="M13,14H11V10H13M13,18H11V16H13M1,21H23L12,2L1,21Z"/></svg>
@@ -581,8 +583,19 @@
             </div>
         </div>
     </div>
+    --}}
 
-    <div class="tariffs-grid">
+    {{-- Баннер: онлайн-оплата временно недоступна --}}
+    <div style="background:#fffbeb; border:2px solid #f59e0b; border-radius:12px; padding:1.25rem 1.5rem; margin-bottom:1.5rem; text-align:center;">
+        <div style="font-weight:700; color:#92400e; font-size:1.05rem; margin-bottom:0.4rem;">⚠️ Онлайн-оплата временно недоступна</div>
+        <div style="color:#92400e; font-size:0.92rem; line-height:1.6;">
+            Этот способ оплаты пока не работает. Чтобы оплатить, заполните форму «Нужна помощь с оплатой?» ниже или напишите нам в Telegram —
+            <a href="https://t.me/Sponsor_admin" target="_blank" style="color:#b45309; font-weight:700; text-decoration:none;">@Sponsor_admin</a>.
+        </div>
+    </div>
+
+    {{-- Тарифы временно неактивны (онлайн-оплата отключена) --}}
+    <div class="tariffs-grid" style="opacity:0.55; filter:grayscale(1); pointer-events:none; user-select:none;">
 
         {{-- 5 дней --}}
         <div class="tariff-card">
@@ -609,7 +622,7 @@
                 <input type="hidden" name="amount" value="7592">
                 <input type="hidden" name="days" value="5">
                 <input type="hidden" name="service" value="verified_status">
-                <button type="submit" class="tariff-btn">Оплатить</button>
+                <button type="submit" class="tariff-btn" disabled>Оплатить</button>
             </form>
         </div>
 
@@ -638,7 +651,7 @@
                 <input type="hidden" name="amount" value="10846">
                 <input type="hidden" name="days" value="10">
                 <input type="hidden" name="service" value="verified_status">
-                <button type="submit" class="tariff-btn">Оплатить</button>
+                <button type="submit" class="tariff-btn" disabled>Оплатить</button>
             </form>
         </div>
 
@@ -668,7 +681,7 @@
                 <input type="hidden" name="amount" value="16268">
                 <input type="hidden" name="days" value="30">
                 <input type="hidden" name="service" value="verified_status">
-                <button type="submit" class="tariff-btn">Оплатить</button>
+                <button type="submit" class="tariff-btn" disabled>Оплатить</button>
             </form>
         </div>
 
