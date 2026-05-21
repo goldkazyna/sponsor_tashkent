@@ -521,12 +521,13 @@
         <div class="error-message">{{ session('error') }}</div>
     @endif
 
-    {{-- Баннер: онлайн-оплата временно недоступна --}}
-    <div style="background:#fffbeb; border:2px solid #f59e0b; border-radius:12px; padding:1.25rem 1.5rem; margin-bottom:1.5rem; text-align:center;">
-        <div style="font-weight:700; color:#92400e; font-size:1.05rem; margin-bottom:0.4rem;">⚠️ Онлайн-оплата временно недоступна</div>
-        <div style="color:#92400e; font-size:0.92rem; line-height:1.6;">
-            Этот способ оплаты пока не работает. Чтобы поднять объявление в ТОП, заполните форму «Нужна помощь с оплатой?» ниже или напишите нам в Telegram —
-            <a href="https://t.me/Sponsor_admin" target="_blank" style="color:#b45309; font-weight:700; text-decoration:none;">@Sponsor_admin</a>.
+    {{-- Баннер: оплата только ручным переводом (онлайн-оплата отключена) --}}
+    <div style="background:#fffbeb; border:3px solid #f59e0b; border-radius:14px; padding:1.75rem 1.5rem; margin-bottom:1.5rem; text-align:center;">
+        <div style="font-weight:800; color:#b45309; font-size:1.6rem; line-height:1.25; margin-bottom:0.85rem; text-transform:uppercase; letter-spacing:0.3px;">💳 Оплата только ручным переводом</div>
+        <div style="color:#92400e; font-size:1.05rem; line-height:1.65; font-weight:600;">
+            Онлайн-оплата временно не работает.<br>
+            Напишите мне — оплатить можно <strong>криптовалютой</strong> или <strong>переводом на карту</strong>:<br>
+            <a href="https://t.me/Sponsor_admin" target="_blank" style="display:inline-block; margin-top:0.5rem; color:#b45309; font-weight:800; font-size:1.2rem; text-decoration:underline;">@Sponsor_admin</a>
         </div>
     </div>
 
