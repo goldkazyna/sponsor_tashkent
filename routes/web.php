@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AdminBotController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\PostController;
@@ -120,7 +121,7 @@ Route::get('/apply-ai-secret', function () {
         $result[] = "#{$post->id}: «{$post->title}» → «{$post->title_ai}»";
     }
 
-    return 'Обновлено: ' . count($result) . '<br>' . implode('<br>', $result);
+    return 'Обновлено: '.count($result).'<br>'.implode('<br>', $result);
 });
 
 // Telegram Bot
@@ -128,6 +129,10 @@ Route::post('/telegram/webhook', [TelegramBotController::class, 'webhook']);
 Route::get('/telegram/set-webhook', [TelegramBotController::class, 'setWebhook']);
 Route::get('/telegram/disable-webhook-secret', [TelegramBotController::class, 'disableWebhook']);
 Route::get('/telegram/poll-secret', [TelegramBotController::class, 'pollUpdates']);
+
+// Админ-бот (ручная выдача статуса / ТОП — без онлайн-оплаты)
+Route::get('/admin-bot/poll-secret', [AdminBotController::class, 'pollUpdates']);
+Route::get('/admin-bot/disable-webhook-secret', [AdminBotController::class, 'disableWebhook']);
 
 // Автологин из Telegram бота (одноразовый токен)
 Route::get('/auto-login/{token}', function (string $token, Illuminate\Http\Request $request) {
@@ -200,7 +205,7 @@ Route::get('/moderation-secret', function () {
     $aiChanges = '';
 
     if ($post) {
-        if (!empty($post->title_ai)) {
+        if (! empty($post->title_ai)) {
             // AI уже обработал раньше
             $aiTitle = $post->title_ai;
             $aiDescription = $post->discription_ai ?? '';
@@ -235,10 +240,11 @@ Route::post('/moderation-secret/approve', function (Illuminate\Http\Request $req
 
     if ($delete) {
         DB::table('post')->where('id', $postId)->update(['del' => 1, 'check' => 1]);
+
         return redirect('/moderation-secret')->with('success', 'Объявление удалено');
     }
 
-    if (!$skip) {
+    if (! $skip) {
         $update = ['check' => 1];
         $update['title_ai'] = $request->input('ai_title') ?? '';
         $update['discription_ai'] = $request->input('ai_description') ?? '';
@@ -272,7 +278,7 @@ Route::post('/moderation-secret/add-rule', function (Illuminate\Http\Request $re
 
     if ($rule !== '') {
         $rulesFile = storage_path('app/ai_moderation_rules.txt');
-        file_put_contents($rulesFile, $rule . PHP_EOL, FILE_APPEND);
+        file_put_contents($rulesFile, $rule.PHP_EOL, FILE_APPEND);
     }
 
     DB::table('post')->where('id', $postId)->update(['check' => 2]);
@@ -300,13 +306,13 @@ Route::get('/extract-telegram-secret', function () {
         }
         if (empty($aiResults)) {
             // Показать последние строки из telegram-лога
-            $logFile = storage_path('logs/telegram-' . date('Y-m-d') . '.log');
+            $logFile = storage_path('logs/telegram-'.date('Y-m-d').'.log');
             $logTail = '';
             if (file_exists($logFile)) {
                 $lines = file($logFile);
                 $logTail = implode('', array_slice($lines, -20));
             }
-            $debugInfo = 'API вернул пустой результат. Лог:' . "\n" . $logTail;
+            $debugInfo = 'API вернул пустой результат. Лог:'."\n".$logTail;
         }
     }
 
@@ -319,10 +325,14 @@ Route::post('/extract-telegram-secret/save', function (Illuminate\Http\Request $
 
     foreach ($items as $postId => $telegram) {
         $telegram = trim($telegram);
-        if ($telegram === '') continue;
+        if ($telegram === '') {
+            continue;
+        }
 
         $post = DB::table('post')->where('id', $postId)->first();
-        if (!$post) continue;
+        if (! $post) {
+            continue;
+        }
 
         $update = [];
 
@@ -330,7 +340,7 @@ Route::post('/extract-telegram-secret/save', function (Illuminate\Http\Request $
             $update['telegram'] = $telegram;
         }
 
-        $patterns = ['@' . $telegram, $telegram];
+        $patterns = ['@'.$telegram, $telegram];
         foreach ($patterns as $pattern) {
             $titleField = $update['title'] ?? $post->title ?? '';
             if ($titleField !== '' && stripos($titleField, $pattern) !== false) {
@@ -346,7 +356,7 @@ Route::post('/extract-telegram-secret/save', function (Illuminate\Http\Request $
             }
         }
 
-        if (!empty($update)) {
+        if (! empty($update)) {
             DB::table('post')->where('id', $postId)->update($update);
             $processed++;
         }
@@ -360,6 +370,7 @@ Route::post('/extract-telegram-secret/save', function (Illuminate\Http\Request $
 // Чёрный список Telegram
 Route::get('/blacklist-telegram-secret', function () {
     $blacklist = \App\Services\TelegramBlacklistService::getBlacklist();
+
     return view('blacklist-telegram', compact('blacklist'));
 });
 
@@ -368,6 +379,7 @@ Route::post('/blacklist-telegram-secret/add', function (Illuminate\Http\Request 
     if ($nick !== '') {
         \App\Services\TelegramBlacklistService::addToBlacklist($nick);
     }
+
     return redirect('/blacklist-telegram-secret')->with('success', "Добавлен: {$nick}");
 });
 
@@ -376,6 +388,7 @@ Route::post('/blacklist-telegram-secret/remove', function (Illuminate\Http\Reque
     if ($nick !== '') {
         \App\Services\TelegramBlacklistService::removeFromBlacklist($nick);
     }
+
     return redirect('/blacklist-telegram-secret')->with('success', "Удалён: {$nick}");
 });
 
@@ -386,7 +399,7 @@ Route::get('/test-ai-secret', function () {
         return 'API key not set. Check ANTHROPIC_API_KEY in .env';
     }
 
-    $masked = substr($apiKey, 0, 10) . '...' . substr($apiKey, -4);
+    $masked = substr($apiKey, 0, 10).'...'.substr($apiKey, -4);
     $keyLen = strlen($apiKey);
 
     $proxy = config('services.anthropic.proxy');
@@ -398,7 +411,7 @@ Route::get('/test-ai-secret', function () {
         'content-type' => 'application/json',
     ])->timeout(15);
 
-    if (!empty($proxy)) {
+    if (! empty($proxy)) {
         $http = $http->withOptions(['proxy' => $proxy]);
     }
 
@@ -409,11 +422,11 @@ Route::get('/test-ai-secret', function () {
     ]);
 
     return '<pre>'
-        . "Key: {$masked} (length: {$keyLen})\n"
-        . "Proxy: {$proxyInfo}\n\n"
-        . "Status: {$r1->status()}\n"
-        . "Body: " . htmlspecialchars($r1->body()) . "\n"
-        . '</pre>';
+        ."Key: {$masked} (length: {$keyLen})\n"
+        ."Proxy: {$proxyInfo}\n\n"
+        ."Status: {$r1->status()}\n"
+        .'Body: '.htmlspecialchars($r1->body())."\n"
+        .'</pre>';
 });
 
 // Временно: последние ошибки из лога

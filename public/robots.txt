@@ -7,6 +7,7 @@ Disallow: /result_url_new
 Disallow: /success_url
 Disallow: /fail
 Disallow: /telegram/
+Disallow: /admin-bot/
 Disallow: /clear-cache-secret
 Disallow: /apply-ai-secret
 Disallow: /moderation-secret
