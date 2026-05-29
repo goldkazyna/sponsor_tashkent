@@ -524,18 +524,17 @@
         <div class="error-message">{{ session('error') }}</div>
     @endif
 
-    {{-- Баннер: оплата только ручным переводом (онлайн-оплата отключена) --}}
+    {{-- Баннер: онлайн-оплата может сбоить — пробовать несколько раз, иначе ручной перевод через админа --}}
     <div style="background:#fffbeb; border:3px solid #f59e0b; border-radius:14px; padding:1.75rem 1.5rem; margin-bottom:1.5rem; text-align:center;">
-        <div style="font-weight:800; color:#b45309; font-size:1.6rem; line-height:1.25; margin-bottom:0.85rem; text-transform:uppercase; letter-spacing:0.3px;">💳 Оплата только ручным переводом</div>
+        <div style="font-weight:800; color:#b45309; font-size:1.5rem; line-height:1.25; margin-bottom:0.85rem; letter-spacing:0.3px;">⚠️ Если оплата не проходит</div>
         <div style="color:#92400e; font-size:1.05rem; line-height:1.65; font-weight:600;">
-            Онлайн-оплата временно не работает.<br>
-            Напишите мне — оплатить можно <strong>криптовалютой</strong> или <strong>переводом на карту</strong>:<br>
+            Иногда онлайн-оплата сбоит. Нажмите кнопку «Оплатить» <strong>несколько раз</strong>, пока система не выдаст реквизиты для перевода.<br>
+            Если оплатить так и не получилось — напишите мне, оплатить можно <strong>криптовалютой</strong> или <strong>переводом на карту</strong> (только тариф на 1 месяц):<br>
             <a href="https://t.me/Sponsor_admin" target="_blank" style="display:inline-block; margin-top:0.5rem; color:#b45309; font-weight:800; font-size:1.2rem; text-decoration:underline;">@Sponsor_admin</a>
         </div>
     </div>
 
-    {{-- Тарифы временно неактивны (онлайн-оплата отключена) --}}
-    <div class="tariffs-grid" style="opacity:0.55; filter:grayscale(1); pointer-events:none; user-select:none;">
+    <div class="tariffs-grid">
 
         {{-- 5 дней --}}
         <div class="tariff-card">
@@ -563,7 +562,7 @@
                 <input type="hidden" name="days" value="5">
                 <input type="hidden" name="service" value="top_post">
                 <input type="hidden" name="post_id" value="{{ $post->id ?? '' }}">
-                <button type="submit" class="tariff-btn" disabled>Оплатить</button>
+                <button type="submit" class="tariff-btn">Оплатить</button>
             </form>
         </div>
 
@@ -593,7 +592,7 @@
                 <input type="hidden" name="days" value="10">
                 <input type="hidden" name="service" value="top_post">
                 <input type="hidden" name="post_id" value="{{ $post->id ?? '' }}">
-                <button type="submit" class="tariff-btn" disabled>Оплатить</button>
+                <button type="submit" class="tariff-btn">Оплатить</button>
             </form>
         </div>
 
@@ -624,7 +623,7 @@
                 <input type="hidden" name="days" value="30">
                 <input type="hidden" name="service" value="top_post">
                 <input type="hidden" name="post_id" value="{{ $post->id ?? '' }}">
-                <button type="submit" class="tariff-btn" disabled>Оплатить</button>
+                <button type="submit" class="tariff-btn">Оплатить</button>
             </form>
         </div>
 
