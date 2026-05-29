@@ -105,7 +105,7 @@
         <h1>Оплата не прошла</h1>
         <p>К сожалению, платёж не был завершён. Попробуйте ещё раз или свяжитесь с администрацией.</p>
         <div class="payment-actions">
-            <a href="{{ route('pricing') }}" class="payment-btn">Попробовать снова</a>
+            <a href="{{ route('become.verified') }}" class="payment-btn">Попробовать снова</a>
             <a href="{{ route('home') }}" class="payment-link">Вернуться на главную</a>
         </div>
     </div>
