@@ -214,6 +214,13 @@
     font-weight: 800;
     color: #1a202c;
     line-height: 1;
+    margin-bottom: 0.25rem;
+}
+
+.manual-pay-price-kzt {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #64748b;
     margin-bottom: 1.5rem;
 }
 
@@ -694,6 +701,7 @@
     <div class="manual-pay-card">
         <div class="manual-pay-badge">Статус на 30 дней</div>
         <div class="manual-pay-price">$30</div>
+        <div class="manual-pay-price-kzt">15 600 ₸</div>
         <ul class="tariff-features manual-pay-features">
             <li>
                 <svg viewBox="0 0 24 24"><path d="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z"/></svg>
@@ -714,9 +722,8 @@
             <div class="manual-pay-cardnum" id="cardNumber">5356 5020 0902 5390</div>
             <button type="button" class="manual-pay-copy" id="copyCardBtn">Скопировать номер</button>
             <div class="manual-pay-note">
-                После перевода напишите мне в Telegram —
-                <a href="https://t.me/Sponsor_admin" target="_blank">@Sponsor_admin</a> —
-                и я активирую статус на 30 дней.
+                После перевода заполните форму ниже. Если возникнут какие-то проблемы — напишите
+                <a href="https://t.me/Sponsor_admin" target="_blank">@Sponsor_admin</a>.
             </div>
         </div>
     </div>
