@@ -469,7 +469,7 @@ Route::post('/scan-minors-secret/scan', function () {
     if ($cursor !== null) {
         $query->where('id', '<', $cursor);
     }
-    $posts = $query->orderBy('id', 'desc')->limit(50)->get();
+    $posts = $query->orderBy('id', 'desc')->limit(100)->get();
 
     if ($posts->isEmpty()) {
         return redirect('/scan-minors-secret')->with('success', 'Готово — все объявления просканированы.');

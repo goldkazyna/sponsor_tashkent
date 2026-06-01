@@ -65,7 +65,7 @@
         <p class="sm-sub">
             AI проверяет объявления и помечает те, где упоминается возраст <b>16, 17 или младше</b>,
             либо <b>девственность</b>. Ничего не удаляется автоматически — вы решаете сами.
-            Сканирование идёт от новых объявлений к старым, по 50 за раз.
+            Сканирование идёт от новых объявлений к старым, по 100 за раз.
         </p>
 
         <div class="sm-progress-bar">
@@ -80,8 +80,8 @@
             <form action="{{ url('/scan-minors-secret/scan') }}" method="POST" style="margin:0;">
                 @csrf
                 <button type="submit" class="sm-btn" {{ $apiKeySet ? '' : 'disabled' }}
-                        onclick="this.disabled=true;this.innerHTML='⏳ Сканирую 50…';this.form.submit();">
-                    ▶ Сканировать следующие 50
+                        onclick="this.disabled=true;this.innerHTML='⏳ Сканирую 100…';this.form.submit();">
+                    ▶ Сканировать следующие 100
                 </button>
             </form>
 
@@ -140,7 +140,7 @@
                 </div>
             </div>
         @empty
-            <div class="sm-empty">Пока ничего не найдено. Нажмите «Сканировать следующие 50».</div>
+            <div class="sm-empty">Пока ничего не найдено. Нажмите «Сканировать следующие 100».</div>
         @endforelse
     </div>
 
