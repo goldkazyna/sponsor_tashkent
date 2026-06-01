@@ -597,6 +597,42 @@ Route::get('/debug-log-secret', function () {
     return '<pre>'.htmlspecialchars(implode('', $last)).'</pre>';
 });
 
+// Telegram бот: показать текущий прокси из .env (пароль замаскирован) — какой IP/порт продлевать
+Route::get('/debug-proxy-secret', function () {
+    $proxy = (string) config('services.telegram.proxy');
+
+    if ($proxy === '') {
+        return '<pre>TELEGRAM_PROXY не задан в .env</pre>';
+    }
+
+    $scheme = parse_url($proxy, PHP_URL_SCHEME);
+    $host = parse_url($proxy, PHP_URL_HOST);
+    $port = parse_url($proxy, PHP_URL_PORT);
+    $user = parse_url($proxy, PHP_URL_USER);
+
+    // Быстрая проверка доступности прокси через getMe бота
+    $token = config('services.telegram.bot_token_interactive');
+    $client = \Illuminate\Support\Facades\Http::asForm()->connectTimeout(5)->timeout(10)
+        ->withOptions(['proxy' => $proxy]);
+
+    $reach = '';
+    try {
+        $me = $client->get("https://api.telegram.org/bot{$token}/getMe")->json();
+        $reach = 'getMe: '.json_encode($me, JSON_UNESCAPED_UNICODE);
+    } catch (\Throwable $e) {
+        $reach = 'ОШИБКА (прокси недоступен): '.$e->getMessage();
+    }
+
+    return '<pre>'.htmlspecialchars(
+        "scheme: {$scheme}\n".
+        "host:   {$host}\n".
+        "port:   {$port}\n".
+        "user:   {$user}\n".
+        "pass:   (скрыт)\n\n".
+        $reach
+    ).'</pre>';
+});
+
 // Telegram бот: getWebhookInfo через прокси — диагностика webhook со стороны Telegram
 Route::get('/debug-tg-info-secret', function () {
     $token = config('services.telegram.bot_token_interactive');
