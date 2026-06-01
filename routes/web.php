@@ -685,6 +685,40 @@ Route::get('/debug-proxy-test-secret', function (Illuminate\Http\Request $reques
     return '<pre>'.htmlspecialchars($out).'</pre>';
 });
 
+// Админ-бот: диагностика токена через рабочий прокси (getMe + getWebhookInfo).
+// Видно: задан ли токен, валиден ли, не висит ли webhook (тогда getUpdates даёт 409).
+Route::get('/debug-admin-info-secret', function () {
+    $token = (string) config('services.telegram.bot_token_admin');
+    $proxy = config('services.telegram.proxy');
+
+    if ($token === '') {
+        return '<pre>TELEGRAM_BOT_TOKEN_ADMIN не задан в .env</pre>';
+    }
+
+    $client = \Illuminate\Support\Facades\Http::asForm()->connectTimeout(6)->timeout(12);
+    if ($proxy) {
+        $client = $client->withOptions(['proxy' => $proxy]);
+    }
+
+    $tokenMasked = substr($token, 0, 12).'...'.substr($token, -4);
+
+    try {
+        $me = $client->get("https://api.telegram.org/bot{$token}/getMe")->json();
+        $info = $client->get("https://api.telegram.org/bot{$token}/getWebhookInfo")->json();
+    } catch (\Throwable $e) {
+        return '<pre>ERROR: '.htmlspecialchars($e->getMessage()).'</pre>';
+    }
+
+    $adminIds = (string) config('services.telegram.admin_ids');
+
+    return '<pre>'.htmlspecialchars(
+        "token: {$tokenMasked}\n".
+        "admin_ids: {$adminIds}\n\n".
+        "getMe:\n".json_encode($me, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)."\n\n".
+        "getWebhookInfo:\n".json_encode($info, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)
+    ).'</pre>';
+});
+
 // Telegram бот: getWebhookInfo через прокси — диагностика webhook со стороны Telegram
 Route::get('/debug-tg-info-secret', function () {
     $token = config('services.telegram.bot_token_interactive');
