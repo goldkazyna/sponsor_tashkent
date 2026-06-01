@@ -633,6 +633,58 @@ Route::get('/debug-proxy-secret', function () {
     ).'</pre>';
 });
 
+// Telegram бот: перебрать схемы прокси и найти рабочую.
+// Использование: /debug-proxy-test-secret?p=HOST:PORT:USER:PASS
+// (если ?p не задан — берёт текущий TELEGRAM_PROXY из .env как есть)
+Route::get('/debug-proxy-test-secret', function (Illuminate\Http\Request $request) {
+    $token = config('services.telegram.bot_token_interactive');
+
+    $raw = trim((string) $request->query('p', ''));
+
+    // Собираем список прокси-URL для проверки
+    $candidates = [];
+    if ($raw !== '') {
+        $parts = explode(':', $raw);
+        if (count($parts) === 4) {
+            [$host, $port, $user, $pass] = $parts;
+            $auth = rawurlencode($user).':'.rawurlencode($pass).'@';
+            foreach (['http', 'socks5', 'socks5h'] as $scheme) {
+                $candidates[$scheme] = "{$scheme}://{$auth}{$host}:{$port}";
+            }
+        } elseif (count($parts) === 2) {
+            [$host, $port] = $parts;
+            foreach (['http', 'socks5', 'socks5h'] as $scheme) {
+                $candidates[$scheme] = "{$scheme}://{$host}:{$port}";
+            }
+        } else {
+            return '<pre>Неверный формат ?p. Нужно HOST:PORT:USER:PASS</pre>';
+        }
+    } else {
+        $candidates['(текущий .env)'] = (string) config('services.telegram.proxy');
+    }
+
+    $out = '';
+    foreach ($candidates as $label => $proxyUrl) {
+        $client = \Illuminate\Support\Facades\Http::asForm()
+            ->connectTimeout(6)
+            ->timeout(12)
+            ->withOptions(['proxy' => $proxyUrl]);
+
+        $masked = preg_replace('#://[^@]+@#', '://***:***@', $proxyUrl);
+        try {
+            $resp = $client->get("https://api.telegram.org/bot{$token}/getMe");
+            $json = $resp->json();
+            $ok = ($json['ok'] ?? false) ? '✅ РАБОТАЕТ' : '⚠️ ответ есть, но ok=false';
+            $out .= "[{$label}] {$masked}\n   {$ok} | HTTP {$resp->status()} | ".
+                json_encode($json, JSON_UNESCAPED_UNICODE)."\n\n";
+        } catch (\Throwable $e) {
+            $out .= "[{$label}] {$masked}\n   ❌ ".$e->getMessage()."\n\n";
+        }
+    }
+
+    return '<pre>'.htmlspecialchars($out).'</pre>';
+});
+
 // Telegram бот: getWebhookInfo через прокси — диагностика webhook со стороны Telegram
 Route::get('/debug-tg-info-secret', function () {
     $token = config('services.telegram.bot_token_interactive');
