@@ -185,6 +185,96 @@
     box-shadow: none !important;
 }
 
+/* Карточка ручной оплаты */
+.manual-pay-card {
+    background: white;
+    border-radius: 16px;
+    padding: 2.25rem 1.75rem;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    border: 2px solid #3b82f6;
+    text-align: center;
+    max-width: 440px;
+    margin: 0 auto 2rem;
+    position: relative;
+}
+
+.manual-pay-badge {
+    display: inline-block;
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    color: white;
+    padding: 0.4rem 1.2rem;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+}
+
+.manual-pay-price {
+    font-size: 2.8rem;
+    font-weight: 800;
+    color: #1a202c;
+    line-height: 1;
+    margin-bottom: 1.5rem;
+}
+
+.manual-pay-features {
+    max-width: 240px;
+    margin: 0 auto 1.5rem;
+}
+
+.manual-pay-howto {
+    background: #f8fafc;
+    border: 2px dashed #cbd5e1;
+    border-radius: 12px;
+    padding: 1.25rem 1rem;
+}
+
+.manual-pay-step {
+    color: #475569;
+    font-size: 0.95rem;
+    margin-bottom: 0.75rem;
+}
+
+.manual-pay-cardnum {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #1a202c;
+    letter-spacing: 2px;
+    margin-bottom: 0.75rem;
+    user-select: all;
+}
+
+.manual-pay-copy {
+    display: inline-block;
+    padding: 0.6rem 1.4rem;
+    border: none;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    color: white;
+    background: linear-gradient(135deg, #10b981, #059669);
+    transition: all 0.3s ease;
+}
+
+.manual-pay-copy:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(16,185,129,0.4);
+}
+
+.manual-pay-note {
+    margin-top: 1rem;
+    color: #64748b;
+    font-size: 0.88rem;
+    line-height: 1.6;
+}
+
+.manual-pay-note a {
+    color: #3b82f6;
+    font-weight: 700;
+    text-decoration: none;
+}
+
 .verified-info {
     background: white;
     border-radius: 16px;
@@ -588,7 +678,8 @@
     </div>
     --}}
 
-    {{-- Баннер: онлайн-оплата может сбоить — пробовать несколько раз, иначе ручной перевод через админа --}}
+    {{-- Баннер «Если оплата не проходит» скрыт, пока онлайн-оплата отключена. Восстановить — раскомментировать. --}}
+    {{--
     <div style="background:#fffbeb; border:3px solid #f59e0b; border-radius:14px; padding:1.75rem 1.5rem; margin-bottom:1.5rem; text-align:center;">
         <div style="font-weight:800; color:#b45309; font-size:1.5rem; line-height:1.25; margin-bottom:0.85rem; letter-spacing:0.3px;">⚠️ Если оплата не проходит</div>
         <div style="color:#92400e; font-size:1.05rem; line-height:1.65; font-weight:600;">
@@ -597,7 +688,41 @@
             <a href="https://t.me/Sponsor_admin" target="_blank" style="display:inline-block; margin-top:0.5rem; color:#b45309; font-weight:800; font-size:1.2rem; text-decoration:underline;">@Sponsor_admin</a>
         </div>
     </div>
+    --}}
 
+    {{-- Ручная оплата переводом на карту (одна карточка, 30 дней / $30). Восстановить онлайн-тарифы — раскомментировать .tariffs-grid ниже. --}}
+    <div class="manual-pay-card">
+        <div class="manual-pay-badge">Статус на 30 дней</div>
+        <div class="manual-pay-price">$30</div>
+        <ul class="tariff-features manual-pay-features">
+            <li>
+                <svg viewBox="0 0 24 24"><path d="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z"/></svg>
+                Значок проверенного
+            </li>
+            <li>
+                <svg viewBox="0 0 24 24"><path d="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z"/></svg>
+                Повышенное доверие
+            </li>
+            <li>
+                <svg viewBox="0 0 24 24"><path d="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z"/></svg>
+                Больше откликов
+            </li>
+        </ul>
+
+        <div class="manual-pay-howto">
+            <div class="manual-pay-step">Переведите <strong>$30</strong> на карту:</div>
+            <div class="manual-pay-cardnum" id="cardNumber">5356 5020 0902 5390</div>
+            <button type="button" class="manual-pay-copy" id="copyCardBtn">Скопировать номер</button>
+            <div class="manual-pay-note">
+                После перевода напишите мне в Telegram —
+                <a href="https://t.me/Sponsor_admin" target="_blank">@Sponsor_admin</a> —
+                и я активирую статус на 30 дней.
+            </div>
+        </div>
+    </div>
+
+    {{-- Онлайн-тарифы (5/10/30 дней) скрыты, пока онлайн-оплата отключена. Восстановить — заменить @if(false) на @if(true). --}}
+    @if(false)
     <div class="tariffs-grid">
 
         {{-- 5 дней --}}
@@ -689,6 +814,7 @@
         </div>
 
     </div>
+    @endif
 
     <div class="verified-info">
         <h3>Что даёт статус проверенного?</h3>
@@ -784,6 +910,32 @@
 </div>
 
 <script>
+// Кнопка «Скопировать номер» карты для ручной оплаты
+(function() {
+    var copyBtn = document.getElementById('copyCardBtn');
+    if (copyBtn) {
+        copyBtn.addEventListener('click', function() {
+            var num = document.getElementById('cardNumber').textContent.replace(/\s+/g, ' ').trim();
+            var done = function() {
+                var orig = copyBtn.textContent;
+                copyBtn.textContent = '✓ Скопировано';
+                setTimeout(function() { copyBtn.textContent = orig; }, 2000);
+            };
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(num).then(done).catch(done);
+            } else {
+                var ta = document.createElement('textarea');
+                ta.value = num;
+                document.body.appendChild(ta);
+                ta.select();
+                try { document.execCommand('copy'); } catch (e) {}
+                document.body.removeChild(ta);
+                done();
+            }
+        });
+    }
+})();
+
 var sawInstruction = {{ ($user->saw_instruction ?? 0) ? 'true' : 'false' }};
 var pendingForm = null;
 
