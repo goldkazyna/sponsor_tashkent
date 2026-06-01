@@ -392,6 +392,162 @@ Route::post('/blacklist-telegram-secret/remove', function (Illuminate\Http\Reque
     return redirect('/blacklist-telegram-secret')->with('success', "Удалён: {$nick}");
 });
 
+// ── Поиск объявлений с упоминанием несовершеннолетних (16/17 и младше) или девственности ──
+// Ничего не удаляет автоматически — только показывает для ручной проверки. Батчи по 50.
+
+if (! function_exists('scanMinorsState')) {
+    function scanMinorsStatePath(): string
+    {
+        return storage_path('app/scan_minors_state.json');
+    }
+
+    function scanMinorsResultsPath(): string
+    {
+        return storage_path('app/scan_minors_results.json');
+    }
+
+    function scanMinorsState(): array
+    {
+        $path = scanMinorsStatePath();
+        if (file_exists($path)) {
+            $data = json_decode(file_get_contents($path), true);
+            if (is_array($data)) {
+                return array_merge(['cursor' => null, 'done' => 0], $data);
+            }
+        }
+
+        return ['cursor' => null, 'done' => 0];
+    }
+
+    function scanMinorsSaveState(array $state): void
+    {
+        file_put_contents(scanMinorsStatePath(), json_encode($state, JSON_UNESCAPED_UNICODE));
+    }
+
+    function scanMinorsResults(): array
+    {
+        $path = scanMinorsResultsPath();
+        if (file_exists($path)) {
+            $data = json_decode(file_get_contents($path), true);
+            if (is_array($data)) {
+                return $data;
+            }
+        }
+
+        return [];
+    }
+
+    function scanMinorsSaveResults(array $results): void
+    {
+        file_put_contents(scanMinorsResultsPath(), json_encode(array_values($results), JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
+    }
+}
+
+Route::get('/scan-minors-secret', function () {
+    $state = scanMinorsState();
+    $results = scanMinorsResults();
+
+    $total = DB::table('post')->where('del', 0)->count();
+    $apiKeySet = ! empty(config('services.anthropic.api_key'));
+
+    return view('scan-minors', [
+        'results' => array_reverse($results), // новые сверху
+        'done' => $state['done'],
+        'total' => $total,
+        'cursor' => $state['cursor'],
+        'apiKeySet' => $apiKeySet,
+    ]);
+});
+
+Route::post('/scan-minors-secret/scan', function () {
+    @set_time_limit(0);
+
+    $state = scanMinorsState();
+    $cursor = $state['cursor'];
+
+    $query = DB::table('post')->where('del', 0);
+    if ($cursor !== null) {
+        $query->where('id', '<', $cursor);
+    }
+    $posts = $query->orderBy('id', 'desc')->limit(50)->get();
+
+    if ($posts->isEmpty()) {
+        return redirect('/scan-minors-secret')->with('success', 'Готово — все объявления просканированы.');
+    }
+
+    // Батчим по 25, чтобы не упереться в токены/таймаут
+    $flagged = [];
+    foreach (array_chunk($posts->all(), 25) as $chunk) {
+        $flagged += \App\Services\AiModerationService::detectMinorsAndVirgin($chunk);
+    }
+
+    // Складываем найденное в файл (дедуп по id)
+    $results = scanMinorsResults();
+    $byId = [];
+    foreach ($results as $r) {
+        $byId[$r['id']] = $r;
+    }
+
+    $foundNow = 0;
+    foreach ($posts as $post) {
+        if (isset($flagged[$post->id]) && ! isset($byId[$post->id])) {
+            $byId[$post->id] = [
+                'id' => $post->id,
+                'title' => $post->title ?? '',
+                'reason' => $flagged[$post->id]['reason'],
+                'fragment' => $flagged[$post->id]['fragment'],
+            ];
+            $foundNow++;
+        }
+    }
+
+    scanMinorsSaveResults($byId);
+
+    // Двигаем курсор и счётчик
+    $minId = $posts->min('id');
+    $state['cursor'] = $minId;
+    $state['done'] = ($state['done'] ?? 0) + $posts->count();
+    scanMinorsSaveState($state);
+
+    return redirect('/scan-minors-secret')->with('success',
+        "Просканировано +{$posts->count()}. Найдено в этом батче: {$foundNow}."
+    );
+});
+
+Route::post('/scan-minors-secret/delete', function (Illuminate\Http\Request $request) {
+    $postId = (int) $request->input('post_id');
+
+    if ($postId > 0) {
+        DB::table('post')->where('id', $postId)->update(['del' => 1]);
+
+        $results = scanMinorsResults();
+        $results = array_filter($results, fn ($r) => (int) $r['id'] !== $postId);
+        scanMinorsSaveResults($results);
+    }
+
+    return redirect('/scan-minors-secret')->with('success', "Объявление #{$postId} удалено.");
+});
+
+Route::post('/scan-minors-secret/dismiss', function (Illuminate\Http\Request $request) {
+    $postId = (int) $request->input('post_id');
+
+    $results = scanMinorsResults();
+    $results = array_filter($results, fn ($r) => (int) $r['id'] !== $postId);
+    scanMinorsSaveResults($results);
+
+    return redirect('/scan-minors-secret')->with('success', "Объявление #{$postId} убрано из списка (не удалено).");
+});
+
+Route::post('/scan-minors-secret/reset', function (Illuminate\Http\Request $request) {
+    scanMinorsSaveState(['cursor' => null, 'done' => 0]);
+
+    if ($request->input('clear_results')) {
+        scanMinorsSaveResults([]);
+    }
+
+    return redirect('/scan-minors-secret')->with('success', 'Позиция сброшена — сканирование начнётся заново с самых новых.');
+});
+
 // Временно: тест Claude API
 Route::get('/test-ai-secret', function () {
     $apiKey = config('services.anthropic.api_key');

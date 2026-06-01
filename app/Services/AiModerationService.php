@@ -143,6 +143,108 @@ PROMPT;
         }
     }
 
+    /**
+     * Поиск объявлений с упоминанием несовершеннолетних (16, 17 и младше) или девственности.
+     * Ничего не удаляет — только помечает для ручного просмотра. Батч до ~25 шт.
+     *
+     * @param  array  $posts  — массив объектов с полями id, title, fio, discription
+     * @return array<int, array{reason: string, fragment: string}>  ключ = post id (только помеченные)
+     */
+    public static function detectMinorsAndVirgin(array $posts): array
+    {
+        $apiKey = config('services.anthropic.api_key');
+
+        if (empty($apiKey) || empty($posts)) {
+            return [];
+        }
+
+        $postLines = '';
+        foreach ($posts as $post) {
+            $id = $post->id;
+            $title = $post->title ?? '';
+            $fio = $post->fio ?? '';
+            $desc = $post->discription ?? '';
+            $postLines .= "---\nID: {$id}\nTITLE: {$title}\nFIO: {$fio}\nDESCRIPTION: {$desc}\n";
+        }
+
+        $prompt = <<<PROMPT
+Ты — помощник модератора сайта знакомств. Тебе даны объявления. Для КАЖДОГО определи, есть ли в полях TITLE, FIO или DESCRIPTION один из двух признаков:
+
+1. ВОЗРАСТ 16, 17 лет ИЛИ МЛАДШЕ (несовершеннолетние, до 18 лет включительно НЕ считается — 18 это норма, НЕ помечай 18 и старше).
+   Учитывай замаскированные и словесные формы: "16", "17", "шестнадцать", "семнадцать", "16лет", "1 6", цифры через пробелы/точки, "мне 16", "16 годиков" и т.п.
+   НЕ путай с ростом, весом, размером, ценой, количеством, номерами телефонов, годом. Только если по смыслу это ВОЗРАСТ человека и он 17 или меньше.
+
+2. ДЕВСТВЕННОСТЬ — упоминание что человек девственница/девственник, "невинная", "без опыта в этом смысле", "первый раз", "цела" и подобное по смыслу.
+
+Для КАЖДОГО объявления выведи РОВНО одну строку строго в формате:
+ID: <число> | FLAG: <yes или no> | REASON: <age, virgin, both или пусто> | FRAGMENT: <короткая цитата из текста где нашёл, или пусто>
+
+FLAG: yes только если уверен. Если не уверен или признаков нет — FLAG: no. Только этот формат, ничего больше.
+
+{$postLines}
+PROMPT;
+
+        try {
+            $httpClient = Http::withHeaders([
+                'x-api-key' => $apiKey,
+                'anthropic-version' => '2023-06-01',
+                'content-type' => 'application/json',
+            ])->timeout(60);
+
+            $proxy = config('services.anthropic.proxy');
+            if (! empty($proxy)) {
+                $httpClient = $httpClient->withOptions(['proxy' => $proxy]);
+            }
+
+            $response = $httpClient->post('https://api.anthropic.com/v1/messages', [
+                'model' => 'claude-haiku-4-5-20251001',
+                'max_tokens' => 2048,
+                'messages' => [
+                    ['role' => 'user', 'content' => $prompt],
+                ],
+            ]);
+
+            if (! $response->successful()) {
+                Log::channel('telegram')->error('DetectMinors: API error', ['status' => $response->status(), 'body' => $response->body()]);
+
+                return [];
+            }
+
+            $content = $response->json('content.0.text', '');
+
+            return self::parseDetectMinorsResponse($content);
+        } catch (\Exception $e) {
+            Log::channel('telegram')->error('DetectMinors: Exception', ['message' => $e->getMessage()]);
+
+            return [];
+        }
+    }
+
+    private static function parseDetectMinorsResponse(string $content): array
+    {
+        $results = [];
+
+        if (preg_match_all('/ID:\s*(\d+)\s*\|\s*FLAG:\s*(\w+)\s*\|\s*REASON:\s*(.*?)\s*\|\s*FRAGMENT:\s*(.*?)(?:\n|$)/i', $content, $matches, PREG_SET_ORDER)) {
+            foreach ($matches as $m) {
+                $id = (int) $m[1];
+                $flag = mb_strtolower(trim($m[2]));
+                $reason = mb_strtolower(trim($m[3]));
+                $fragment = trim($m[4]);
+
+                if ($flag !== 'yes') {
+                    continue;
+                }
+
+                $results[$id] = [
+                    'reason' => $reason,
+                    'fragment' => $fragment,
+                ];
+            }
+        }
+
+        return $results;
+    }
+
     private static function parseExtractTelegramResponse(string $content): array
     {
         $results = [];
