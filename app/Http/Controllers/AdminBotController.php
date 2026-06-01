@@ -118,6 +118,13 @@ class AdminBotController extends Controller
                 'processed' => $totalProcessed,
                 'duration' => time() - $startTime,
             ]);
+        } catch (\Illuminate\Http\Client\ConnectionException $e) {
+            // Прокси/Telegram недоступны — не валим cron в 500, пишем понятную строку.
+            Log::channel('telegram')->error('Admin bot: Telegram unreachable (poll) — proxy down?', [
+                'message' => $e->getMessage(),
+            ]);
+
+            return response()->json(['ok' => false, 'error' => 'telegram_unreachable', 'detail' => $e->getMessage()]);
         } finally {
             $lock->release();
         }

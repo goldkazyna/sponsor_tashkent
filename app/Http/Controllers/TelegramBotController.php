@@ -132,6 +132,13 @@ class TelegramBotController extends Controller
                 'duration' => time() - $startTime,
                 'next_offset' => $lastId > 0 ? $lastId + 1 : null,
             ]);
+        } catch (\Illuminate\Http\Client\ConnectionException $e) {
+            // Прокси/Telegram недоступны — не валим cron в 500, пишем понятную строку.
+            Log::channel('telegram')->error('Telegram unreachable (poll) — proxy down?', [
+                'message' => $e->getMessage(),
+            ]);
+
+            return response()->json(['ok' => false, 'error' => 'telegram_unreachable', 'detail' => $e->getMessage()]);
         } finally {
             $lock->release();
         }
