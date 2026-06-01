@@ -282,6 +282,35 @@
     text-decoration: none;
 }
 
+.manual-pay-attention {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    background: #fffbeb;
+    border: 2px solid #f59e0b;
+    border-radius: 12px;
+    padding: 1.1rem 1.25rem;
+    max-width: 440px;
+    margin: 0 auto 2rem;
+    color: #92400e;
+    font-size: 0.92rem;
+    line-height: 1.6;
+}
+
+.manual-pay-attention svg {
+    width: 24px;
+    height: 24px;
+    fill: #f59e0b;
+    flex-shrink: 0;
+    margin-top: 1px;
+}
+
+.manual-pay-attention a {
+    color: #b45309;
+    font-weight: 800;
+    text-decoration: underline;
+}
+
 .verified-info {
     background: white;
     border-radius: 16px;
@@ -729,6 +758,15 @@
                 После перевода заполните форму ниже. Если возникнут какие-то проблемы — напишите
                 <a href="https://t.me/Sponsor_admin" target="_blank">@Sponsor_admin</a>.
             </div>
+        </div>
+    </div>
+
+    {{-- Блок внимание: оплата на меньшее кол-во дней — только криптовалютой --}}
+    <div class="manual-pay-attention">
+        <svg viewBox="0 0 24 24"><path d="M13,14H11V10H13M13,18H11V16H13M1,21H23L12,2L1,21Z"/></svg>
+        <div>
+            <strong>Внимание!</strong> Если хотите оплатить за меньшее количество дней — это возможно только через
+            <strong>криптовалюту</strong>. Напишите <a href="https://t.me/Sponsor_admin" target="_blank">@Sponsor_admin</a>.
         </div>
     </div>
 
