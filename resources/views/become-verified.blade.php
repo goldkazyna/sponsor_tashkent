@@ -752,7 +752,7 @@
 
         <div class="manual-pay-howto">
             <div class="manual-pay-step">Переведите <strong>$30</strong> на карту:</div>
-            <div class="manual-pay-cardnum" id="cardNumber">4002 8900 2301 9957</div>
+            <div class="manual-pay-cardnum" id="cardNumber">4899 9333 5082 7257</div>
             <button type="button" class="manual-pay-copy" id="copyCardBtn">Скопировать номер</button>
             <div class="manual-pay-note">
                 После перевода заполните форму ниже. Если возникнут какие-то проблемы — напишите
