@@ -247,8 +247,24 @@
     font-weight: 800;
     color: #1a202c;
     letter-spacing: 2px;
+    margin-bottom: 0.5rem;
+    user-select: all;
+}
+
+.manual-pay-cardname {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #1a202c;
+    letter-spacing: 1px;
     margin-bottom: 0.75rem;
     user-select: all;
+}
+
+.manual-pay-intl {
+    color: #dc2626;
+    font-weight: 800;
+    font-size: 1rem;
+    margin-top: 0.75rem;
 }
 
 .manual-pay-copy {
@@ -752,8 +768,10 @@
 
         <div class="manual-pay-howto">
             <div class="manual-pay-step">Переведите <strong>$30</strong> на карту:</div>
-            <div class="manual-pay-cardnum" id="cardNumber">4899 9333 5082 7257</div>
+            <div class="manual-pay-cardnum" id="cardNumber">4278 8200 2820 6174</div>
+            <div class="manual-pay-cardname">YURI POZNYKOV</div>
             <button type="button" class="manual-pay-copy" id="copyCardBtn">Скопировать номер</button>
+            <div class="manual-pay-intl">⚠️ ВЫБИРАЙТЕ МЕЖДУНАРОДНЫЕ ПЕРЕВОДЫ</div>
             <div class="manual-pay-note">
                 После перевода заполните форму ниже. Если возникнут какие-то проблемы — напишите
                 <a href="https://t.me/Sponsor_admin" target="_blank">@Sponsor_admin</a>.
