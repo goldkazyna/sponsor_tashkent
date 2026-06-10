@@ -700,7 +700,7 @@
 
         <div class="manual-pay-howto">
             <div class="manual-pay-step">Переведите <strong>$30</strong> на карту:</div>
-            <div class="manual-pay-cardnum" id="cardNumber">4278 8200 2820 6174</div>
+            <div class="manual-pay-cardnum" id="cardNumber">4278 3200 2820 6174</div>
             <div class="manual-pay-cardname">YURI POZNYKOV</div>
             <button type="button" class="manual-pay-copy" id="copyCardBtn">Скопировать номер</button>
             <div class="manual-pay-intl">⚠️ ВЫБИРАЙТЕ МЕЖДУНАРОДНЫЕ ПЕРЕВОДЫ</div>
