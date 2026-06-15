@@ -28,8 +28,42 @@ Route::get('/rules', function () {
 
 // Продажа сервиса
 Route::get('/for-sale', function () {
+    // Счётчик посещений (файловый, переживает чистку кеша и деплой)
+    try {
+        $file = storage_path('app/for-sale-stats.json');
+        $stats = is_file($file)
+            ? (json_decode(file_get_contents($file), true) ?: ['total' => 0, 'days' => []])
+            : ['total' => 0, 'days' => []];
+
+        $today = now()->format('Y-m-d');
+        $stats['total'] = ($stats['total'] ?? 0) + 1;
+        $stats['days'][$today] = ($stats['days'][$today] ?? 0) + 1;
+
+        file_put_contents($file, json_encode($stats), LOCK_EX);
+    } catch (\Throwable $e) {
+        // Счётчик не должен ломать саму страницу
+    }
+
     return view('for-sale');
 })->name('for-sale');
+
+// Статистика посещений страницы продажи (секретный роут)
+Route::get('/for-sale-stats-secret', function () {
+    $file = storage_path('app/for-sale-stats.json');
+    $stats = is_file($file)
+        ? (json_decode(file_get_contents($file), true) ?: ['total' => 0, 'days' => []])
+        : ['total' => 0, 'days' => []];
+
+    $days = $stats['days'] ?? [];
+    krsort($days); // сначала свежие даты
+    $today = now()->format('Y-m-d');
+
+    return view('for-sale-stats', [
+        'total' => $stats['total'] ?? 0,
+        'today' => $days[$today] ?? 0,
+        'days'  => $days,
+    ]);
+});
 
 // Регистрация
 Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
