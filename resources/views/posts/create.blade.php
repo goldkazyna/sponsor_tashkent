@@ -38,7 +38,12 @@
                 <span style="font-size:24px; line-height:1;">❌</span>
                 <div>
                     <div style="font-weight:800; color:#991b1b; font-size:1.05rem; margin-bottom:6px;">Объявление не опубликовано</div>
-                    <div style="color:#b91c1c; font-size:0.95rem; line-height:1.6;">{{ $errors->first('ai') }}</div>
+                    @php $aiReasons = array_values(array_filter(array_map('trim', preg_split('/\s*\|\s*/', $errors->first('ai'))))); @endphp
+                    @foreach($aiReasons as $r)
+                        <div style="color:#b91c1c; font-size:0.95rem; line-height:1.6; display:flex; gap:7px; margin-bottom:4px;">
+                            <span>•</span><span>{{ $r }}</span>
+                        </div>
+                    @endforeach
                     <div style="color:#7f1d1d; font-size:0.85rem; line-height:1.6; margin-top:10px;">
                         Если считаете, что это ошибка — напишите
                         <a href="https://t.me/Sponsor_admin" target="_blank" style="color:#b91c1c; font-weight:700; text-decoration:underline;">@Sponsor_admin</a>.
