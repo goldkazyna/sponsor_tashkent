@@ -83,6 +83,30 @@
     font-size: 0.8rem;
     margin-top: 1px;
 }
+.sale-price {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    background: linear-gradient(135deg, #fff7ed, #ffedd5);
+    border: 2px solid #f5a623;
+    border-radius: 16px;
+    padding: 1.6rem 1.5rem;
+    margin-bottom: 1.5rem;
+}
+.sale-price__label {
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #b45309;
+}
+.sale-price__value {
+    font-size: 2.6rem;
+    font-weight: 900;
+    color: #d97706;
+    line-height: 1;
+}
 .sale-cta {
     text-align: center;
     background: #fafafa;
@@ -135,8 +159,13 @@
             <li><span class="ic">✓</span> Налаженный поисковый трафик (SEO) и monetization-модель</li>
         </ul>
 
+        <div class="sale-price">
+            <span class="sale-price__label">Цена</span>
+            <span class="sale-price__value">$12 000</span>
+        </div>
+
         <div class="sale-cta">
-            <p>Интересует покупка или нужны подробности и цена?<br>Напишите администратору — ответим на все вопросы.</p>
+            <p>Если вы готовы заплатить такую сумму — пишите администратору.<br>Обсудим детали и передачу проекта.</p>
             <a href="https://t.me/Sponsor_admin" target="_blank" rel="noopener" class="sale-btn">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.78,18.65L10.06,14.42L17.74,7.5C18.08,7.19 17.67,7.04 17.22,7.31L7.74,13.3L3.64,12C2.76,11.75 2.75,11.14 3.84,10.7L19.81,4.54C20.54,4.21 21.24,4.72 20.96,5.84L18.24,18.65C18.05,19.56 17.5,19.78 16.74,19.36L12.6,16.3L10.61,18.23C10.38,18.46 10.19,18.65 9.78,18.65Z"/></svg>
                 Написать @Sponsor_admin
