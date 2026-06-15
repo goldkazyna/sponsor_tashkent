@@ -35,11 +35,30 @@
 
 
     
-    @if($errors->any())
+    @if($errors->has('ai'))
+        <div style="background:#fef2f2; border:2px solid #ef4444; border-radius:12px; padding:18px 20px; margin-bottom:20px;">
+            <div style="display:flex; align-items:flex-start; gap:12px;">
+                <span style="font-size:24px; line-height:1;">❌</span>
+                <div>
+                    <div style="font-weight:800; color:#991b1b; font-size:1.05rem; margin-bottom:6px;">Объявление не опубликовано</div>
+                    <div style="color:#b91c1c; font-size:0.95rem; line-height:1.6;">{{ $errors->first('ai') }}</div>
+                    <div style="color:#7f1d1d; font-size:0.85rem; line-height:1.6; margin-top:10px;">
+                        Если считаете, что это ошибка — напишите
+                        <a href="https://t.me/Sponsor_admin" target="_blank" style="color:#b91c1c; font-weight:700; text-decoration:underline;">@Sponsor_admin</a>.
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    @php $otherErrors = collect($errors->keys())->reject(fn($k) => $k === 'ai'); @endphp
+    @if($otherErrors->isNotEmpty())
         <div style="background: #fee; border: 1px solid #fcc; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
             <ul style="list-style: none; padding: 0; margin: 0; color: #c00;">
-                @foreach($errors->all() as $error)
-                    <li style="margin-bottom: 5px;">{{ $error }}</li>
+                @foreach($otherErrors as $key)
+                    @foreach($errors->get($key) as $error)
+                        <li style="margin-bottom: 5px;">{{ $error }}</li>
+                    @endforeach
                 @endforeach
             </ul>
         </div>

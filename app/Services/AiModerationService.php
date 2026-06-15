@@ -65,6 +65,136 @@ class AiModerationService
     }
 
     /**
+     * Привратник при добавлении объявления: проверяет заголовок и описание по
+     * правилам из storage/app/add_moderation_rules.txt.
+     *
+     * Fail-open: при любой неудаче (нет ключа, нет/пустой файл правил, ошибка API,
+     * неразборчивый ответ) объявление пропускается.
+     *
+     * @return array{allowed: bool, reason: string}
+     */
+    public static function checkSubmission(string $title, string $description): array
+    {
+        $apiKey = config('services.anthropic.api_key');
+        if (empty($apiKey)) {
+            return ['allowed' => true, 'reason' => ''];
+        }
+
+        $rules = self::loadAddRules();
+        if ($rules === '') {
+            // Нет правил — нечего нарушать
+            return ['allowed' => true, 'reason' => ''];
+        }
+
+        $prompt = <<<PROMPT
+Ты — модератор-привратник сайта знакомств. Тебе дан заголовок и описание объявления. Ниже список правил. Реши, нарушает ли объявление ХОТЯ БЫ ОДНО правило.
+
+ПРАВИЛА (нарушение любого = блокировка):
+{$rules}
+
+Ответь СТРОГО в формате (без лишнего текста):
+VERDICT: <allow или block>
+REASON: <если block — короткая понятная причина на русском для пользователя, почему нельзя опубликовать; если allow — пусто>
+
+Заголовок: {$title}
+Описание: {$description}
+PROMPT;
+
+        try {
+            $httpClient = Http::withHeaders([
+                'x-api-key' => $apiKey,
+                'anthropic-version' => '2023-06-01',
+                'content-type' => 'application/json',
+            ])->timeout(30);
+
+            $proxy = config('services.anthropic.proxy');
+            if (! empty($proxy)) {
+                $httpClient = $httpClient->withOptions(['proxy' => $proxy]);
+            }
+
+            $response = $httpClient->post('https://api.anthropic.com/v1/messages', [
+                'model' => 'claude-haiku-4-5-20251001',
+                'max_tokens' => 512,
+                'messages' => [
+                    ['role' => 'user', 'content' => $prompt],
+                ],
+            ]);
+
+            if (! $response->successful()) {
+                Log::channel('telegram')->error('CheckSubmission: API error', ['status' => $response->status(), 'body' => mb_substr($response->body(), 0, 500)]);
+
+                return ['allowed' => true, 'reason' => ''];
+            }
+
+            $content = $response->json('content.0.text', '');
+            $result = self::parseSubmissionVerdict($content);
+
+            Log::channel('telegram')->info('CheckSubmission verdict', [
+                'title' => $title,
+                'allowed' => $result['allowed'],
+                'reason' => $result['reason'],
+            ]);
+
+            return $result;
+        } catch (\Exception $e) {
+            Log::channel('telegram')->error('CheckSubmission: Exception', ['message' => $e->getMessage()]);
+
+            return ['allowed' => true, 'reason' => ''];
+        }
+    }
+
+    /**
+     * Разбор ответа привратника. Fail-open: всё, что не «block» по формату — allow.
+     *
+     * @return array{allowed: bool, reason: string}
+     */
+    public static function parseSubmissionVerdict(string $content): array
+    {
+        if (! preg_match('/VERDICT:\s*(allow|block)/i', $content, $m)) {
+            return ['allowed' => true, 'reason' => ''];
+        }
+
+        if (mb_strtolower(trim($m[1])) !== 'block') {
+            return ['allowed' => true, 'reason' => ''];
+        }
+
+        $reason = '';
+        if (preg_match('/REASON:\s*(.+?)(?:\n|$)/su', $content, $rm)) {
+            $val = trim($rm[1]);
+            if ($val !== '' && ! preg_match('/^VERDICT:/i', $val)) {
+                $reason = $val;
+            }
+        }
+
+        if ($reason === '') {
+            $reason = 'Объявление нарушает правила сайта.';
+        }
+
+        return ['allowed' => false, 'reason' => $reason];
+    }
+
+    /**
+     * Загружает правила привратника из файла, по одной на строку (пустые игнорируются).
+     */
+    private static function loadAddRules(): string
+    {
+        $rulesFile = storage_path('app/add_moderation_rules.txt');
+        if (! file_exists($rulesFile)) {
+            return '';
+        }
+
+        $lines = array_filter(array_map('trim', file($rulesFile)));
+        $block = '';
+        $i = 1;
+        foreach ($lines as $line) {
+            $block .= "{$i}. {$line}\n";
+            $i++;
+        }
+
+        return trim($block);
+    }
+
+    /**
      * Извлечение Telegram-ников из полей объявлений (батч до 5 шт.).
      *
      * @param  array  $posts  — массив объектов с полями id, title, fio, discription

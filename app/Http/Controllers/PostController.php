@@ -252,6 +252,15 @@ class PostController extends Controller
             return redirect('/');
         }
 
+        // AI-привратник: проверяем объявление по правилам перед публикацией.
+        // Fail-open — при сбое API объявление пропускается (см. AiModerationService).
+        $check = AiModerationService::checkSubmission($request->title, $request->discription ?? '');
+        if (! $check['allowed']) {
+            return back()
+                ->withErrors(['ai' => $check['reason']])
+                ->withInput();
+        }
+
         // Сохраняем объявление
         $postId = DB::table('post')->insertGetId([
             'title' => $request->title,
