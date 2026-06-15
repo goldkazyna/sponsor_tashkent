@@ -65,6 +65,31 @@ Route::get('/for-sale-stats-secret', function () {
     ]);
 });
 
+// Лог попыток добавления объявлений (секретный роут) — что люди пытались добавить
+Route::get('/add-attempts-secret', function () {
+    $file = storage_path('app/add_attempts.jsonl');
+    $entries = [];
+    if (is_file($file)) {
+        foreach (array_filter(array_map('trim', file($file))) as $line) {
+            $d = json_decode($line, true);
+            if (is_array($d)) {
+                $entries[] = $d;
+            }
+        }
+    }
+
+    $total = count($entries);
+    $blocked = count(array_filter($entries, fn ($e) => empty($e['allowed'])));
+
+    $entries = array_slice(array_reverse($entries), 0, 500); // новые сверху, максимум 500
+
+    return view('add-attempts', [
+        'entries' => $entries,
+        'total'   => $total,
+        'blocked' => $blocked,
+    ]);
+});
+
 // Регистрация
 Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
 Route::post('/register', [AuthController::class, 'register'])->name('register.post');

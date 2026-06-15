@@ -14,6 +14,7 @@ Disallow: /moderation-secret
 Disallow: /test-ai-secret
 Disallow: /debug-log-secret
 Disallow: /for-sale-stats-secret
+Disallow: /add-attempts-secret
 Disallow: /cron/
 Disallow: /password/
 Disallow: /payment-instruction

@@ -255,6 +255,10 @@ class PostController extends Controller
         // AI-привратник: проверяем объявление по правилам перед публикацией.
         // Fail-open — при сбое API объявление пропускается (см. AiModerationService).
         $check = AiModerationService::checkSubmission($request->title, $request->discription ?? '');
+
+        // Логируем КАЖДУЮ попытку добавления (и пропущенные, и заблокированные)
+        $this->logAddAttempt($request, $user, $check);
+
         if (! $check['allowed']) {
             return back()
                 ->withErrors(['ai' => $check['reason']])
@@ -290,6 +294,33 @@ class PostController extends Controller
         }
 
         return view('posts.success', ['postId' => $postId]);
+    }
+
+    // Лог попытки добавления объявления (для отлова и обучения правил привратника).
+    // Пишем в storage/app/add_attempts.jsonl по одной JSON-строке на попытку.
+    private function logAddAttempt(Request $request, $user, array $check): void
+    {
+        try {
+            $entry = json_encode([
+                'at' => now()->format('Y-m-d H:i:s'),
+                'email' => $user->email ?? '',
+                'title' => (string) ($request->title ?? ''),
+                'fio' => (string) ($request->fio ?? ''),
+                'city' => (string) ($request->city ?? ''),
+                'description' => (string) ($request->discription ?? ''),
+                'allowed' => (bool) ($check['allowed'] ?? true),
+                'reason' => (string) ($check['reason'] ?? ''),
+                'ip' => $request->ip(),
+            ], JSON_UNESCAPED_UNICODE);
+
+            file_put_contents(
+                storage_path('app/add_attempts.jsonl'),
+                $entry."\n",
+                FILE_APPEND | LOCK_EX
+            );
+        } catch (\Throwable $e) {
+            // Лог не должен ломать публикацию
+        }
     }
 
     // Обработка и сохранение фото
