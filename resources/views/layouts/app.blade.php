@@ -330,33 +330,82 @@
             @endif
         </div>
 
-        <!-- Telegram плашка (только на главной) -->
+        <!-- Продающая шапка (только на главной) -->
         @if(Route::currentRouteName() === 'home')
-        <div style="max-width: 1160px; margin: 15px auto; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.15);">
-            <div style="background: linear-gradient(135deg, #f5a623, #e8941a); display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; padding: 11px 15px; color: #fff;">
-                <span style="font-weight: 700; font-size: 15px;">🏷️ Сервис продаётся</span>
-                <a href="{{ route('for-sale') }}" style="background: #fff; color: #d97706; padding: 6px 16px; border-radius: 20px; text-decoration: none; font-size: 13px; font-weight: 700; display: inline-flex; align-items: center; gap: 5px; box-shadow: 0 2px 6px rgba(0,0,0,0.18); transition: transform 0.15s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
-                    Подробнее →
-                </a>
+        <a href="{{ route('for-sale') }}" class="sale-banner">
+            <span class="sale-banner__pulse">🔥 ПРОДАЁТСЯ</span>
+            <div class="sale-banner__text">
+                <span class="sale-banner__title">Готовый бизнес — сайт знакомств по Казахстану</span>
+                <span class="sale-banner__sub">Трафик · база объявлений · Telegram-бот · домен «под ключ»</span>
             </div>
-            <div style="background: linear-gradient(135deg, #d64541, #c0392b); text-align: center; padding: 15px;">
-                <div style="color: #fff; font-weight: 700; font-size: 15px; margin-bottom: 12px;">📱 Telegram группы:</div>
-                <div style="display: flex; justify-content: center; gap: 10px; flex-wrap: wrap;">
-                    <a href="https://t.me/sponsory5" target="_blank" style="background: rgba(0,0,0,0.25); color: #fff; padding: 8px 18px; border-radius: 20px; text-decoration: none; font-size: 13px; font-weight: 500; display: inline-flex; align-items: center; gap: 6px; transition: background 0.2s;">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="width: 16px; height: 16px; fill: #fff;"><path d="M9.78,18.65L10.06,14.42L17.74,7.5C18.08,7.19 17.67,7.04 17.22,7.31L7.74,13.3L3.64,12C2.76,11.75 2.75,11.14 3.84,10.7L19.81,4.54C20.54,4.21 21.24,4.72 20.96,5.84L18.24,18.65C18.05,19.56 17.5,19.78 16.74,19.36L12.6,16.3L10.61,18.23C10.38,18.46 10.19,18.65 9.78,18.65Z"/></svg>
-                        Информационная группа
-                    </a>
-                    <a href="https://t.me/blacklist_sponsory" target="_blank" style="background: rgba(0,0,0,0.25); color: #fff; padding: 8px 18px; border-radius: 20px; text-decoration: none; font-size: 13px; font-weight: 500; display: inline-flex; align-items: center; gap: 6px; transition: background 0.2s;">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="width: 16px; height: 16px; fill: #fff;"><path d="M12,2C17.53,2 22,6.47 22,12C22,17.53 17.53,22 12,22C6.47,22 2,17.53 2,12C2,6.47 6.47,2 12,2M15.59,7L12,10.59L8.41,7L7,8.41L10.59,12L7,15.59L8.41,17L12,13.41L15.59,17L17,15.59L13.41,12L17,8.41L15.59,7Z"/></svg>
-                        Канал черный список
-                    </a>
-                    <a href="https://t.me/sponsory5_bot" target="_blank" style="background: rgba(0,0,0,0.25); color: #fff; padding: 8px 18px; border-radius: 20px; text-decoration: none; font-size: 13px; font-weight: 500; display: inline-flex; align-items: center; gap: 6px; transition: background 0.2s;">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="width: 16px; height: 16px; fill: #fff;"><path d="M12,1L3,5V11C3,16.55 6.84,21.74 12,23C17.16,21.74 21,16.55 21,11V5L12,1M12,5A3,3 0 0,1 15,8A3,3 0 0,1 12,11A3,3 0 0,1 9,8A3,3 0 0,1 12,5M17.13,17C15.92,18.85 14.11,20.24 12,20.92C9.89,20.24 8.08,18.85 6.87,17C6.53,16.5 6.24,16 6,15.47C6,13.82 8.71,12.47 12,12.47C15.29,12.47 18,13.79 18,15.47C17.76,16 17.47,16.5 17.13,17Z"/></svg>
-                        Подать жалобу
-                    </a>
-                </div>
-            </div>
-        </div>
+            <span class="sale-banner__btn">Узнать цену →</span>
+        </a>
+        <style>
+            .sale-banner {
+                display: flex;
+                align-items: center;
+                gap: 18px;
+                max-width: 1160px;
+                margin: 15px auto;
+                padding: 16px 22px;
+                border-radius: 14px;
+                text-decoration: none;
+                color: #fff;
+                background: linear-gradient(120deg, #b91c1c 0%, #e8941a 55%, #f5a623 100%);
+                background-size: 200% 100%;
+                box-shadow: 0 6px 22px rgba(185,28,28,0.28);
+                animation: saleShift 6s ease infinite;
+                transition: transform 0.2s, box-shadow 0.2s;
+            }
+            .sale-banner:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 10px 28px rgba(185,28,28,0.38);
+            }
+            @keyframes saleShift {
+                0%,100% { background-position: 0% 50%; }
+                50% { background-position: 100% 50%; }
+            }
+            .sale-banner__pulse {
+                flex-shrink: 0;
+                background: rgba(0,0,0,0.22);
+                padding: 9px 15px;
+                border-radius: 30px;
+                font-weight: 800;
+                font-size: 14px;
+                letter-spacing: 0.5px;
+                white-space: nowrap;
+                animation: salePulse 1.6s ease-in-out infinite;
+            }
+            @keyframes salePulse {
+                0%,100% { transform: scale(1); }
+                50% { transform: scale(1.07); }
+            }
+            .sale-banner__text {
+                display: flex;
+                flex-direction: column;
+                gap: 3px;
+                flex: 1;
+                min-width: 0;
+            }
+            .sale-banner__title { font-weight: 800; font-size: 17px; line-height: 1.25; }
+            .sale-banner__sub { font-size: 13px; opacity: 0.92; }
+            .sale-banner__btn {
+                flex-shrink: 0;
+                background: #fff;
+                color: #b91c1c;
+                padding: 11px 22px;
+                border-radius: 30px;
+                font-weight: 800;
+                font-size: 14px;
+                white-space: nowrap;
+                box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+            }
+            @media (max-width: 700px) {
+                .sale-banner { flex-direction: column; text-align: center; gap: 12px; padding: 16px; }
+                .sale-banner__title { font-size: 15px; }
+                .sale-banner__btn { width: 100%; }
+            }
+        </style>
         @endif
 
         @yield('content')
