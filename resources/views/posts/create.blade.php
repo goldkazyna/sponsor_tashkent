@@ -160,7 +160,7 @@
         <div style="padding: 15px; background: #f8f9fa; border-radius: 5px; margin-bottom: 20px;">
             <p style="margin: 0; color: #666; font-size: 14px;">
                 <strong>Вы добавляете объявление как:</strong> 
-                {{ $user->sex == 1 ? '👨 Мужчина (Спонсор)' : '👩 Женщина (Содержанка)' }}
+                {{ $user->sex == 1 ? '👨 Мужчина (Спонсор)' : '👩 Женщина' }}
             </p>
         </div>
 
