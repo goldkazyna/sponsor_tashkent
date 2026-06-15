@@ -26,6 +26,11 @@ Route::get('/rules', function () {
     return view('rules');
 })->name('rules');
 
+// Продажа сервиса
+Route::get('/for-sale', function () {
+    return view('for-sale');
+})->name('for-sale');
+
 // Регистрация
 Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
 Route::post('/register', [AuthController::class, 'register'])->name('register.post');

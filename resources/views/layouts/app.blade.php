@@ -333,8 +333,11 @@
         <!-- Telegram плашка (только на главной) -->
         @if(Route::currentRouteName() === 'home')
         <div style="max-width: 1160px; margin: 15px auto; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.15);">
-            <div style="background: linear-gradient(135deg, #f5a623, #e8941a); text-align: center; padding: 10px 15px; font-weight: 600; color: #fff; font-size: 14px;">
-                🔒 Сайт блокируется - используйте VPN
+            <div style="background: linear-gradient(135deg, #f5a623, #e8941a); display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; padding: 11px 15px; color: #fff;">
+                <span style="font-weight: 700; font-size: 15px;">🏷️ Сервис продаётся</span>
+                <a href="{{ route('for-sale') }}" style="background: #fff; color: #d97706; padding: 6px 16px; border-radius: 20px; text-decoration: none; font-size: 13px; font-weight: 700; display: inline-flex; align-items: center; gap: 5px; box-shadow: 0 2px 6px rgba(0,0,0,0.18); transition: transform 0.15s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                    Подробнее →
+                </a>
             </div>
             <div style="background: linear-gradient(135deg, #d64541, #c0392b); text-align: center; padding: 15px;">
                 <div style="color: #fff; font-weight: 700; font-size: 15px; margin-bottom: 12px;">📱 Telegram группы:</div>
