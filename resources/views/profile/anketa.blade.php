@@ -24,7 +24,7 @@
 .form-input:focus, .form-select:focus, .form-textarea:focus { outline: none; border-color: #f59e0b; }
 .form-textarea { resize: vertical; min-height: 110px; }
 .photo-row { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
-.photo-preview {
+.anketa-photo {
     width: 110px; height: 140px; border-radius: 12px; object-fit: cover;
     background: #f1f5f9; border: 2px solid #e2e8f0; flex-shrink: 0;
 }
@@ -83,7 +83,7 @@
                     <div class="photo-preview-empty" id="photoPreviewEmpty" @if($profile && $profile->photo) style="display:none;" @endif>
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12,12A5,5 0 0,0 17,7A5,5 0 0,0 12,2A5,5 0 0,0 7,7A5,5 0 0,0 12,12M12,14C8.67,14 2,15.67 2,19V22H22V19C22,15.67 15.33,14 12,14Z"/></svg>
                     </div>
-                    <img class="photo-preview" id="photoPreview" alt="Фото"
+                    <img class="anketa-photo" id="photoPreview" alt="Фото"
                          @if($profile && $profile->photo) src="{{ asset($profile->photo) }}?v={{ time() }}" @else style="display:none;" @endif>
                     <input type="file" name="photo" accept="image/*" class="form-input" id="photoInput" style="max-width:320px;">
                 </div>
