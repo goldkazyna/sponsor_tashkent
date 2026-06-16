@@ -202,10 +202,16 @@
 				$currentUser = null;
 				$isVerified = false;
 
+				$unreadMessages = 0;
+
 				if (session('user_id')) {
 					$currentUser = DB::table('users')->where('id', session('user_id'))->first();
 					if ($currentUser) {
 						$isVerified = $currentUser->prov == 1;
+						$unreadMessages = DB::table('messages')
+							->where('receiver_id', $currentUser->id)
+							->where('is_read', 0)
+							->count();
 					}
 				}
 				?>
@@ -241,7 +247,7 @@
 										
 					@if($currentUser)
 						<!-- Авторизованный пользователь -->
-						<a href="{{ route('profile.index') }}" class="btn btn-outline">Мой профиль</a>
+						<a href="{{ route('profile.index') }}" class="btn btn-outline" style="position: relative;">Мой профиль@if($unreadMessages > 0)<span style="position:absolute; top:-7px; right:-7px; background:#ef4444; color:#fff; min-width:19px; height:19px; padding:0 5px; border-radius:10px; font-size:11px; font-weight:700; display:inline-flex; align-items:center; justify-content:center; box-shadow:0 2px 5px rgba(0,0,0,0.25); line-height:1;">{{ $unreadMessages > 99 ? '99+' : $unreadMessages }}</span>@endif</a>
 						<form method="POST" action="{{ route('logout') }}" style="display: inline;">
 							@csrf
 							<button type="submit" class="btn btn-outline" style="cursor: pointer;">Выйти</button>
@@ -279,7 +285,7 @@
 						
 			@if(session('user_id'))
 				<!-- Авторизованный пользователь -->
-				<a href="{{ route('profile.index') }}" class="btn btn-outline">Мой профиль</a>
+				<a href="{{ route('profile.index') }}" class="btn btn-outline" style="position: relative;">Мой профиль@if($unreadMessages > 0)<span style="position:absolute; top:-7px; right:-7px; background:#ef4444; color:#fff; min-width:19px; height:19px; padding:0 5px; border-radius:10px; font-size:11px; font-weight:700; display:inline-flex; align-items:center; justify-content:center; box-shadow:0 2px 5px rgba(0,0,0,0.25); line-height:1;">{{ $unreadMessages > 99 ? '99+' : $unreadMessages }}</span>@endif</a>
 				<form method="POST" action="{{ route('logout') }}">
 					@csrf
 					<button type="submit" class="btn btn-outline" style="width: 100%; cursor: pointer;">Выйти</button>
