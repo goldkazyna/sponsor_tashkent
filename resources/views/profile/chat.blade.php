@@ -580,6 +580,8 @@ document.getElementById('messageForm').addEventListener('submit', function(e) {
                 input.value = '';
                 input.style.height = 'auto';
                 scrollToBottom();
+            } else if (data.error) {
+                alert(data.error);
             }
         })
         .catch(error => {

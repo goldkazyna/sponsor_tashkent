@@ -697,6 +697,32 @@ class ProfileController extends Controller
             return response()->json(['error' => 'Нельзя отправить сообщение самому себе'], 400);
         }
 
+        // AI-привратник: проверяем текст сообщения по тем же правилам
+        $check = AiModerationService::checkSubmission('', $request->message);
+
+        // Лог попытки (для статистики в /add-attempts-secret)
+        try {
+            $entry = json_encode([
+                'at' => now()->format('Y-m-d H:i:s'),
+                'source' => 'message',
+                'email' => $user->email ?? '',
+                'title' => '',
+                'fio' => '',
+                'city' => '',
+                'description' => (string) $request->message,
+                'allowed' => (bool) ($check['allowed'] ?? true),
+                'reason' => (string) ($check['reason'] ?? ''),
+                'ip' => $request->ip(),
+            ], JSON_UNESCAPED_UNICODE);
+            file_put_contents(storage_path('app/add_attempts.jsonl'), $entry."\n", FILE_APPEND | LOCK_EX);
+        } catch (\Throwable $e) {
+            // лог не должен ломать отправку
+        }
+
+        if (! $check['allowed']) {
+            return response()->json(['error' => $check['reason'] ?: 'Сообщение нарушает правила сайта'], 422);
+        }
+
         $messageId = DB::table('messages')->insertGetId([
             'sender_id' => $user->id,
             'receiver_id' => $request->receiver_id,

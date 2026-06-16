@@ -61,7 +61,12 @@
     @if(count($entries))
     <div class="att-list">
         @foreach($entries as $e)
-        @php $isAnketa = ($e['source'] ?? 'add') === 'anketa'; @endphp
+        @php
+            $src = $e['source'] ?? 'add';
+            $isAnketa = $src === 'anketa';
+            $isMessage = $src === 'message';
+            $srcLabel = $isMessage ? 'Сообщение' : ($isAnketa ? 'Анкета' : 'Объявление');
+        @endphp
         <div class="att-item {{ empty($e['allowed']) ? 'blocked' : '' }}">
             <div class="att-top">
                 @if(empty($e['allowed']))
@@ -69,7 +74,7 @@
                 @else
                     <span class="att-badge ok">Пропущено</span>
                 @endif
-                <span class="att-badge src">{{ $isAnketa ? 'Анкета' : 'Объявление' }}</span>
+                <span class="att-badge src">{{ $srcLabel }}</span>
                 <span class="att-meta">
                     {{ $e['at'] ?? '' }}
                     @if(!empty($e['email'])) · {{ $e['email'] }} @endif
@@ -89,7 +94,7 @@
                     <div class="att-field"><span class="att-flabel">Город:</span> {{ $e['city'] }}</div>
                 @endif
                 @if(!empty($e['description']))
-                    <div class="att-field"><span class="att-flabel">{{ $isAnketa ? 'О себе' : 'Описание' }}:</span> {{ $e['description'] }}</div>
+                    <div class="att-field"><span class="att-flabel">{{ $isMessage ? 'Сообщение' : ($isAnketa ? 'О себе' : 'Описание') }}:</span> {{ $e['description'] }}</div>
                 @endif
             </div>
 
