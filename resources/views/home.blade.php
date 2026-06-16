@@ -31,6 +31,16 @@
             text-align: center;
         }
         .box .icon { font-size: 2.4rem; margin-bottom: 14px; }
+        .box h1 {
+            color: #b91c1c;
+            font-size: 2.4rem;
+            font-weight: 900;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 20px;
+            line-height: 1.15;
+        }
+        @media (max-width: 480px) { .box h1 { font-size: 1.8rem; } }
         .box p {
             color: #334155;
             font-size: 1.15rem;
@@ -46,6 +56,7 @@
 </head>
 <body>
     <div class="box">
+        <h1>Сервис закрыт</h1>
         <div class="icon">💳</div>
         <p>
             <strong>Возврат средств:</strong> если у вас оплачен статус и осталось больше 15 дней —
