@@ -30,6 +30,9 @@
 .att-title { font-weight: 700; color: #1a202c; font-size: 1rem; }
 .att-meta { font-size: 0.78rem; color: #94a3b8; }
 .att-desc { color: #475569; font-size: 0.9rem; line-height: 1.5; margin-top: 4px; white-space: pre-wrap; word-break: break-word; }
+.att-fields { margin-top: 8px; display: flex; flex-direction: column; gap: 5px; }
+.att-field { color: #334155; font-size: 0.92rem; line-height: 1.5; white-space: pre-wrap; word-break: break-word; }
+.att-flabel { color: #94a3b8; font-weight: 700; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.3px; margin-right: 4px; }
 .att-reason {
     margin-top: 8px; background: #fef2f2; border: 1px solid #fca5a5; color: #991b1b;
     border-radius: 8px; padding: 8px 10px; font-size: 0.85rem;
@@ -58,6 +61,7 @@
     @if(count($entries))
     <div class="att-list">
         @foreach($entries as $e)
+        @php $isAnketa = ($e['source'] ?? 'add') === 'anketa'; @endphp
         <div class="att-item {{ empty($e['allowed']) ? 'blocked' : '' }}">
             <div class="att-top">
                 @if(empty($e['allowed']))
@@ -65,21 +69,32 @@
                 @else
                     <span class="att-badge ok">Пропущено</span>
                 @endif
-                <span class="att-badge src">{{ ($e['source'] ?? 'add') === 'anketa' ? 'Анкета' : 'Объявление' }}</span>
-                <span class="att-title">{{ $e['title'] ?? '' }}</span>
+                <span class="att-badge src">{{ $isAnketa ? 'Анкета' : 'Объявление' }}</span>
                 <span class="att-meta">
                     {{ $e['at'] ?? '' }}
-                    @if(!empty($e['city'])) · {{ $e['city'] }} @endif
-                    @if(!empty($e['fio'])) · {{ $e['fio'] }} @endif
                     @if(!empty($e['email'])) · {{ $e['email'] }} @endif
-                    @if(!empty($e['ip'])) · {{ $e['ip'] }} @endif
+                    @if(!empty($e['ip'])) · IP {{ $e['ip'] }} @endif
                 </span>
             </div>
-            @if(!empty($e['description']))
-                <div class="att-desc">{{ $e['description'] }}</div>
-            @endif
-            @if(empty($e['allowed']) && !empty($e['reason']))
-                <div class="att-reason">⛔ {{ $e['reason'] }}</div>
+
+            {{-- Что пытались вписать, по полям --}}
+            <div class="att-fields">
+                @if(!empty($e['title']))
+                    <div class="att-field"><span class="att-flabel">{{ $isAnketa ? 'Имя' : 'Заголовок' }}:</span> {{ $e['title'] }}</div>
+                @endif
+                @if(!empty($e['fio']))
+                    <div class="att-field"><span class="att-flabel">ФИО:</span> {{ $e['fio'] }}</div>
+                @endif
+                @if(!empty($e['city']))
+                    <div class="att-field"><span class="att-flabel">Город:</span> {{ $e['city'] }}</div>
+                @endif
+                @if(!empty($e['description']))
+                    <div class="att-field"><span class="att-flabel">{{ $isAnketa ? 'О себе' : 'Описание' }}:</span> {{ $e['description'] }}</div>
+                @endif
+            </div>
+
+            @if(empty($e['allowed']))
+                <div class="att-reason"><strong>⛔ Причина отказа:</strong> {{ $e['reason'] ?: 'не указана' }}</div>
             @endif
         </div>
         @endforeach
