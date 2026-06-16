@@ -217,14 +217,6 @@
             </div>
 
             <div class="form-group">
-                <label class="form-label">ФИО или Имя</label>
-                <input type="text" name="fio" class="form-input" value="{{ $user->fio ?? '' }}" placeholder="Введите ваше имя">
-                <small style="color: #94a3b8; font-size: 0.85rem; display: block; margin-top: 0.5rem;">
-                    Это имя будет отображаться в ваших объявлениях
-                </small>
-            </div>
-
-            <div class="form-group">
                 <label class="form-label">Телефон</label>
                 <input type="text" name="phone" class="form-input" value="{{ $user->phone ?? '' }}" placeholder="+7 700 123 45 67">
                 <small style="color: #94a3b8; font-size: 0.85rem; display: block; margin-top: 0.5rem;">

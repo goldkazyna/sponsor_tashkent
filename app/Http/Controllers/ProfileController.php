@@ -194,11 +194,9 @@ class ProfileController extends Controller
         }
 
         $request->validate([
-            'fio' => 'nullable|string|max:255',
             'phone' => 'nullable|string|max:20',
             'telegram_username' => 'nullable|string|max:100|regex:/^[a-zA-Z0-9_]+$/',
         ], [
-            'fio.max' => 'ФИО не должно превышать 255 символов',
             'phone.max' => 'Телефон не должен превышать 20 символов',
             'telegram_username.max' => 'Telegram username не должен превышать 100 символов',
             'telegram_username.regex' => 'Telegram username может содержать только буквы, цифры и подчеркивание',
@@ -213,7 +211,6 @@ class ProfileController extends Controller
         DB::table('users')
             ->where('id', session('user_id'))
             ->update([
-                'fio' => $request->input('fio'),
                 'phone' => $request->input('phone'),
                 'telegram_username' => $telegramUsername,
             ]);
