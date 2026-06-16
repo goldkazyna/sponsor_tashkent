@@ -14,10 +14,35 @@ class PostController extends Controller
     // Показать главную страницу со списком объявлений
     public function index(Request $request)
     {
-        // Главная — обычный сайт знакомств (анкеты).
-        // Старая логика объявлений (посты, ТОП, инкремент просмотров) удалена.
-        // Layout сам вычисляет $currentUser/$isVerified; city-filter тянет города сам.
-        return view('home');
+        // Главная — обычный сайт знакомств: сетка анкет из таблицы profiles.
+        $selectedCity = $request->get('city', 'all');
+        $selectedWho = $request->get('who', 'all');
+
+        $query = DB::table('profiles')
+            ->join('users', 'profiles.user_id', '=', 'users.id')
+            ->leftJoin('city', 'profiles.city_id', '=', 'city.id')
+            ->select(
+                'profiles.name',
+                'profiles.birthdate',
+                'profiles.photo',
+                'profiles.city_id',
+                'users.sex',
+                'city.title as city_name'
+            );
+
+        // Фильтр «Кого ищу» (1=мужчину, 2=девушку) — по полу анкеты
+        if (in_array($selectedWho, ['1', '2'], true)) {
+            $query->where('users.sex', $selectedWho);
+        }
+
+        // Фильтр по городу
+        if ($selectedCity !== 'all' && ! empty($selectedCity)) {
+            $query->where('profiles.city_id', $selectedCity);
+        }
+
+        $profiles = $query->orderByDesc('profiles.id')->limit(60)->get();
+
+        return view('home', ['profiles' => $profiles]);
     }
 
     // Показать детальную страницу объявления

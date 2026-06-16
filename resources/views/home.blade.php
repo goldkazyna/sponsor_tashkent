@@ -6,30 +6,10 @@
 
 @section('content')
 
-{{-- ТЕСТОВЫЙ ДИЗАЙН АНКЕТ (примерные данные). Старые объявления ниже спрятаны в @if(false). --}}
+{{-- Анкеты сайта знакомств (данные из таблицы profiles, передаются контроллером) --}}
 @php
-// sex: 1 = мужчина, 2 = женщина; has_photo — есть ли загруженное фото
-$testProfiles = [
-    ['name' => 'Анна',     'age' => 24, 'city' => 'Алматы',    'sex' => 2, 'has_photo' => true],
-    ['name' => 'Дарья',    'age' => 27, 'city' => 'Астана',    'sex' => 2, 'has_photo' => false],
-    ['name' => 'Игорь',    'age' => 34, 'city' => 'Алматы',    'sex' => 1, 'has_photo' => false],
-    ['name' => 'Карина',   'age' => 22, 'city' => 'Шымкент',   'sex' => 2, 'has_photo' => true],
-    ['name' => 'Мария',    'age' => 25, 'city' => 'Алматы',    'sex' => 2, 'has_photo' => true],
-    ['name' => 'Дмитрий',  'age' => 29, 'city' => 'Астана',    'sex' => 1, 'has_photo' => true],
-    ['name' => 'Виктория', 'age' => 31, 'city' => 'Актобе',    'sex' => 2, 'has_photo' => false],
-    ['name' => 'Софья',    'age' => 26, 'city' => 'Тараз',     'sex' => 2, 'has_photo' => false],
-    ['name' => 'Андрей',   'age' => 38, 'city' => 'Караганда', 'sex' => 1, 'has_photo' => false],
-    ['name' => 'Елена',    'age' => 28, 'city' => 'Павлодар',  'sex' => 2, 'has_photo' => true],
-    ['name' => 'Айгерим',  'age' => 21, 'city' => 'Алматы',    'sex' => 2, 'has_photo' => false],
-    ['name' => 'Камила',   'age' => 24, 'city' => 'Шымкент',   'sex' => 2, 'has_photo' => true],
-];
 $isRegistered = (bool) session('user_id');
-
-// Фильтр «Кого ищу» (who: 1=мужчину, 2=девушку) применяем к тестовым анкетам по полу
-$selectedWho = request()->get('who', 'all');
-$visibleProfiles = $selectedWho === 'all'
-    ? $testProfiles
-    : array_values(array_filter($testProfiles, fn ($p) => (string) $p['sex'] === (string) $selectedWho));
+$visibleProfiles = $profiles ?? collect();
 @endphp
 
 <style>
@@ -96,10 +76,12 @@ $visibleProfiles = $selectedWho === 'all'
     <div class="profiles-grid">
         @forelse($visibleProfiles as $p)
         @php
-            $locked = $p['has_photo'] && ! $isRegistered;
+            $hasPhoto = ! empty($p->photo);
+            $locked = $hasPhoto && ! $isRegistered;
+            $age = $p->birthdate ? \Carbon\Carbon::parse($p->birthdate)->age : null;
             if ($locked) {
                 $bg = 'linear-gradient(135deg,#475569,#1e293b)';
-            } elseif ($p['sex'] == 1) {
+            } elseif ($p->sex == 1) {
                 $bg = 'linear-gradient(135deg,#4facfe,#0066ff)';
             } else {
                 $bg = 'linear-gradient(135deg,#f6a5c0,#f5576c)';
@@ -107,12 +89,14 @@ $visibleProfiles = $selectedWho === 'all'
         @endphp
         <div class="profile-card">
             <div class="profile-photo {{ $locked ? 'locked' : '' }}" style="background: {{ $bg }};">
-                @if($locked)
+                @if($hasPhoto && $isRegistered)
+                    <img src="{{ asset($p->photo) }}" alt="{{ $p->name }}" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0;">
+                @elseif($locked)
                     <div class="lock-overlay">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12,17A2,2 0 0,0 14,15C14,13.89 13.1,13 12,13A2,2 0 0,0 10,15A2,2 0 0,0 12,17M18,8A2,2 0 0,1 20,10V20A2,2 0 0,1 18,22H6A2,2 0 0,1 4,20V10C4,8.89 4.9,8 6,8H7V6A5,5 0 0,1 12,1A5,5 0 0,1 17,6V8H18M12,3A3,3 0 0,0 9,6V8H15V6A3,3 0 0,0 12,3Z"/></svg>
                         <span>Зарегистрируйтесь,<br>чтобы посмотреть фото</span>
                     </div>
-                @elseif($p['sex'] == 1)
+                @elseif($p->sex == 1)
                     {{-- Аватар мужчины --}}
                     <svg class="avatar-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><g transform="translate(2.5,0)"><path d="M9.5,5.5A1.5,1.5 0 0,1 8,4A1.5,1.5 0 0,1 9.5,2.5A1.5,1.5 0 0,1 11,4A1.5,1.5 0 0,1 9.5,5.5M9.5,7C11.43,7 13,8.57 13,10.5V16H11V22H8V16H6V10.5C6,8.57 7.57,7 9.5,7Z"/></g></svg>
                 @else
@@ -121,10 +105,10 @@ $visibleProfiles = $selectedWho === 'all'
                 @endif
             </div>
             <div class="profile-info">
-                <div class="profile-name">{{ $p['name'] }}, {{ $p['age'] }}</div>
+                <div class="profile-name">{{ $p->name }}@if($age), {{ $age }}@endif</div>
                 <div class="profile-city">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12,11.5A2.5,2.5 0 0,1 9.5,9A2.5,2.5 0 0,1 12,6.5A2.5,2.5 0 0,1 14.5,9A2.5,2.5 0 0,1 12,11.5M12,2A7,7 0 0,0 5,9C5,14.25 12,22 12,22C12,22 19,14.25 19,9A7,7 0 0,0 12,2Z"/></svg>
-                    {{ $p['city'] }}
+                    {{ $p->city_name ?? '—' }}
                 </div>
             </div>
         </div>
