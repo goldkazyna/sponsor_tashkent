@@ -70,6 +70,10 @@
             <div class="alert-success">{{ session('success') }}</div>
         @endif
 
+        @if(session('error'))
+            <div class="alert-errors" style="font-weight:600;">{{ session('error') }}</div>
+        @endif
+
         @if($errors->has('ai'))
             <div class="alert-errors">
                 @php $aiReasons = array_values(array_filter(array_map('trim', preg_split('/\s*\|\s*/', $errors->first('ai'))))); @endphp

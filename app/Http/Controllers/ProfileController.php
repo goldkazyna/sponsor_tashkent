@@ -509,6 +509,11 @@ class ProfileController extends Controller
             return redirect()->route('login')->with('error', 'Необходимо авторизоваться');
         }
 
+        // Нет анкеты — сообщения недоступны
+        if (! DB::table('profiles')->where('user_id', session('user_id'))->exists()) {
+            return redirect()->route('profile.anketa')->with('error', 'Чтобы читать сообщения, создайте анкету');
+        }
+
         $user = DB::table('users')->where('id', session('user_id'))->first();
 
         // Получаем список уникальных собеседников
