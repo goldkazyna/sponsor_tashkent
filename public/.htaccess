@@ -5,6 +5,10 @@
 
     RewriteEngine On
 
+    # Редирект со старого домена на новый (301), путь и параметры сохраняются
+    RewriteCond %{HTTP_HOST} ^(www\.)?xn--4-ytbcbcjcd6g\.org$ [NC]
+    RewriteRule ^(.*)$ https://xn--80aafsqmek2ak.kz/$1 [R=301,L]
+
     # Handle Authorization Header
     RewriteCond %{HTTP:Authorization} .
     RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
