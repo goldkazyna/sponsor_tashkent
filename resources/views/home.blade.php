@@ -8,20 +8,22 @@
 
 {{-- ТЕСТОВЫЙ ДИЗАЙН АНКЕТ (примерные данные). Старые объявления ниже спрятаны в @if(false). --}}
 @php
+// sex: 1 = мужчина, 2 = женщина; has_photo — есть ли загруженное фото
 $testProfiles = [
-    ['name' => 'Анна',     'age' => 24, 'city' => 'Алматы',    'g' => ['#fda085', '#f6d365']],
-    ['name' => 'Дарья',    'age' => 27, 'city' => 'Астана',    'g' => ['#a18cd1', '#fbc2eb']],
-    ['name' => 'Карина',   'age' => 22, 'city' => 'Шымкент',   'g' => ['#84fab0', '#8fd3f4']],
-    ['name' => 'Алина',    'age' => 29, 'city' => 'Караганда', 'g' => ['#ff9a9e', '#fecfef']],
-    ['name' => 'Мария',    'age' => 25, 'city' => 'Алматы',    'g' => ['#f093fb', '#f5576c']],
-    ['name' => 'Виктория', 'age' => 31, 'city' => 'Актобе',    'g' => ['#4facfe', '#00f2fe']],
-    ['name' => 'Жанна',    'age' => 23, 'city' => 'Астана',    'g' => ['#43e97b', '#38f9d7']],
-    ['name' => 'Софья',    'age' => 26, 'city' => 'Тараз',     'g' => ['#fa709a', '#fee140']],
-    ['name' => 'Елена',    'age' => 28, 'city' => 'Павлодар',  'g' => ['#30cfd0', '#330867']],
-    ['name' => 'Айгерим',  'age' => 21, 'city' => 'Алматы',    'g' => ['#a8edea', '#fed6e3']],
-    ['name' => 'Ольга',    'age' => 30, 'city' => 'Усть-Каменогорск', 'g' => ['#ffecd2', '#fcb69f']],
-    ['name' => 'Камила',   'age' => 24, 'city' => 'Шымкент',   'g' => ['#c471f5', '#fa71cd']],
+    ['name' => 'Анна',     'age' => 24, 'city' => 'Алматы',    'sex' => 2, 'has_photo' => true],
+    ['name' => 'Дарья',    'age' => 27, 'city' => 'Астана',    'sex' => 2, 'has_photo' => false],
+    ['name' => 'Игорь',    'age' => 34, 'city' => 'Алматы',    'sex' => 1, 'has_photo' => false],
+    ['name' => 'Карина',   'age' => 22, 'city' => 'Шымкент',   'sex' => 2, 'has_photo' => true],
+    ['name' => 'Мария',    'age' => 25, 'city' => 'Алматы',    'sex' => 2, 'has_photo' => true],
+    ['name' => 'Дмитрий',  'age' => 29, 'city' => 'Астана',    'sex' => 1, 'has_photo' => true],
+    ['name' => 'Виктория', 'age' => 31, 'city' => 'Актобе',    'sex' => 2, 'has_photo' => false],
+    ['name' => 'Софья',    'age' => 26, 'city' => 'Тараз',     'sex' => 2, 'has_photo' => false],
+    ['name' => 'Андрей',   'age' => 38, 'city' => 'Караганда', 'sex' => 1, 'has_photo' => false],
+    ['name' => 'Елена',    'age' => 28, 'city' => 'Павлодар',  'sex' => 2, 'has_photo' => true],
+    ['name' => 'Айгерим',  'age' => 21, 'city' => 'Алматы',    'sex' => 2, 'has_photo' => false],
+    ['name' => 'Камила',   'age' => 24, 'city' => 'Шымкент',   'sex' => 2, 'has_photo' => true],
 ];
+$isRegistered = (bool) session('user_id');
 @endphp
 
 <style>
@@ -51,7 +53,10 @@ $testProfiles = [
     align-items: center;
     justify-content: center;
 }
-.profile-photo svg { width: 46%; height: 46%; fill: rgba(255,255,255,0.85); }
+.profile-photo .avatar-icon { width: 50%; height: 50%; fill: rgba(255,255,255,0.9); }
+.lock-overlay { text-align: center; color: #fff; padding: 12px; }
+.lock-overlay svg { width: 34px; height: 34px; fill: rgba(255,255,255,0.92); margin-bottom: 8px; }
+.lock-overlay span { display: block; font-size: 0.8rem; line-height: 1.35; font-weight: 600; opacity: 0.96; }
 .profile-info { padding: 12px 14px 14px; }
 .profile-name {
     font-size: 1.05rem;
@@ -82,9 +87,30 @@ $testProfiles = [
 
     <div class="profiles-grid">
         @foreach($testProfiles as $p)
+        @php
+            $locked = $p['has_photo'] && ! $isRegistered;
+            if ($locked) {
+                $bg = 'linear-gradient(135deg,#475569,#1e293b)';
+            } elseif ($p['sex'] == 1) {
+                $bg = 'linear-gradient(135deg,#4facfe,#0066ff)';
+            } else {
+                $bg = 'linear-gradient(135deg,#f6a5c0,#f5576c)';
+            }
+        @endphp
         <div class="profile-card">
-            <div class="profile-photo" style="background: linear-gradient(135deg, {{ $p['g'][0] }}, {{ $p['g'][1] }});">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12,12A5,5 0 0,0 17,7A5,5 0 0,0 12,2A5,5 0 0,0 7,7A5,5 0 0,0 12,12M12,14C8.67,14 2,15.67 2,19V22H22V19C22,15.67 15.33,14 12,14Z"/></svg>
+            <div class="profile-photo {{ $locked ? 'locked' : '' }}" style="background: {{ $bg }};">
+                @if($locked)
+                    <div class="lock-overlay">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12,17A2,2 0 0,0 14,15C14,13.89 13.1,13 12,13A2,2 0 0,0 10,15A2,2 0 0,0 12,17M18,8A2,2 0 0,1 20,10V20A2,2 0 0,1 18,22H6A2,2 0 0,1 4,20V10C4,8.89 4.9,8 6,8H7V6A5,5 0 0,1 12,1A5,5 0 0,1 17,6V8H18M12,3A3,3 0 0,0 9,6V8H15V6A3,3 0 0,0 12,3Z"/></svg>
+                        <span>Зарегистрируйтесь,<br>чтобы посмотреть фото</span>
+                    </div>
+                @elseif($p['sex'] == 1)
+                    {{-- Аватар мужчины --}}
+                    <svg class="avatar-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><g transform="translate(2.5,0)"><path d="M9.5,5.5A1.5,1.5 0 0,1 8,4A1.5,1.5 0 0,1 9.5,2.5A1.5,1.5 0 0,1 11,4A1.5,1.5 0 0,1 9.5,5.5M9.5,7C11.43,7 13,8.57 13,10.5V16H11V22H8V16H6V10.5C6,8.57 7.57,7 9.5,7Z"/></g></svg>
+                @else
+                    {{-- Аватар женщины --}}
+                    <svg class="avatar-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13.94,8.31C13.62,7.52 12.85,7 12,7C11.15,7 10.39,7.52 10.06,8.31L7,16H9.5V22H14.5V16H17M12,2A2,2 0 0,1 14,4A2,2 0 0,1 12,6A2,2 0 0,1 10,4A2,2 0 0,1 12,2Z"/></svg>
+                @endif
             </div>
             <div class="profile-info">
                 <div class="profile-name">{{ $p['name'] }}, {{ $p['age'] }}</div>
