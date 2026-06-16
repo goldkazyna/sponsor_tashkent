@@ -574,6 +574,27 @@ class ProfileController extends Controller
         ]);
     }
 
+    // Удаление переписки с собеседником (удаляет все сообщения между двумя пользователями)
+    public function deleteConversation($interlocutorId)
+    {
+        if (! session('user_id')) {
+            return redirect()->route('login')->with('error', 'Необходимо авторизоваться');
+        }
+
+        $userId = session('user_id');
+
+        DB::table('messages')
+            ->where(function ($q) use ($userId, $interlocutorId) {
+                $q->where('sender_id', $userId)->where('receiver_id', $interlocutorId);
+            })
+            ->orWhere(function ($q) use ($userId, $interlocutorId) {
+                $q->where('sender_id', $interlocutorId)->where('receiver_id', $userId);
+            })
+            ->delete();
+
+        return redirect()->route('profile.messages')->with('success', 'Переписка удалена');
+    }
+
     public function messagesChat($interlocutorId)
     {
         if (! session('user_id')) {

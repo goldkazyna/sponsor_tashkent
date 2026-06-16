@@ -71,9 +71,10 @@
     box-shadow: 0 4px 16px rgba(0,0,0,0.08);
 }
 
+.conversation-row { border-bottom: 1px solid #f1f5f9; }
+.conversation-row:last-child { border-bottom: none; }
 .conversation-item {
     padding: 1.5rem;
-    border-bottom: 1px solid #f1f5f9;
     display: flex;
     gap: 1rem;
     align-items: start;
@@ -82,6 +83,14 @@
     text-decoration: none;
     color: inherit;
 }
+.conv-delete {
+    width: 34px; height: 34px; border: none; border-radius: 9px;
+    background: #f8fafc; color: #94a3b8; cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center;
+    transition: all 0.2s;
+}
+.conv-delete svg { width: 18px; height: 18px; fill: currentColor; }
+.conv-delete:hover { background: #fee2e2; color: #dc2626; }
 
 .conversation-item:hover {
     background: #f8fafc;
@@ -295,6 +304,10 @@
         </a>
     </div>
 
+    @if(session('success'))
+        <div style="background:#d1fae5; border:2px solid #6ee7b7; color:#065f46; padding:0.9rem 1.1rem; border-radius:10px; margin-bottom:1rem;">{{ session('success') }}</div>
+    @endif
+
     @if(isset($conversations) && count($conversations) > 0)
         <!-- Список диалогов -->
         <div class="conversations-list">
@@ -304,38 +317,48 @@
                     $displayName = $conversation->interlocutor->display_name ?? ($conversation->interlocutor->fio ?: $emailUser);
                     $initials = mb_strtoupper(mb_substr($displayName, 0, 2));
                 @endphp
-                <a href="{{ route('profile.messages.chat', $conversation->interlocutor->id ?? 0) }}"
-                   class="conversation-item {{ $conversation->unread_count > 0 ? 'unread' : '' }}">
-                    <div class="conversation-avatar {{ ($conversation->interlocutor->sex ?? 1) == 1 ? 'male' : 'female' }}">
-                        <span class="avatar-initials">{{ $initials }}</span>
-                    </div>
-                    <div class="conversation-content">
-                        <div class="conversation-header">
-                            <div class="conversation-name">
-                                {{ $displayName }}
-                            </div>
-                            <div class="conversation-time">
-                                {{ \Carbon\Carbon::parse($conversation->last_message_time)->diffForHumans() }}
-                            </div>
+                <div class="conversation-row" style="position:relative;">
+                    <a href="{{ route('profile.messages.chat', $conversation->interlocutor->id ?? 0) }}"
+                       class="conversation-item {{ $conversation->unread_count > 0 ? 'unread' : '' }}" style="padding-right:48px;">
+                        <div class="conversation-avatar {{ ($conversation->interlocutor->sex ?? 1) == 1 ? 'male' : 'female' }}">
+                            <span class="avatar-initials">{{ $initials }}</span>
                         </div>
-                        <div class="conversation-message">
-                            {{ Str::limit($conversation->last_message, 60) }}
-                        </div>
-                        <div class="conversation-meta">
-                            @if(isset($conversation->post))
-                                <div class="conversation-post">
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                                        <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2Z"/>
-                                    </svg>
-                                    {{ Str::limit($conversation->post->title, 30) }}
+                        <div class="conversation-content">
+                            <div class="conversation-header">
+                                <div class="conversation-name">
+                                    {{ $displayName }}
                                 </div>
-                            @endif
-                            @if($conversation->unread_count > 0)
-                                <div class="unread-badge">{{ $conversation->unread_count }} новых</div>
-                            @endif
+                                <div class="conversation-time">
+                                    {{ \Carbon\Carbon::parse($conversation->last_message_time)->diffForHumans() }}
+                                </div>
+                            </div>
+                            <div class="conversation-message">
+                                {{ Str::limit($conversation->last_message, 60) }}
+                            </div>
+                            <div class="conversation-meta">
+                                @if(isset($conversation->post))
+                                    <div class="conversation-post">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                            <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2Z"/>
+                                        </svg>
+                                        {{ Str::limit($conversation->post->title, 30) }}
+                                    </div>
+                                @endif
+                                @if($conversation->unread_count > 0)
+                                    <div class="unread-badge">{{ $conversation->unread_count }} новых</div>
+                                @endif
+                            </div>
                         </div>
-                    </div>
-                </a>
+                    </a>
+                    <form method="POST" action="{{ route('profile.messages.delete', $conversation->interlocutor->id ?? 0) }}"
+                          onsubmit="return confirm('Удалить переписку? Сообщения будут удалены безвозвратно.');"
+                          style="position:absolute; top:50%; right:12px; transform:translateY(-50%); margin:0;">
+                        @csrf
+                        <button type="submit" class="conv-delete" title="Удалить переписку" aria-label="Удалить переписку">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"/></svg>
+                        </button>
+                    </form>
+                </div>
             @endforeach
         </div>
     @else

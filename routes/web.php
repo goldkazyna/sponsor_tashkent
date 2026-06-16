@@ -185,6 +185,7 @@ Route::middleware(['web'])->group(function () {
     // AJAX методы для сообщений
     Route::get('/profile/messages', [ProfileController::class, 'messages'])->name('profile.messages');
     Route::get('/profile/messages/chat/{id}', [ProfileController::class, 'messagesChat'])->name('profile.messages.chat');
+    Route::post('/profile/messages/delete/{id}', [ProfileController::class, 'deleteConversation'])->name('profile.messages.delete');
     Route::post('/profile/messages/send', [ProfileController::class, 'sendMessage'])->name('profile.messages.send');
     Route::get('/profile/messages/new/{id}', [ProfileController::class, 'getNewMessages'])->name('profile.messages.new');
     Route::get('/profile/messages/unread-count', [ProfileController::class, 'getUnreadCount'])->name('profile.messages.unread');
