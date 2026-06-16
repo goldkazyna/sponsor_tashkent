@@ -101,6 +101,12 @@ class ProfileController extends Controller
             'photo.max' => 'Фото слишком большое (макс. 20 МБ)',
         ]);
 
+        // AI-привратник: проверяем имя и «о себе» по тем же правилам, что и объявления
+        $check = AiModerationService::checkSubmission($request->name, $request->about ?? '');
+        if (! $check['allowed']) {
+            return back()->withErrors(['ai' => $check['reason']])->withInput();
+        }
+
         $existing = DB::table('profiles')->where('user_id', $user->id)->first();
         $photoPath = $existing->photo ?? null;
 
