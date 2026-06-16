@@ -22,6 +22,8 @@ class PostController extends Controller
             ->join('users', 'profiles.user_id', '=', 'users.id')
             ->leftJoin('city', 'profiles.city_id', '=', 'city.id')
             ->select(
+                'profiles.id',
+                'profiles.user_id',
                 'profiles.name',
                 'profiles.birthdate',
                 'profiles.photo',
@@ -43,6 +45,30 @@ class PostController extends Controller
         $profiles = $query->orderByDesc('profiles.id')->limit(60)->get();
 
         return view('home', ['profiles' => $profiles]);
+    }
+
+    // Страница анкеты (профиль для сайта знакомств)
+    public function showProfile($id)
+    {
+        $profile = DB::table('profiles')
+            ->join('users', 'profiles.user_id', '=', 'users.id')
+            ->leftJoin('city', 'profiles.city_id', '=', 'city.id')
+            ->where('profiles.id', $id)
+            ->select('profiles.*', 'users.sex', 'city.title as city_name')
+            ->first();
+
+        if (! $profile) {
+            abort(404);
+        }
+
+        $isRegistered = (bool) session('user_id');
+        $isOwner = session('user_id') && (int) session('user_id') === (int) $profile->user_id;
+
+        return view('profile-show', [
+            'profile' => $profile,
+            'isRegistered' => $isRegistered,
+            'isOwner' => $isOwner,
+        ]);
     }
 
     // Показать детальную страницу объявления

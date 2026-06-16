@@ -87,7 +87,7 @@ $visibleProfiles = $profiles ?? collect();
                 $bg = 'linear-gradient(135deg,#f6a5c0,#f5576c)';
             }
         @endphp
-        <div class="profile-card">
+        <a href="{{ route('profile.show', $p->id) }}" class="profile-card" style="text-decoration:none; color:inherit;">
             <div class="profile-photo {{ $locked ? 'locked' : '' }}" style="background: {{ $bg }};">
                 @if($hasPhoto && $isRegistered)
                     <img src="{{ asset($p->photo) }}" alt="{{ $p->name }}" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0;">
@@ -111,7 +111,7 @@ $visibleProfiles = $profiles ?? collect();
                     {{ $p->city_name ?? '—' }}
                 </div>
             </div>
-        </div>
+        </a>
         @empty
         <div style="grid-column:1/-1; text-align:center; color:#64748b; padding:40px 0;">Анкеты не найдены.</div>
         @endforelse

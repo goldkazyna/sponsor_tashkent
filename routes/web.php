@@ -141,6 +141,9 @@ Route::get('/add', [PostController::class, 'create'])->name('post.create');
 Route::post('/add', [PostController::class, 'store'])->name('post.store');
 Route::get('/post/detail/{id}', [PostController::class, 'show'])->name('post.detail');
 
+// Страница анкеты (профиль для сайта знакомств)
+Route::get('/anketa/{id}', [PostController::class, 'showProfile'])->name('profile.show');
+
 // Личный кабинет (требует авторизации)
 Route::middleware(['web'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'index'])->name('profile.index');
