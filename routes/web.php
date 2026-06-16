@@ -65,6 +65,35 @@ Route::get('/for-sale-stats-secret', function () {
     ]);
 });
 
+// Создание таблицы profiles на проде (нет CLI). Идемпотентно. Открыть один раз.
+Route::get('/create-profiles-table-secret', function () {
+    try {
+        DB::statement("
+            CREATE TABLE IF NOT EXISTS profiles (
+                id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+                user_id INT NOT NULL,
+                name VARCHAR(100) NOT NULL,
+                birthdate DATE NOT NULL,
+                city_id INT NOT NULL,
+                photo VARCHAR(255) NULL,
+                about TEXT NULL,
+                created_at TIMESTAMP NULL DEFAULT NULL,
+                updated_at TIMESTAMP NULL DEFAULT NULL,
+                PRIMARY KEY (id),
+                UNIQUE KEY uq_profiles_user (user_id)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+        ");
+
+        $exists = DB::getSchemaBuilder()->hasTable('profiles');
+
+        return response('Таблица profiles: '.($exists ? 'OK (создана или уже была)' : 'НЕ создана'), 200)
+            ->header('Content-Type', 'text/plain; charset=utf-8');
+    } catch (\Throwable $e) {
+        return response('Ошибка: '.$e->getMessage(), 500)
+            ->header('Content-Type', 'text/plain; charset=utf-8');
+    }
+});
+
 // Лог попыток добавления объявлений (секретный роут) — что люди пытались добавить
 Route::get('/add-attempts-secret', function () {
     $file = storage_path('app/add_attempts.jsonl');
