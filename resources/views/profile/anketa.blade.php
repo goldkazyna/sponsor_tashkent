@@ -190,6 +190,15 @@
                 <textarea name="about" class="form-textarea" maxlength="2000" placeholder="Расскажите о себе...">{{ old('about', $profile->about ?? '') }}</textarea>
             </div>
 
+            <div class="form-group" style="display:flex; align-items:flex-start; gap:10px;">
+                <input type="checkbox" name="agree" id="agree" value="1" required
+                       {{ old('agree', $profile ? '1' : '') ? 'checked' : '' }}
+                       style="margin-top:3px; width:18px; height:18px; flex-shrink:0; cursor:pointer;">
+                <label for="agree" style="font-size:0.9rem; color:#475569; line-height:1.5; cursor:pointer;">
+                    Я согласен с <a href="{{ route('rules') }}" target="_blank" style="color:#f59e0b; font-weight:700;">правилами сайта</a>
+                </label>
+            </div>
+
             <button type="submit" class="btn-save">Сохранить анкету</button>
         </form>
 
@@ -200,6 +209,11 @@
             <button type="submit" class="btn-delete-anketa">🗑 Удалить анкету</button>
         </form>
         @endif
+
+        <div style="text-align:center; margin-top:18px; color:#64748b; font-size:0.9rem; line-height:1.5;">
+            Если есть вопросы — пишите в Telegram
+            <a href="https://t.me/meets_admin" target="_blank" style="color:#0088cc; font-weight:700; text-decoration:none;">@meets_admin</a>
+        </div>
     </div>
 </div>
 

@@ -92,7 +92,9 @@ class ProfileController extends Controller
             'body_type' => 'nullable|in:'.implode(',', array_keys(config('profile_options.body_type'))),
             'height' => 'nullable|integer|min:100|max:250',
             'weight' => 'nullable|integer|min:30|max:300',
+            'agree' => 'accepted',
         ], [
+            'agree.accepted' => 'Подтвердите согласие с правилами сайта',
             'name.required' => 'Укажите имя',
             'name.min' => 'Имя слишком короткое',
             'name.max' => 'Имя слишком длинное (макс. 30 символов)',
