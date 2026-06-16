@@ -16,6 +16,7 @@ Disallow: /debug-log-secret
 Disallow: /for-sale-stats-secret
 Disallow: /add-attempts-secret
 Disallow: /create-profiles-table-secret
+Disallow: /create-sessions-table-secret
 Disallow: /cron/
 Disallow: /password/
 Disallow: /payment-instruction

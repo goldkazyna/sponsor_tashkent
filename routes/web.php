@@ -65,6 +65,35 @@ Route::get('/for-sale-stats-secret', function () {
     ]);
 });
 
+// Создание таблицы sessions на проде (для драйвера SESSION_DRIVER=database).
+// Без неё логин падает с ошибкой 419. Идемпотентно. Открыть один раз.
+Route::get('/create-sessions-table-secret', function () {
+    try {
+        DB::statement("
+            CREATE TABLE IF NOT EXISTS sessions (
+                id VARCHAR(255) NOT NULL,
+                user_id BIGINT UNSIGNED NULL,
+                ip_address VARCHAR(45) NULL,
+                user_agent TEXT NULL,
+                payload LONGTEXT NOT NULL,
+                last_activity INT NOT NULL,
+                PRIMARY KEY (id),
+                INDEX sessions_user_id_index (user_id),
+                INDEX sessions_last_activity_index (last_activity)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+        ");
+
+        $exists = DB::getSchemaBuilder()->hasTable('sessions');
+
+        return response('Таблица sessions: '.($exists ? 'OK (создана или уже была)' : 'НЕ создана')
+            .'. Теперь очистите кеш: /clear-cache-secret', 200)
+            ->header('Content-Type', 'text/plain; charset=utf-8');
+    } catch (\Throwable $e) {
+        return response('Ошибка: '.$e->getMessage(), 500)
+            ->header('Content-Type', 'text/plain; charset=utf-8');
+    }
+});
+
 // Создание таблицы profiles на проде (нет CLI). Идемпотентно. Открыть один раз.
 Route::get('/create-profiles-table-secret', function () {
     try {
