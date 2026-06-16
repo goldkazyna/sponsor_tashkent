@@ -10,52 +10,29 @@ use Intervention\Image\ImageManager;
 
 class ProfileController extends Controller
 {
-    // Главная страница профиля (перенаправляет на мои объявления)
+    // Личный кабинет (главная страница профиля)
     public function index()
     {
-        return redirect()->route('profile.posts');
-    }
-
-    // Мои объявления
-    public function myPosts()
-    {
-        // Проверяем авторизацию
         if (! session('user_id')) {
             return redirect()->route('login')->with('error', 'Необходимо авторизоваться');
         }
 
-        // Получаем данные пользователя
         $user = DB::table('users')->where('id', session('user_id'))->first();
-
-        // Получаем объявления пользователя
-        $posts = DB::table('post')
-            ->where('email', $user->email)
-            ->where('del', 0)
-            ->orderBy('date', 'desc')
-            ->get();
-
-        // Получаем ID постов в активном топе
-        $topPostIds = DB::table('top_post')
-            ->where('date_end', '>=', now())
-            ->pluck('id_post')
-            ->toArray();
-
-        // Для каждого поста получаем первое фото и название города
-        foreach ($posts as $post) {
-            $post->cover_img = DB::table('gallery')
-                ->where('id_post', $post->id)
-                ->first();
-            $cityRow = DB::table('city')->where('id', $post->city)->first();
-            $post->city_name = $cityRow ? $cityRow->title : $post->city;
-            $post->is_top = in_array($post->id, $topPostIds);
-        }
+        $profile = DB::table('profiles')->where('user_id', $user->id)->first();
 
         return view('profile.index', [
             'user' => $user,
-            'posts' => $posts,
-            'activeSection' => 'posts',
-            'sectionTitle' => 'Мои объявления',
+            'hasProfile' => (bool) $profile,
+            'profileId' => $profile->id ?? null,
+            'activeSection' => 'cabinet',
+            'sectionTitle' => 'Личный кабинет',
         ]);
+    }
+
+    // Старый путь «Мои объявления» — теперь ведёт в кабинет
+    public function myPosts()
+    {
+        return redirect()->route('profile.index');
     }
 
     // Настройки профиля

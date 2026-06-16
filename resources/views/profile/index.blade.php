@@ -91,11 +91,24 @@
                             <path d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z"/>
                         </svg>
                     </div>
-                    <div class="empty-title">Добро пожаловать!</div>
-                    <div class="empty-description">
-                        Заполните свою анкету, чтобы она появилась на сайте знакомств.
-                    </div>
-                    <a href="{{ route('profile.anketa') }}" class="empty-action">📝 Заполнить анкету</a>
+                    @if(!empty($hasProfile))
+                        <div class="empty-title">Ваша анкета заполнена ✓</div>
+                        <div class="empty-description">
+                            Анкета опубликована и видна на сайте знакомств.
+                        </div>
+                        <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:center;">
+                            <a href="{{ route('profile.anketa') }}" class="empty-action">✏️ Редактировать анкету</a>
+                            @if(!empty($profileId))
+                                <a href="{{ route('profile.show', $profileId) }}" class="empty-action" style="background:#0088cc;">👁 Смотреть анкету</a>
+                            @endif
+                        </div>
+                    @else
+                        <div class="empty-title">Добро пожаловать!</div>
+                        <div class="empty-description">
+                            Заполните свою анкету, чтобы она появилась на сайте знакомств.
+                        </div>
+                        <a href="{{ route('profile.anketa') }}" class="empty-action">📝 Заполнить анкету</a>
+                    @endif
                 </div>
             @elseif(false)
                 @if(isset($posts) && count($posts) > 0)

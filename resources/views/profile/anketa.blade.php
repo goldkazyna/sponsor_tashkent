@@ -54,7 +54,7 @@
 </style>
 
 <div class="anketa-container">
-    <a href="{{ route('profile.posts') }}" class="back-link">← В кабинет</a>
+    <a href="{{ route('profile.index') }}" class="back-link">← В кабинет</a>
 
     <div class="anketa-card">
         <h1>Моя анкета</h1>
