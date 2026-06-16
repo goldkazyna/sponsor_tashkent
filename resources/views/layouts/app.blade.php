@@ -176,6 +176,27 @@
         flex: 1;
     }
 }
+
+/* Сервис закрыт: кнопки и ссылки шапки серые/неактивные (кроме .keep-active). Вернуть — удалить этот блок. */
+#mainHeader nav a,
+#mainHeader .btn,
+#mobileMenu nav a,
+#mobileMenu .btn,
+#mobileMenu .mobile-verified-btn,
+#mobileMenu .mobile-buy-btn {
+    opacity: 0.5 !important;
+    filter: grayscale(1) !important;
+    pointer-events: none !important;
+    cursor: default !important;
+    box-shadow: none !important;
+}
+#mainHeader nav a.keep-active,
+#mobileMenu nav a.keep-active {
+    opacity: 1 !important;
+    filter: none !important;
+    pointer-events: auto !important;
+    cursor: pointer !important;
+}
     </style>
     <header id="mainHeader">
         <!-- Верхнее меню (только десктоп) -->
@@ -183,7 +204,7 @@
             <div class="container">
                 <nav>
                     <a href="/">Главная</a>
-                    <a href="/contact">Написать админу</a>
+                    <a href="/contact" class="keep-active">Написать админу</a>
                     <a href="/rules">Правила</a>
                     <a href="/news">Нововведения</a>
                 </nav>
@@ -272,7 +293,7 @@
 		</div>
 		<nav>
 			<a href="/">Главная</a>
-			<a href="/contact">Написать админу</a>
+			<a href="/contact" class="keep-active">Написать админу</a>
 			<a href="/rules">Правила</a>
 			<a href="/news">Нововведения</a>
 		</nav>
