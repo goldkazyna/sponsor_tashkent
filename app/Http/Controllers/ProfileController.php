@@ -86,7 +86,7 @@ class ProfileController extends Controller
             'birthdate' => 'required|date|before:'.now()->subYears(18)->format('Y-m-d'),
             'city_id' => 'required|integer',
             'about' => 'nullable|string|max:2000',
-            'photo' => 'nullable|image|max:8192',
+            'photo' => 'nullable|image|max:20480',
             'goal' => 'nullable|in:'.implode(',', array_keys(config('profile_options.goal'))),
             'financial' => 'nullable|in:'.implode(',', array_keys(config('profile_options.financial'))),
             'body_type' => 'nullable|in:'.implode(',', array_keys(config('profile_options.body_type'))),
@@ -98,7 +98,7 @@ class ProfileController extends Controller
             'birthdate.before' => 'Регистрация только с 18 лет',
             'city_id.required' => 'Выберите город',
             'photo.image' => 'Файл должен быть изображением',
-            'photo.max' => 'Фото слишком большое (макс. 8 МБ)',
+            'photo.max' => 'Фото слишком большое (макс. 20 МБ)',
         ]);
 
         $existing = DB::table('profiles')->where('user_id', $user->id)->first();
@@ -144,7 +144,8 @@ class ProfileController extends Controller
 
         $filename = time().'.webp';
         $image = $manager->read($file->getRealPath());
-        $image->scaleDown(width: 800);
+        // Уменьшаем только если фото больше 8000px по любой стороне (иначе оставляем как есть)
+        $image->scaleDown(8000, 8000);
         $image->toWebp(85)->save($dir.'/'.$filename);
 
         return 'uploads/profiles/'.$userId.'/'.$filename;

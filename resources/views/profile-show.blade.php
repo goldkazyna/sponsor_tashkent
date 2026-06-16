@@ -4,6 +4,8 @@
 
 @section('content')
 
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.css" />
+
 @php
     $hasPhoto = ! empty($profile->photo);
     $age = $profile->birthdate ? \Carbon\Carbon::parse($profile->birthdate)->age : null;
@@ -55,7 +57,9 @@
     <div class="ps-card">
         <div class="ps-photo" style="background: {{ $locked ? 'linear-gradient(135deg,#475569,#1e293b)' : ($profile->sex == 1 ? 'linear-gradient(135deg,#4facfe,#0066ff)' : 'linear-gradient(135deg,#f6a5c0,#f5576c)') }};">
             @if($hasPhoto && $isRegistered)
-                <img src="{{ asset($profile->photo) }}" alt="{{ $profile->name }}">
+                <a href="{{ asset($profile->photo) }}" data-fancybox="profile" style="position:absolute; inset:0; cursor:zoom-in;">
+                    <img src="{{ asset($profile->photo) }}" alt="{{ $profile->name }}">
+                </a>
             @elseif($locked)
                 <div class="ps-lock">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12,17A2,2 0 0,0 14,15C14,13.89 13.1,13 12,13A2,2 0 0,0 10,15A2,2 0 0,0 12,17M18,8A2,2 0 0,1 20,10V20A2,2 0 0,1 18,22H6A2,2 0 0,1 4,20V10C4,8.89 4.9,8 6,8H7V6A5,5 0 0,1 12,1A5,5 0 0,1 17,6V8H18M12,3A3,3 0 0,0 9,6V8H15V6A3,3 0 0,0 12,3Z"/></svg>
@@ -115,5 +119,10 @@
         </div>
     </div>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.umd.js"></script>
+<script>
+    Fancybox.bind("[data-fancybox]", {});
+</script>
 
 @endsection
