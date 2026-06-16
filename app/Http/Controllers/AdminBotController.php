@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 /**
- * Отдельный админ-бот для РУЧНОЙ выдачи статуса «Проверенный спонсор»
+ * Отдельный админ-бот для РУЧНОЙ выдачи статуса «Проверенный пользователь»
  * и поднятия объявления в ТОП — без онлайн-оплаты.
  *
  * Доступ только для Telegram ID из TELEGRAM_ADMIN_IDS.
@@ -210,7 +210,7 @@ class AdminBotController extends Controller
             $chatId,
             '✅ Найден: <b>'.e($user->email)."</b>\nФИО: ".e(($user->fio ?? '') ?: '—')."\n\nЧто выдать?",
             ['inline_keyboard' => [
-                [['text' => '✅ Проверенный спонсор', 'callback_data' => 'svc_verified']],
+                [['text' => '✅ Проверенный пользователь', 'callback_data' => 'svc_verified']],
                 [['text' => '🚀 Оплата ТОП', 'callback_data' => 'svc_top']],
             ]]
         );
@@ -248,7 +248,7 @@ class AdminBotController extends Controller
             return;
         }
 
-        // Выбор услуги «Проверенный спонсор» → сразу срок.
+        // Выбор услуги «Проверенный пользователь» → сразу срок.
         if ($data === 'svc_verified') {
             $state['service'] = 'verified';
             Cache::put($this->stateKey($telegramId), $state, now()->addMinutes(30));
@@ -344,7 +344,7 @@ class AdminBotController extends Controller
             $text = "<b>Подтвердите выдачу:</b>\n\n"
                 .'👤 '.e($state['email'])."\n"
                 .'ФИО: '.e(($state['fio'] ?? '') ?: '—')."\n"
-                ."Услуга: ✅ Проверенный спонсор\n"
+                ."Услуга: ✅ Проверенный пользователь\n"
                 ."Срок: {$days} дн.\n"
                 .'Действует до: <b>'.$newDate->format('d.m.Y H:i').'</b>';
         } else {

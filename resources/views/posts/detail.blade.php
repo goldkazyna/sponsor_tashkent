@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', $post->title . ' | Спонсоры и содержанки в Алматы, Астане, Казахстане.')
+@section('title', $post->title . ' | Знакомства в Казахстане')
 
 @section('content')
 
@@ -463,7 +463,7 @@
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
                             <path d="M23,12L20.56,9.22L20.9,5.54L17.29,4.72L15.4,1.54L12,3L8.6,1.54L6.71,4.72L3.1,5.53L3.44,9.21L1,12L3.44,14.78L3.1,18.47L6.71,19.29L8.6,22.47L12,21L15.4,22.46L17.29,19.28L20.9,18.46L20.56,14.78L23,12M10,17L6,13L7.41,11.59L10,14.17L16.59,7.58L18,9L10,17Z"/>
                         </svg>
-                        <span>Для просмотра фото <a href="/become-verified">купите статус</a> проверенного спонсора</span>
+                        <span>Для просмотра фото <a href="/become-verified">купите статус</a> проверенного пользователя</span>
                     </div>
                 @else
                     <img src="{{ asset('images/' . ($post->sex == 1 ? 'mens' : 'girls') . '.png') }}" alt="Фото" class="main-photo">
@@ -478,7 +478,7 @@
                     @elseif(in_array($contactAccess, [1, 4, 5]))
                         {{ $post->fio }}
                     @else
-                        <span style="color: #92400e; font-size: 0.9rem;">Для просмотра имени <a href="/become-verified" style="color: #92400e;">купите статус</a> проверенного спонсора</span>
+                        <span style="color: #92400e; font-size: 0.9rem;">Для просмотра имени <a href="/become-verified" style="color: #92400e;">купите статус</a> проверенного пользователя</span>
                     @endif
                 </div>
                 <div class="master-location">
@@ -521,7 +521,7 @@
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
                             <path d="M23,12L20.56,9.22L20.9,5.54L17.29,4.72L15.4,1.54L12,3L8.6,1.54L6.71,4.72L3.1,5.53L3.44,9.21L1,12L3.44,14.78L3.1,18.47L6.71,19.29L8.6,22.47L12,21L15.4,22.46L17.29,19.28L20.9,18.46L20.56,14.78L23,12M10,17L6,13L7.41,11.59L10,14.17L16.59,7.58L18,9L10,17Z"/>
                         </svg>
-                        <span>Для просмотра <a href="/become-verified">купите статус</a> проверенного спонсора</span>
+                        <span>Для просмотра <a href="/become-verified">купите статус</a> проверенного пользователя</span>
                     </div>
                 @endif
             </div>
@@ -544,7 +544,7 @@
                         <span>{{ $post->sex == 1 ? '👨 Мужчина ищет Женщину' : '👩 Женщина ищет Мужчину' }}</span>
                     </div>
                     <div>
-                        <span>💼 {{ $post->who == 1 ? 'Спонсор' : 'Содержанка' }}</span>
+                        <span>💼 {{ $post->who == 1 ? 'Мужчина' : 'Девушка' }}</span>
                     </div>
                     @if(!empty($postUser) && $postUser->prov == 1)
                         <div style="color: #059669;">

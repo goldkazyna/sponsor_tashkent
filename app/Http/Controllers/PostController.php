@@ -128,7 +128,7 @@ class PostController extends Controller
         // Получаем данные пользователя
         $user = DB::table('users')->where('id', session('user_id'))->first();
 
-        // Мужчина без статуса проверенного спонсора — не может добавлять
+        // Мужчина без статуса проверенного пользователя — не может добавлять
         if ($user->sex == 1 && $user->prov != 1) {
             return view('posts.need-status', compact('user'));
         }

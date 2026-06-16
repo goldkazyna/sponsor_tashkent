@@ -361,7 +361,7 @@
             </div>
             <div class="chat-user-details">
                 <h2>{{ $chatDisplayName }}</h2>
-                <div class="chat-user-status">{{ $interlocutor->sex == 1 ? 'Спонсор' : 'Содержанка' }}</div>
+                <div class="chat-user-status">{{ $interlocutor->sex == 1 ? 'Мужчина' : 'Девушка' }}</div>
             </div>
         </div>
 

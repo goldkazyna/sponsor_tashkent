@@ -309,7 +309,7 @@
         @if($post)
             <div class="mod-post-meta">
                 <div class="mod-meta-item">ID: {{ $post->id }}</div>
-                <div class="mod-meta-item">{{ $post->who == 1 ? 'Спонсор ищет' : 'Содержанка ищет' }}</div>
+                <div class="mod-meta-item">{{ $post->who == 1 ? 'Мужчина ищет' : 'Девушка ищет' }}</div>
                 <div class="mod-meta-item">{{ $post->city ?? '—' }}</div>
                 <div class="mod-meta-item">{{ $post->created_at ?? '' }}</div>
             </div>

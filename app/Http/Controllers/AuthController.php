@@ -151,7 +151,7 @@ class AuthController extends Controller
 		
 		Mail::raw("Для восстановления пароля перейдите по ссылке: {$resetUrl}", function($message) use ($request) {
 			$message->to($request->email)
-					->subject('Восстановление пароля - Спонсоры Казахстан');
+					->subject('Восстановление пароля - знакомства.KZ');
 		});
 
 		return back()->with('success', 'Ссылка для восстановления пароля отправлена на ваш email!');

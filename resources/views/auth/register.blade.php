@@ -42,11 +42,11 @@
 			<div style="display: flex; gap: 20px;">
 				<label style="display: flex; align-items: center; cursor: pointer;">
 					<input type="radio" name="sex" value="1" {{ old('sex') == 1 ? 'checked' : '' }} required style="margin-right: 8px;">
-					<span>Мужской (Спонсор)</span>
+					<span>Мужской</span>
 				</label>
 				<label style="display: flex; align-items: center; cursor: pointer;">
 					<input type="radio" name="sex" value="2" {{ old('sex') == 2 ? 'checked' : '' }} required style="margin-right: 8px;">
-					<span>Женский (Содержанка)</span>
+					<span>Женский</span>
 				</label>
 			</div>
 		</div>

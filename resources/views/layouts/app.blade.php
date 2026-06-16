@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@yield('title', 'Спонсоры и Содержанки Казахстан')</title>
-    <meta name="description" content="@yield('meta_description', 'Спонсоры и Содержанки в Казахстане. Найдите спонсора или содержанку в Алматы, Астане и других городах.')">
+    <title>@yield('title', 'Знакомства в Казахстане | знакомства.KZ')</title>
+    <meta name="description" content="@yield('meta_description', 'Сайт знакомств в Казахстане. Анкеты девушек и мужчин в Алматы, Астане и других городах.')">
     <link rel="icon" href="/favicon.ico" type="image/x-icon">
     <meta name="yandex-verification" content="146f8ad2330863be" />
     <meta name="verification" content="2b16d45900f2e4cde6c0335a7ce05d" />
@@ -332,7 +332,7 @@
     </div>
 
     <footer>
-        <p>&copy; 2025 Спонсоры и Содержанки Казахстан. Все права защищены.</p>
+        <p>&copy; 2025 знакомства.KZ. Все права защищены.</p>
         <p>Только для лиц старше 18 лет</p>
     </footer>
 
