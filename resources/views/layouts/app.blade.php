@@ -176,27 +176,6 @@
         flex: 1;
     }
 }
-
-/* Сервис закрыт: кнопки и ссылки шапки серые/неактивные (кроме .keep-active). Вернуть — удалить этот блок. */
-#mainHeader nav a,
-#mainHeader .btn,
-#mobileMenu nav a,
-#mobileMenu .btn,
-#mobileMenu .mobile-verified-btn,
-#mobileMenu .mobile-buy-btn {
-    opacity: 0.5 !important;
-    filter: grayscale(1) !important;
-    pointer-events: none !important;
-    cursor: default !important;
-    box-shadow: none !important;
-}
-#mainHeader nav a.keep-active,
-#mobileMenu nav a.keep-active {
-    opacity: 1 !important;
-    filter: none !important;
-    pointer-events: auto !important;
-    cursor: pointer !important;
-}
     </style>
     <header id="mainHeader">
         <!-- Верхнее меню (только десктоп) -->
@@ -204,7 +183,7 @@
             <div class="container">
                 <nav>
                     <a href="/">Главная</a>
-                    <a href="/contact" class="keep-active">Написать админу</a>
+                    <a href="/contact">Написать админу</a>
                     <a href="/rules">Правила</a>
                     <a href="/news">Нововведения</a>
                 </nav>
@@ -293,7 +272,7 @@
 		</div>
 		<nav>
 			<a href="/">Главная</a>
-			<a href="/contact" class="keep-active">Написать админу</a>
+			<a href="/contact">Написать админу</a>
 			<a href="/rules">Правила</a>
 			<a href="/news">Нововведения</a>
 		</nav>
@@ -350,84 +329,6 @@
                 </div>
             @endif
         </div>
-
-        <!-- Продающая шапка (только на главной) -->
-        @if(Route::currentRouteName() === 'home')
-        <a href="{{ route('for-sale') }}" class="sale-banner">
-            <span class="sale-banner__pulse">🔥 ПРОДАЁТСЯ</span>
-            <div class="sale-banner__text">
-                <span class="sale-banner__title">Продаётся готовый бизнес или доля в бизнесе</span>
-                <span class="sale-banner__sub">Сайт знакомств по Казахстану · трафик · база · Telegram-бот. Можно купить даже долю — от 10%</span>
-            </div>
-            <span class="sale-banner__btn">Подробнее →</span>
-        </a>
-        <style>
-            .sale-banner {
-                display: flex;
-                align-items: center;
-                gap: 18px;
-                max-width: 1160px;
-                margin: 15px auto;
-                padding: 16px 22px;
-                border-radius: 14px;
-                text-decoration: none;
-                color: #fff;
-                background: linear-gradient(120deg, #b91c1c 0%, #e8941a 55%, #f5a623 100%);
-                background-size: 200% 100%;
-                box-shadow: 0 6px 22px rgba(185,28,28,0.28);
-                animation: saleShift 6s ease infinite;
-                transition: transform 0.2s, box-shadow 0.2s;
-            }
-            .sale-banner:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 10px 28px rgba(185,28,28,0.38);
-            }
-            @keyframes saleShift {
-                0%,100% { background-position: 0% 50%; }
-                50% { background-position: 100% 50%; }
-            }
-            .sale-banner__pulse {
-                flex-shrink: 0;
-                background: rgba(0,0,0,0.22);
-                padding: 9px 15px;
-                border-radius: 30px;
-                font-weight: 800;
-                font-size: 14px;
-                letter-spacing: 0.5px;
-                white-space: nowrap;
-                animation: salePulse 1.6s ease-in-out infinite;
-            }
-            @keyframes salePulse {
-                0%,100% { transform: scale(1); }
-                50% { transform: scale(1.07); }
-            }
-            .sale-banner__text {
-                display: flex;
-                flex-direction: column;
-                gap: 3px;
-                flex: 1;
-                min-width: 0;
-            }
-            .sale-banner__title { font-weight: 800; font-size: 17px; line-height: 1.25; }
-            .sale-banner__sub { font-size: 13px; opacity: 0.92; }
-            .sale-banner__btn {
-                flex-shrink: 0;
-                background: #fff;
-                color: #b91c1c;
-                padding: 11px 22px;
-                border-radius: 30px;
-                font-weight: 800;
-                font-size: 14px;
-                white-space: nowrap;
-                box-shadow: 0 3px 10px rgba(0,0,0,0.2);
-            }
-            @media (max-width: 700px) {
-                .sale-banner { flex-direction: column; text-align: center; gap: 12px; padding: 16px; }
-                .sale-banner__title { font-size: 15px; }
-                .sale-banner__btn { width: 100%; }
-            }
-        </style>
-        @endif
 
         @yield('content')
     </div>

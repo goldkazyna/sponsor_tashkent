@@ -4,10 +4,6 @@
 
 @section('content')
 
-{{-- Сервис закрыт: показываем уведомление вместо объявления. Вернуть — заменить @if(false) на @if(true) и убрать include. --}}
-@include('partials.service-closed')
-
-@if(false)
 <!-- Fancybox CSS -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.css" />
 
@@ -609,5 +605,4 @@
     Fancybox.bind("[data-fancybox]", {});
 </script>
 
-@endif
 @endsection
