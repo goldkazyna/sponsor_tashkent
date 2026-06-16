@@ -26,6 +26,11 @@ Route::get('/rules', function () {
     return view('rules');
 })->name('rules');
 
+// Пользовательское соглашение
+Route::get('/agreement', function () {
+    return view('agreement');
+})->name('agreement');
+
 // Продажа сервиса
 Route::get('/for-sale', function () {
     // Счётчик посещений (файловый, переживает чистку кеша и деплой)

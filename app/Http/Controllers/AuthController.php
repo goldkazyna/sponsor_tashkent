@@ -24,7 +24,8 @@ class AuthController extends Controller
 		$request->validate([
 			'email' => 'required|email|unique:users,email',
 			'password' => 'required|min:6|confirmed',
-			'sex' => 'required|in:1,2'
+			'sex' => 'required|in:1,2',
+			'agree' => 'accepted',
 		], [
 			'email.required' => 'Email обязателен',
 			'email.email' => 'Введите корректный email',
@@ -32,7 +33,8 @@ class AuthController extends Controller
 			'password.required' => 'Пароль обязателен',
 			'password.min' => 'Пароль должен быть минимум 6 символов',
 			'password.confirmed' => 'Пароли не совпадают',
-			'sex.required' => 'Выберите пол'
+			'sex.required' => 'Выберите пол',
+			'agree.accepted' => 'Нужно принять Пользовательское соглашение и Правила сайта',
 		]);
 
 		$cookieKey = $request->cookie('_dk');

@@ -51,6 +51,15 @@
 			</div>
 		</div>
 
+        <div style="display:flex; align-items:flex-start; gap:10px; margin-bottom: 18px;">
+            <input type="checkbox" name="agree" id="agree" value="1" required {{ old('agree') ? 'checked' : '' }}
+                   style="margin-top:3px; width:18px; height:18px; flex-shrink:0; cursor:pointer;">
+            <label for="agree" style="font-size:0.9rem; color:#475569; line-height:1.5; cursor:pointer;">
+                Я принимаю <a href="{{ route('agreement') }}" target="_blank" style="color:#e74c3c; font-weight:600;">Пользовательское соглашение</a>
+                и <a href="{{ route('rules') }}" target="_blank" style="color:#e74c3c; font-weight:600;">Правила сайта</a>, и мне есть 18 лет
+            </label>
+        </div>
+
         <button type="submit" class="btn btn-success" style="width: 100%; padding: 12px; font-size: 16px;">
             Зарегистрироваться
         </button>
