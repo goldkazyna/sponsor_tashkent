@@ -24,6 +24,12 @@ $testProfiles = [
     ['name' => 'Камила',   'age' => 24, 'city' => 'Шымкент',   'sex' => 2, 'has_photo' => true],
 ];
 $isRegistered = (bool) session('user_id');
+
+// Фильтр «Кого ищу» (who: 1=мужчину, 2=девушку) применяем к тестовым анкетам по полу
+$selectedWho = request()->get('who', 'all');
+$visibleProfiles = $selectedWho === 'all'
+    ? $testProfiles
+    : array_values(array_filter($testProfiles, fn ($p) => (string) $p['sex'] === (string) $selectedWho));
 @endphp
 
 <style>
@@ -85,8 +91,10 @@ $isRegistered = (bool) session('user_id');
         <p>Тестовый дизайн — примерные данные</p>
     </div>
 
+    @include('partials.city-filter')
+
     <div class="profiles-grid">
-        @foreach($testProfiles as $p)
+        @forelse($visibleProfiles as $p)
         @php
             $locked = $p['has_photo'] && ! $isRegistered;
             if ($locked) {
@@ -120,7 +128,9 @@ $isRegistered = (bool) session('user_id');
                 </div>
             </div>
         </div>
-        @endforeach
+        @empty
+        <div style="grid-column:1/-1; text-align:center; color:#64748b; padding:40px 0;">Анкеты не найдены.</div>
+        @endforelse
     </div>
 </div>
 
