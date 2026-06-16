@@ -146,6 +146,8 @@ Route::middleware(['web'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'index'])->name('profile.index');
     Route::get('/profile/posts', [ProfileController::class, 'myPosts'])->name('profile.posts');
     Route::get('/profile/settings', [ProfileController::class, 'settings'])->name('profile.settings');
+    Route::get('/profile/anketa', [ProfileController::class, 'anketa'])->name('profile.anketa');
+    Route::post('/profile/anketa', [ProfileController::class, 'updateAnketa'])->name('profile.anketa.update');
     Route::get('/profile/pricing', [ProfileController::class, 'pricing'])->name('profile.pricing');
 
     // Управление объявлениями

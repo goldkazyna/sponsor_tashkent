@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Services\AiModerationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Intervention\Image\Drivers\Gd\Driver;
+use Intervention\Image\ImageManager;
 
 class ProfileController extends Controller
 {
@@ -71,6 +73,94 @@ class ProfileController extends Controller
             'activeSection' => 'settings',
             'sectionTitle' => 'Настройки профиля',
         ]);
+    }
+
+    // Моя анкета (профиль для сайта знакомств)
+    public function anketa()
+    {
+        if (! session('user_id')) {
+            return redirect()->route('login')->with('error', 'Необходимо авторизоваться');
+        }
+
+        $user = DB::table('users')->where('id', session('user_id'))->first();
+        $profile = DB::table('profiles')->where('user_id', $user->id)->first();
+        $cities = DB::table('city')->orderBy('id')->get();
+
+        return view('profile.anketa', [
+            'user' => $user,
+            'profile' => $profile,
+            'cities' => $cities,
+            'activeSection' => 'anketa',
+            'sectionTitle' => 'Моя анкета',
+        ]);
+    }
+
+    // Сохранение анкеты (upsert по user_id)
+    public function updateAnketa(Request $request)
+    {
+        if (! session('user_id')) {
+            return redirect()->route('login')->with('error', 'Необходимо авторизоваться');
+        }
+
+        $user = DB::table('users')->where('id', session('user_id'))->first();
+
+        $request->validate([
+            'name' => 'required|string|max:100',
+            'birthdate' => 'required|date|before:'.now()->subYears(18)->format('Y-m-d'),
+            'city_id' => 'required|integer',
+            'about' => 'nullable|string|max:2000',
+            'photo' => 'nullable|image|max:8192',
+        ], [
+            'name.required' => 'Укажите имя',
+            'birthdate.required' => 'Укажите дату рождения',
+            'birthdate.before' => 'Регистрация только с 18 лет',
+            'city_id.required' => 'Выберите город',
+            'photo.image' => 'Файл должен быть изображением',
+            'photo.max' => 'Фото слишком большое (макс. 8 МБ)',
+        ]);
+
+        $existing = DB::table('profiles')->where('user_id', $user->id)->first();
+        $photoPath = $existing->photo ?? null;
+
+        if ($request->hasFile('photo')) {
+            $photoPath = $this->storeProfilePhoto($request->file('photo'), $user->id);
+        }
+
+        $data = [
+            'name' => $request->name,
+            'birthdate' => $request->birthdate,
+            'city_id' => (int) $request->city_id,
+            'about' => $request->about,
+            'photo' => $photoPath,
+            'updated_at' => now(),
+        ];
+
+        if ($existing) {
+            DB::table('profiles')->where('user_id', $user->id)->update($data);
+        } else {
+            $data['user_id'] = $user->id;
+            $data['created_at'] = now();
+            DB::table('profiles')->insert($data);
+        }
+
+        return redirect()->route('profile.anketa')->with('success', 'Анкета сохранена');
+    }
+
+    // Загрузка фото анкеты в WebP
+    private function storeProfilePhoto($file, $userId): string
+    {
+        $manager = new ImageManager(new Driver);
+        $dir = public_path('uploads/profiles/'.$userId);
+        if (! is_dir($dir)) {
+            mkdir($dir, 0755, true);
+        }
+
+        $filename = time().'.webp';
+        $image = $manager->read($file->getRealPath());
+        $image->scaleDown(width: 800);
+        $image->toWebp(85)->save($dir.'/'.$filename);
+
+        return 'uploads/profiles/'.$userId.'/'.$filename;
     }
 
     // Обновление профиля
