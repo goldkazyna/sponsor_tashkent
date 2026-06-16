@@ -6,6 +6,99 @@
 
 @section('content')
 
+{{-- ТЕСТОВЫЙ ДИЗАЙН АНКЕТ (примерные данные). Старые объявления ниже спрятаны в @if(false). --}}
+@php
+$testProfiles = [
+    ['name' => 'Анна',     'age' => 24, 'city' => 'Алматы',    'g' => ['#fda085', '#f6d365']],
+    ['name' => 'Дарья',    'age' => 27, 'city' => 'Астана',    'g' => ['#a18cd1', '#fbc2eb']],
+    ['name' => 'Карина',   'age' => 22, 'city' => 'Шымкент',   'g' => ['#84fab0', '#8fd3f4']],
+    ['name' => 'Алина',    'age' => 29, 'city' => 'Караганда', 'g' => ['#ff9a9e', '#fecfef']],
+    ['name' => 'Мария',    'age' => 25, 'city' => 'Алматы',    'g' => ['#f093fb', '#f5576c']],
+    ['name' => 'Виктория', 'age' => 31, 'city' => 'Актобе',    'g' => ['#4facfe', '#00f2fe']],
+    ['name' => 'Жанна',    'age' => 23, 'city' => 'Астана',    'g' => ['#43e97b', '#38f9d7']],
+    ['name' => 'Софья',    'age' => 26, 'city' => 'Тараз',     'g' => ['#fa709a', '#fee140']],
+    ['name' => 'Елена',    'age' => 28, 'city' => 'Павлодар',  'g' => ['#30cfd0', '#330867']],
+    ['name' => 'Айгерим',  'age' => 21, 'city' => 'Алматы',    'g' => ['#a8edea', '#fed6e3']],
+    ['name' => 'Ольга',    'age' => 30, 'city' => 'Усть-Каменогорск', 'g' => ['#ffecd2', '#fcb69f']],
+    ['name' => 'Камила',   'age' => 24, 'city' => 'Шымкент',   'g' => ['#c471f5', '#fa71cd']],
+];
+@endphp
+
+<style>
+.profiles-wrap { max-width: 1200px; margin: 24px auto; padding: 0 16px; }
+.profiles-head { margin-bottom: 20px; }
+.profiles-head h1 { font-size: 1.6rem; font-weight: 800; color: #0f172a; margin: 0 0 4px; }
+.profiles-head p { color: #64748b; font-size: 0.95rem; margin: 0; }
+.profiles-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 18px;
+}
+.profile-card {
+    background: #fff;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+    transition: transform 0.2s, box-shadow 0.2s;
+    cursor: pointer;
+    border: 1px solid #f1f5f9;
+}
+.profile-card:hover { transform: translateY(-4px); box-shadow: 0 12px 28px rgba(0,0,0,0.14); }
+.profile-photo {
+    position: relative;
+    aspect-ratio: 3 / 4;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.profile-photo svg { width: 46%; height: 46%; fill: rgba(255,255,255,0.85); }
+.profile-info { padding: 12px 14px 14px; }
+.profile-name {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0 0 4px;
+    line-height: 1.2;
+}
+.profile-city {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    color: #64748b;
+    font-size: 0.88rem;
+}
+.profile-city svg { width: 14px; height: 14px; fill: #94a3b8; flex-shrink: 0; }
+@media (max-width: 480px) {
+    .profiles-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    .profile-name { font-size: 0.95rem; }
+}
+</style>
+
+<div class="profiles-wrap">
+    <div class="profiles-head">
+        <h1>Анкеты</h1>
+        <p>Тестовый дизайн — примерные данные</p>
+    </div>
+
+    <div class="profiles-grid">
+        @foreach($testProfiles as $p)
+        <div class="profile-card">
+            <div class="profile-photo" style="background: linear-gradient(135deg, {{ $p['g'][0] }}, {{ $p['g'][1] }});">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12,12A5,5 0 0,0 17,7A5,5 0 0,0 12,2A5,5 0 0,0 7,7A5,5 0 0,0 12,12M12,14C8.67,14 2,15.67 2,19V22H22V19C22,15.67 15.33,14 12,14Z"/></svg>
+            </div>
+            <div class="profile-info">
+                <div class="profile-name">{{ $p['name'] }}, {{ $p['age'] }}</div>
+                <div class="profile-city">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12,11.5A2.5,2.5 0 0,1 9.5,9A2.5,2.5 0 0,1 12,6.5A2.5,2.5 0 0,1 14.5,9A2.5,2.5 0 0,1 12,11.5M12,2A7,7 0 0,0 5,9C5,14.25 12,22 12,22C12,22 19,14.25 19,9A7,7 0 0,0 12,2Z"/></svg>
+                    {{ $p['city'] }}
+                </div>
+            </div>
+        </div>
+        @endforeach
+    </div>
+</div>
+
+@if(false)
 <!-- Fancybox CSS -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.css" />
 
@@ -814,4 +907,5 @@
     Fancybox.bind("[data-fancybox]", {});
 </script>
 
+@endif
 @endsection
