@@ -42,7 +42,9 @@ class PostController extends Controller
             $query->where('profiles.city_id', $selectedCity);
         }
 
-        $profiles = $query->orderByDesc('profiles.id')->limit(60)->get();
+        $profiles = $query->orderByDesc('profiles.id')
+            ->paginate(10)
+            ->appends($request->query());
 
         return view('home', ['profiles' => $profiles]);
     }

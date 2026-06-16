@@ -63,12 +63,21 @@ $visibleProfiles = $profiles ?? collect();
     .profiles-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
     .profile-name { font-size: 0.95rem; }
 }
+.pager { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin: 28px 0 8px; }
+.pager-btn {
+    min-width: 40px; height: 40px; padding: 0 12px; border-radius: 10px;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: #fff; border: 1px solid #e2e8f0; color: #475569;
+    text-decoration: none; font-size: 14px; font-weight: 600; transition: all 0.2s;
+}
+.pager-btn:hover { background: #f8fafc; border-color: #cbd5e1; color: #0f172a; }
+.pager-btn.active { background: #f59e0b; border-color: #f59e0b; color: #fff; }
+.pager-btn.disabled { color: #cbd5e1; pointer-events: none; }
 </style>
 
 <div class="profiles-wrap">
     <div class="profiles-head">
         <h1>Анкеты</h1>
-        <p>Тестовый дизайн — примерные данные</p>
     </div>
 
     @include('partials.city-filter')
@@ -116,6 +125,26 @@ $visibleProfiles = $profiles ?? collect();
         <div style="grid-column:1/-1; text-align:center; color:#64748b; padding:40px 0;">Анкеты не найдены.</div>
         @endforelse
     </div>
+
+    @if(method_exists($visibleProfiles, 'hasPages') && $visibleProfiles->hasPages())
+    <div class="pager">
+        @if($visibleProfiles->onFirstPage())
+            <span class="pager-btn disabled">‹</span>
+        @else
+            <a class="pager-btn" href="{{ $visibleProfiles->previousPageUrl() }}">‹</a>
+        @endif
+
+        @foreach($visibleProfiles->getUrlRange(1, $visibleProfiles->lastPage()) as $page => $url)
+            <a class="pager-btn {{ $page == $visibleProfiles->currentPage() ? 'active' : '' }}" href="{{ $url }}">{{ $page }}</a>
+        @endforeach
+
+        @if($visibleProfiles->hasMorePages())
+            <a class="pager-btn" href="{{ $visibleProfiles->nextPageUrl() }}">›</a>
+        @else
+            <span class="pager-btn disabled">›</span>
+        @endif
+    </div>
+    @endif
 </div>
 
 @endsection
