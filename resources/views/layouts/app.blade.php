@@ -238,8 +238,7 @@
 						</div>
 					@endif
 					
-					<a href="/add" class="btn btn-success">+ Добавить объявление</a>
-					
+										
 					@if($currentUser)
 						<!-- Авторизованный пользователь -->
 						<a href="{{ route('profile.index') }}" class="btn btn-outline">Мой профиль</a>
@@ -277,8 +276,7 @@
 			<a href="/news">Нововведения</a>
 		</nav>
 		<div class="buttons">
-			<a href="/add" class="btn btn-success">+ Добавить объявление</a>
-			
+						
 			@if(session('user_id'))
 				<!-- Авторизованный пользователь -->
 				<a href="{{ route('profile.index') }}" class="btn btn-outline">Мой профиль</a>
