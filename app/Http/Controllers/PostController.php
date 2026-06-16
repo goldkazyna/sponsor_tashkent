@@ -14,87 +14,10 @@ class PostController extends Controller
     // Показать главную страницу со списком объявлений
     public function index(Request $request)
     {
-        // Получаем параметры фильтров
-        $selectedCity = $request->get('city', 'all');
-        $selectedWho = $request->get('who', 'all');
-
-        // Строим запрос постов
-        $query = DB::table('post')->where('del', 0);
-
-        // Фильтр по городу
-        if ($selectedCity !== 'all' && ! empty($selectedCity)) {
-            $query->where('city', $selectedCity);
-        }
-
-        // Фильтр "Кого ищу" (who: 1=спонсор ищет женщину, 2=содержанка ищет мужчину)
-        if ($selectedWho !== 'all' && in_array($selectedWho, ['1', '2'])) {
-            $query->where('who', $selectedWho);
-        }
-
-        // Сортировка по id DESC (новые первыми) и пагинация
-        $posts = $query->orderBy('id', 'desc')->paginate(10);
-
-        // Для каждого поста получаем первое фото и название города
-        foreach ($posts as $post) {
-            $post->cover_img = DB::table('gallery')
-                ->where('id_post', $post->id)
-                ->first();
-            $cityRow = DB::table('city')->where('id', $post->city)->first();
-            $post->city_name = $cityRow ? $cityRow->title : $post->city;
-        }
-
-        // Проверяем авторизацию
-        $currentUser = null;
-        if (session('user_id')) {
-            $currentUser = DB::table('users')->where('id', session('user_id'))->first();
-        }
-
-        // Увеличиваем view +1 для всех объявлений на текущей странице
-        $postIds = $posts->pluck('id')->toArray();
-        if (! empty($postIds)) {
-            DB::table('post')->whereIn('id', $postIds)->increment('view');
-        }
-
-        // Добавляем параметр города к пагинации
-        $posts->appends(['city' => $selectedCity, 'who' => $selectedWho]);
-
-        // ТОП объявления: 2 с наименьшим count_view (активные по date_end)
-        $topPosts = DB::table('top_post')
-            ->where('date_end', '>=', now())
-            ->orderBy('count_view', 'asc')
-            ->limit(2)
-            ->get();
-
-        $topPostsData = collect();
-        if ($topPosts->count() > 0) {
-            $topIds = $topPosts->pluck('id_post')->toArray();
-            $topViewMap = $topPosts->pluck('count_view', 'id_post')->toArray();
-            $topRecordIds = $topPosts->pluck('id', 'id_post')->toArray();
-
-            $topPostsData = DB::table('post')
-                ->whereIn('id', $topIds)
-                ->where('del', 0)
-                ->get();
-
-            foreach ($topPostsData as $tp) {
-                $tp->cover_img = DB::table('gallery')->where('id_post', $tp->id)->first();
-                $cityRow = DB::table('city')->where('id', $tp->city)->first();
-                $tp->city_name = $cityRow ? $cityRow->title : $tp->city;
-                $tp->top_views = $topViewMap[$tp->id] ?? 0;
-            }
-
-            // Обновляем count_view +1
-            DB::table('top_post')
-                ->whereIn('id', $topPosts->pluck('id')->toArray())
-                ->increment('count_view');
-        }
-
-        return view('home', [
-            'posts' => $posts,
-            'topPosts' => $topPostsData,
-            'currentUser' => $currentUser,
-            'selectedCity' => $selectedCity,
-        ]);
+        // Главная — обычный сайт знакомств (анкеты).
+        // Старая логика объявлений (посты, ТОП, инкремент просмотров) удалена.
+        // Layout сам вычисляет $currentUser/$isVerified; city-filter тянет города сам.
+        return view('home');
     }
 
     // Показать детальную страницу объявления
