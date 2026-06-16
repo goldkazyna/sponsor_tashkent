@@ -45,6 +45,7 @@
                         </div>
                     @endforeach
                     <div style="color:#7f1d1d; font-size:0.85rem; line-height:1.6; margin-top:10px;">
+                        Ознакомьтесь с <a href="{{ route('rules') }}" target="_blank" style="color:#b91c1c; font-weight:700; text-decoration:underline;">правилами сайта</a>.
                         Если считаете, что это ошибка — напишите
                         <a href="https://t.me/Sponsor_admin" target="_blank" style="color:#b91c1c; font-weight:700; text-decoration:underline;">@Sponsor_admin</a>.
                     </div>

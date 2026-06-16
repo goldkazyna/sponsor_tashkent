@@ -70,11 +70,26 @@
             <div class="alert-success">{{ session('success') }}</div>
         @endif
 
-        @if($errors->any())
+        @if($errors->has('ai'))
+            <div class="alert-errors">
+                @php $aiReasons = array_values(array_filter(array_map('trim', preg_split('/\s*\|\s*/', $errors->first('ai'))))); @endphp
+                @foreach($aiReasons as $r)
+                    <div style="margin-bottom:4px;">• {{ $r }}</div>
+                @endforeach
+                <div style="margin-top:8px; font-size:0.88rem;">
+                    Ознакомьтесь с <a href="{{ route('rules') }}" target="_blank" style="color:#991b1b; font-weight:700; text-decoration:underline;">правилами сайта</a>.
+                </div>
+            </div>
+        @endif
+
+        @php $otherErrors = collect($errors->keys())->reject(fn($k) => $k === 'ai'); @endphp
+        @if($otherErrors->isNotEmpty())
             <div class="alert-errors">
                 <ul>
-                    @foreach($errors->all() as $error)
-                        <li>{{ $error }}</li>
+                    @foreach($otherErrors as $key)
+                        @foreach($errors->get($key) as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
                     @endforeach
                 </ul>
             </div>
