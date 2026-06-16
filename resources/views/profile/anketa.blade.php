@@ -80,14 +80,11 @@
             <div class="form-group">
                 <label class="form-label">Фото</label>
                 <div class="photo-row">
-                    @if($profile && $profile->photo)
-                        <img src="{{ asset($profile->photo) }}?v={{ time() }}" class="photo-preview" id="photoPreview" alt="Фото">
-                    @else
-                        <div class="photo-preview-empty" id="photoPreviewEmpty">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12,12A5,5 0 0,0 17,7A5,5 0 0,0 12,2A5,5 0 0,0 7,7A5,5 0 0,0 12,12M12,14C8.67,14 2,15.67 2,19V22H22V19C22,15.67 15.33,14 12,14Z"/></svg>
-                        </div>
-                        <img src="" class="photo-preview" id="photoPreview" alt="Фото" style="display:none;">
-                    @endif
+                    <div class="photo-preview-empty" id="photoPreviewEmpty" @if($profile && $profile->photo) style="display:none;" @endif>
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12,12A5,5 0 0,0 17,7A5,5 0 0,0 12,2A5,5 0 0,0 7,7A5,5 0 0,0 12,12M12,14C8.67,14 2,15.67 2,19V22H22V19C22,15.67 15.33,14 12,14Z"/></svg>
+                    </div>
+                    <img class="photo-preview" id="photoPreview" alt="Фото"
+                         @if($profile && $profile->photo) src="{{ asset($profile->photo) }}?v={{ time() }}" @else style="display:none;" @endif>
                     <input type="file" name="photo" accept="image/*" class="form-input" id="photoInput" style="max-width:320px;">
                 </div>
             </div>
