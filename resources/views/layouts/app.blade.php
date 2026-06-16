@@ -194,7 +194,7 @@
         <div class="main-menu">
             <div class="container">
                 <div class="logo">
-					<a href="/"><img src="{{ asset('images/logo.png') }}" alt="sponsory.org" style="height: 50px;"></a>
+					<a href="/"><img src="{{ asset('images/logo.png') }}" alt="знакомства.KZ" style="height: 50px;"></a>
 				</div>
 				<!-- Кнопки для десктопа -->
 				<?php
