@@ -30,6 +30,10 @@
 .ps-city svg { width: 16px; height: 16px; fill: #94a3b8; }
 .ps-about-title { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px; color: #94a3b8; font-weight: 700; margin-bottom: 6px; }
 .ps-about { color: #334155; font-size: 1rem; line-height: 1.65; white-space: pre-wrap; margin-bottom: 22px; }
+.ps-attrs { margin-bottom: 20px; border-top: 1px solid #f1f5f9; }
+.ps-attr { display: flex; justify-content: space-between; gap: 12px; padding: 9px 0; border-bottom: 1px solid #f1f5f9; font-size: 0.95rem; }
+.ps-attr-k { color: #64748b; }
+.ps-attr-v { color: #0f172a; font-weight: 600; text-align: right; }
 .ps-btn {
     display: inline-flex; align-items: center; gap: 8px; padding: 13px 26px; border-radius: 30px;
     font-weight: 700; font-size: 1rem; text-decoration: none; border: none; cursor: pointer;
@@ -70,6 +74,22 @@
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12,11.5A2.5,2.5 0 0,1 9.5,9A2.5,2.5 0 0,1 12,6.5A2.5,2.5 0 0,1 14.5,9A2.5,2.5 0 0,1 12,11.5M12,2A7,7 0 0,0 5,9C5,14.25 12,22 12,22C12,22 19,14.25 19,9A7,7 0 0,0 12,2Z"/></svg>
                 {{ $profile->city_name ?? '—' }}
             </div>
+
+            @php
+                $attrs = [];
+                if (! empty($profile->goal)) { $attrs['Цель знакомства'] = config('profile_options.goal.'.$profile->goal); }
+                if (! empty($profile->financial)) { $attrs['Материальное положение'] = config('profile_options.financial.'.$profile->financial); }
+                if (! empty($profile->body_type)) { $attrs['Телосложение'] = config('profile_options.body_type.'.$profile->body_type); }
+                if (! empty($profile->height)) { $attrs['Рост'] = $profile->height.' см'; }
+                if (! empty($profile->weight)) { $attrs['Вес'] = $profile->weight.' кг'; }
+            @endphp
+            @if(count($attrs))
+                <div class="ps-attrs">
+                    @foreach($attrs as $k => $v)
+                        <div class="ps-attr"><span class="ps-attr-k">{{ $k }}</span><span class="ps-attr-v">{{ $v }}</span></div>
+                    @endforeach
+                </div>
+            @endif
 
             @if(! empty($profile->about))
                 <div class="ps-about-title">О себе</div>

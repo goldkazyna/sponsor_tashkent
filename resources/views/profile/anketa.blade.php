@@ -113,6 +113,53 @@
                 </select>
             </div>
 
+            <div style="margin: 1.6rem 0 0.8rem; font-size: 0.8rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;">
+                Дополнительно (необязательно)
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Цель знакомства</label>
+                <select name="goal" class="form-select">
+                    <option value="">— не указано —</option>
+                    @foreach(config('profile_options.goal') as $key => $label)
+                        <option value="{{ $key }}" {{ (string) old('goal', $profile->goal ?? '') === (string) $key ? 'selected' : '' }}>{{ $label }}</option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Материальное положение</label>
+                <select name="financial" class="form-select">
+                    <option value="">— не указано —</option>
+                    @foreach(config('profile_options.financial') as $key => $label)
+                        <option value="{{ $key }}" {{ (string) old('financial', $profile->financial ?? '') === (string) $key ? 'selected' : '' }}>{{ $label }}</option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Телосложение</label>
+                <select name="body_type" class="form-select">
+                    <option value="">— не указано —</option>
+                    @foreach(config('profile_options.body_type') as $key => $label)
+                        <option value="{{ $key }}" {{ (string) old('body_type', $profile->body_type ?? '') === (string) $key ? 'selected' : '' }}>{{ $label }}</option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div class="form-group" style="display:flex; gap:14px;">
+                <div style="flex:1;">
+                    <label class="form-label">Рост, см</label>
+                    <input type="number" name="height" class="form-input" min="100" max="250"
+                           value="{{ old('height', $profile->height ?? '') }}" placeholder="например, 175">
+                </div>
+                <div style="flex:1;">
+                    <label class="form-label">Вес, кг</label>
+                    <input type="number" name="weight" class="form-input" min="30" max="300"
+                           value="{{ old('weight', $profile->weight ?? '') }}" placeholder="например, 65">
+                </div>
+            </div>
+
             <div class="form-group">
                 <label class="form-label">О себе</label>
                 <textarea name="about" class="form-textarea" maxlength="2000" placeholder="Расскажите о себе...">{{ old('about', $profile->about ?? '') }}</textarea>

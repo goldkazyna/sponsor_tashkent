@@ -87,6 +87,11 @@ class ProfileController extends Controller
             'city_id' => 'required|integer',
             'about' => 'nullable|string|max:2000',
             'photo' => 'nullable|image|max:8192',
+            'goal' => 'nullable|in:'.implode(',', array_keys(config('profile_options.goal'))),
+            'financial' => 'nullable|in:'.implode(',', array_keys(config('profile_options.financial'))),
+            'body_type' => 'nullable|in:'.implode(',', array_keys(config('profile_options.body_type'))),
+            'height' => 'nullable|integer|min:100|max:250',
+            'weight' => 'nullable|integer|min:30|max:300',
         ], [
             'name.required' => 'Укажите имя',
             'birthdate.required' => 'Укажите дату рождения',
@@ -109,6 +114,11 @@ class ProfileController extends Controller
             'city_id' => (int) $request->city_id,
             'about' => $request->about,
             'photo' => $photoPath,
+            'goal' => $request->goal ?: null,
+            'financial' => $request->financial ?: null,
+            'body_type' => $request->body_type ?: null,
+            'height' => $request->height ?: null,
+            'weight' => $request->weight ?: null,
             'updated_at' => now(),
         ];
 

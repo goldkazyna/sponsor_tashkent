@@ -84,10 +84,30 @@ Route::get('/create-profiles-table-secret', function () {
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
         ");
 
-        $exists = DB::getSchemaBuilder()->hasTable('profiles');
+        // Добавляем доп. колонки анкеты, если их ещё нет (идемпотентно)
+        $sb = DB::getSchemaBuilder();
+        $added = [];
+        $cols = [
+            'goal' => "ALTER TABLE profiles ADD COLUMN goal VARCHAR(30) NULL",
+            'financial' => "ALTER TABLE profiles ADD COLUMN financial VARCHAR(30) NULL",
+            'body_type' => "ALTER TABLE profiles ADD COLUMN body_type VARCHAR(30) NULL",
+            'height' => "ALTER TABLE profiles ADD COLUMN height SMALLINT NULL",
+            'weight' => "ALTER TABLE profiles ADD COLUMN weight SMALLINT NULL",
+        ];
+        foreach ($cols as $col => $sql) {
+            if (! $sb->hasColumn('profiles', $col)) {
+                DB::statement($sql);
+                $added[] = $col;
+            }
+        }
 
-        return response('Таблица profiles: '.($exists ? 'OK (создана или уже была)' : 'НЕ создана'), 200)
-            ->header('Content-Type', 'text/plain; charset=utf-8');
+        $exists = $sb->hasTable('profiles');
+
+        return response(
+            'Таблица profiles: '.($exists ? 'OK' : 'НЕ создана')
+            .'. Добавлены колонки: '.($added ? implode(', ', $added) : 'нет (уже были)'),
+            200
+        )->header('Content-Type', 'text/plain; charset=utf-8');
     } catch (\Throwable $e) {
         return response('Ошибка: '.$e->getMessage(), 500)
             ->header('Content-Type', 'text/plain; charset=utf-8');
