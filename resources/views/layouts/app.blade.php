@@ -8,7 +8,7 @@
     <link rel="icon" href="/favicon.ico" type="image/x-icon">
     <meta name="yandex-verification" content="146f8ad2330863be" />
     <meta name="verification" content="2b16d45900f2e4cde6c0335a7ce05d" />
-	<link rel="stylesheet" href="{{ asset('css/style.css') }}?v={{ time() }}">
+	<link rel="stylesheet" href="{{ asset('css/style.css') }}?v={{ filemtime(public_path('css/style.css')) }}">
 	<!-- Yandex.Metrika counter -->
 	<script type="text/javascript">
 		(function(m,e,t,r,i,k,a){

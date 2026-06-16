@@ -4,7 +4,7 @@
 
 @section('content')
 
-<link rel="stylesheet" href="{{ asset('css/cabinet.css') }}?v={{ time() }}">
+<link rel="stylesheet" href="{{ asset('css/cabinet.css') }}?v={{ filemtime(public_path('css/cabinet.css')) }}">
 
 <style>
 .anketa-container { max-width: 720px; margin: 0 auto; padding: 0 1rem; }
