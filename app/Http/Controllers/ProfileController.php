@@ -82,7 +82,7 @@ class ProfileController extends Controller
         $user = DB::table('users')->where('id', session('user_id'))->first();
 
         $request->validate([
-            'name' => ['required', 'string', 'min:2', 'max:30', 'regex:/^[\p{L}\s\-]+$/u'],
+            'name' => ['required', 'string', 'min:2', 'max:30', 'regex:/^[А-Яа-яЁё\s\-]+$/u'],
             'birthdate' => 'required|date|before:'.now()->subYears(18)->format('Y-m-d'),
             'city_id' => 'required|integer',
             'about' => 'nullable|string|max:2000',
@@ -96,7 +96,7 @@ class ProfileController extends Controller
             'name.required' => 'Укажите имя',
             'name.min' => 'Имя слишком короткое',
             'name.max' => 'Имя слишком длинное (макс. 30 символов)',
-            'name.regex' => 'В поле «Имя» можно использовать только буквы (без цифр, ссылок и символов)',
+            'name.regex' => 'Имя пишите русскими буквами (без латиницы, цифр и символов)',
             'birthdate.required' => 'Укажите дату рождения',
             'birthdate.before' => 'Регистрация только с 18 лет',
             'city_id.required' => 'Выберите город',
