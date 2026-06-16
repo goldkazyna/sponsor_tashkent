@@ -171,6 +171,7 @@ Route::middleware(['web'])->group(function () {
     Route::get('/profile/settings', [ProfileController::class, 'settings'])->name('profile.settings');
     Route::get('/profile/anketa', [ProfileController::class, 'anketa'])->name('profile.anketa');
     Route::post('/profile/anketa', [ProfileController::class, 'updateAnketa'])->name('profile.anketa.update');
+    Route::post('/profile/anketa/delete', [ProfileController::class, 'deleteAnketa'])->name('profile.anketa.delete');
     Route::get('/profile/pricing', [ProfileController::class, 'pricing'])->name('profile.pricing');
 
     // Управление объявлениями

@@ -133,6 +133,31 @@ class ProfileController extends Controller
         return redirect()->route('profile.anketa')->with('success', 'Анкета сохранена');
     }
 
+    // Удаление анкеты (вместе с фото)
+    public function deleteAnketa()
+    {
+        if (! session('user_id')) {
+            return redirect()->route('login')->with('error', 'Необходимо авторизоваться');
+        }
+
+        $userId = session('user_id');
+
+        if (DB::table('profiles')->where('user_id', $userId)->exists()) {
+            // Удаляем папку с фото анкеты
+            $dir = public_path('uploads/profiles/'.$userId);
+            if (is_dir($dir)) {
+                foreach (glob($dir.'/*') as $file) {
+                    @unlink($file);
+                }
+                @rmdir($dir);
+            }
+
+            DB::table('profiles')->where('user_id', $userId)->delete();
+        }
+
+        return redirect()->route('profile.index')->with('success', 'Анкета удалена');
+    }
+
     // Загрузка фото анкеты в WebP
     private function storeProfilePhoto($file, $userId): string
     {

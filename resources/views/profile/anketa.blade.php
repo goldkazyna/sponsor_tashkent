@@ -40,6 +40,12 @@
     cursor: pointer; transition: transform 0.15s, box-shadow 0.2s;
 }
 .btn-save:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(245,158,11,0.35); }
+.btn-delete-anketa {
+    width: 100%; padding: 0.85rem; background: #fff; color: #dc2626;
+    border: 2px solid #fca5a5; border-radius: 12px; font-weight: 700; font-size: 0.95rem;
+    cursor: pointer; transition: all 0.2s;
+}
+.btn-delete-anketa:hover { background: #fee2e2; border-color: #f87171; }
 .alert-success {
     background: #d1fae5; border: 2px solid #6ee7b7; color: #065f46;
     padding: 1rem; border-radius: 10px; margin-bottom: 1.5rem;
@@ -167,6 +173,14 @@
 
             <button type="submit" class="btn-save">Сохранить анкету</button>
         </form>
+
+        @if($profile)
+        <form method="POST" action="{{ route('profile.anketa.delete') }}"
+              onsubmit="return confirm('Удалить анкету? Это действие необратимо.');" style="margin-top: 14px;">
+            @csrf
+            <button type="submit" class="btn-delete-anketa">🗑 Удалить анкету</button>
+        </form>
+        @endif
     </div>
 </div>
 
