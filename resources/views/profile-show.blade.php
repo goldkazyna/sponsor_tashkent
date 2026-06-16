@@ -45,6 +45,14 @@
 .ps-btn-primary svg { width: 20px; height: 20px; fill: #fff; }
 .ps-note { color: #64748b; font-size: 0.92rem; }
 .ps-note a { color: #0077b3; font-weight: 700; text-decoration: underline; }
+.ps-cta {
+    background: linear-gradient(135deg, #fff7ed, #ffedd5); border: 2px solid #f5a623;
+    border-radius: 14px; padding: 1.1rem 1.25rem; text-align: center;
+}
+.ps-cta-text { color: #b45309; font-weight: 700; font-size: 0.98rem; margin-bottom: 0.8rem; }
+.ps-btn-create { background: linear-gradient(135deg, #f59e0b, #d97706); color: #fff; box-shadow: 0 4px 14px rgba(245,158,11,0.35); }
+.ps-btn-create:hover { transform: translateY(-2px); color: #fff; }
+.ps-btn-create svg { width: 20px; height: 20px; fill: #fff; }
 @media (max-width: 640px) {
     .ps-card { grid-template-columns: 1fr; }
     .ps-photo { aspect-ratio: 1/1; max-height: 380px; }
@@ -108,8 +116,12 @@
                     Написать сообщение
                 </a>
             @elseif($isRegistered && ! $viewerHasProfile)
-                <div class="ps-note">
-                    Чтобы написать сообщение — <a href="{{ route('profile.anketa') }}">создайте свою анкету</a>.
+                <div class="ps-cta">
+                    <div class="ps-cta-text">Чтобы написать сообщение, нужна ваша анкета</div>
+                    <a href="{{ route('profile.anketa') }}" class="ps-btn ps-btn-create">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z"/></svg>
+                        Создать анкету
+                    </a>
                 </div>
             @else
                 <div class="ps-note">
