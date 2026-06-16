@@ -533,6 +533,8 @@ class ProfileController extends Controller
                 continue;
             }
 
+            $intProfile = DB::table('profiles')->where('user_id', $interlocutor->id)->first();
+            $interlocutor->display_name = ($intProfile->name ?? null) ?: ($interlocutor->fio ?: explode('@', $interlocutor->email ?? '')[0]);
             $conversation->interlocutor = $interlocutor;
 
             if ($conversation->post_id) {
@@ -556,11 +558,20 @@ class ProfileController extends Controller
 
         $user = DB::table('users')->where('id', session('user_id'))->first();
 
+        // Нет своей анкеты — нельзя писать сообщения
+        if (! DB::table('profiles')->where('user_id', $user->id)->exists()) {
+            return redirect()->route('profile.anketa')->with('error', 'Создайте анкету, чтобы писать сообщения');
+        }
+
         $interlocutor = DB::table('users')->where('id', $interlocutorId)->first();
 
         if (! $interlocutor) {
             return redirect()->route('profile.messages')->with('error', 'Пользователь не найден');
         }
+
+        // Имя собеседника берём из его анкеты
+        $intProfile = DB::table('profiles')->where('user_id', $interlocutor->id)->first();
+        $interlocutor->display_name = ($intProfile->name ?? null) ?: ($interlocutor->fio ?: explode('@', $interlocutor->email ?? '')[0]);
 
         $messages = DB::table('messages')
             ->where(function ($query) use ($user, $interlocutorId) {
@@ -602,6 +613,11 @@ class ProfileController extends Controller
     {
         if (! session('user_id')) {
             return response()->json(['error' => 'Необходимо авторизоваться'], 401);
+        }
+
+        // Нет своей анкеты — нельзя писать сообщения
+        if (! DB::table('profiles')->where('user_id', session('user_id'))->exists()) {
+            return response()->json(['error' => 'Создайте анкету, чтобы писать сообщения'], 403);
         }
 
         $request->validate([

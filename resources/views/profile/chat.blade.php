@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Чат с ' . ($interlocutor->fio ?: explode('@', $interlocutor->email ?? '')[0]))
+@section('title', 'Чат с ' . ($interlocutor->display_name ?? ($interlocutor->fio ?: explode('@', $interlocutor->email ?? '')[0])))
 
 @section('content')
 
@@ -351,8 +351,7 @@
         </a>
         
         @php
-            $emailUser = explode('@', $interlocutor->email ?? '')[0];
-            $chatDisplayName = $interlocutor->fio ?: $emailUser;
+            $chatDisplayName = $interlocutor->display_name ?? ($interlocutor->fio ?: explode('@', $interlocutor->email ?? '')[0]);
             $chatInitials = mb_strtoupper(mb_substr($chatDisplayName, 0, 2));
         @endphp
         <div class="chat-user-info">

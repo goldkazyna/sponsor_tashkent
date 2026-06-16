@@ -63,11 +63,15 @@ class PostController extends Controller
 
         $isRegistered = (bool) session('user_id');
         $isOwner = session('user_id') && (int) session('user_id') === (int) $profile->user_id;
+        $viewerHasProfile = session('user_id')
+            ? DB::table('profiles')->where('user_id', session('user_id'))->exists()
+            : false;
 
         return view('profile-show', [
             'profile' => $profile,
             'isRegistered' => $isRegistered,
             'isOwner' => $isOwner,
+            'viewerHasProfile' => $viewerHasProfile,
         ]);
     }
 

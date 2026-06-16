@@ -301,7 +301,7 @@
             @foreach($conversations as $conversation)
                 @php
                     $emailUser = explode('@', $conversation->interlocutor->email ?? '')[0];
-                    $displayName = $conversation->interlocutor->fio ?: $emailUser;
+                    $displayName = $conversation->interlocutor->display_name ?? ($conversation->interlocutor->fio ?: $emailUser);
                     $initials = mb_strtoupper(mb_substr($displayName, 0, 2));
                 @endphp
                 <a href="{{ route('profile.messages.chat', $conversation->interlocutor->id ?? 0) }}"

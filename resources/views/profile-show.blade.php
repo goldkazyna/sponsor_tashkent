@@ -78,11 +78,15 @@
 
             @if($isOwner)
                 <a href="{{ route('profile.anketa') }}" class="ps-btn ps-btn-primary">Редактировать мою анкету</a>
-            @elseif($isRegistered)
+            @elseif($isRegistered && $viewerHasProfile)
                 <a href="{{ route('profile.messages.chat', $profile->user_id) }}" class="ps-btn ps-btn-primary">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20,2H4A2,2 0 0,0 2,4V22L6,18H20A2,2 0 0,0 22,16V4A2,2 0 0,0 20,2Z"/></svg>
                     Написать сообщение
                 </a>
+            @elseif($isRegistered && ! $viewerHasProfile)
+                <div class="ps-note">
+                    Чтобы написать сообщение — <a href="{{ route('profile.anketa') }}">создайте свою анкету</a>.
+                </div>
             @else
                 <div class="ps-note">
                     Чтобы написать сообщение — <a href="{{ route('login') }}">войдите</a> или <a href="{{ route('register') }}">зарегистрируйтесь</a>.
