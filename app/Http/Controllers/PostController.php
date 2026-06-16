@@ -283,6 +283,7 @@ class PostController extends Controller
         try {
             $entry = json_encode([
                 'at' => now()->format('Y-m-d H:i:s'),
+                'source' => 'add',
                 'email' => $user->email ?? '',
                 'title' => (string) ($request->title ?? ''),
                 'fio' => (string) ($request->fio ?? ''),

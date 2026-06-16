@@ -106,6 +106,26 @@ class ProfileController extends Controller
 
         // AI-привратник: проверяем имя и «о себе» по тем же правилам, что и объявления
         $check = AiModerationService::checkSubmission($request->name, $request->about ?? '');
+
+        // Логируем попытку (для просмотра в /add-attempts-secret)
+        try {
+            $entry = json_encode([
+                'at' => now()->format('Y-m-d H:i:s'),
+                'source' => 'anketa',
+                'email' => $user->email ?? '',
+                'title' => (string) ($request->name ?? ''),
+                'fio' => '',
+                'city' => '',
+                'description' => (string) ($request->about ?? ''),
+                'allowed' => (bool) ($check['allowed'] ?? true),
+                'reason' => (string) ($check['reason'] ?? ''),
+                'ip' => $request->ip(),
+            ], JSON_UNESCAPED_UNICODE);
+            file_put_contents(storage_path('app/add_attempts.jsonl'), $entry."\n", FILE_APPEND | LOCK_EX);
+        } catch (\Throwable $e) {
+            // лог не должен ломать сохранение
+        }
+
         if (! $check['allowed']) {
             return back()->withErrors(['ai' => $check['reason']])->withInput();
         }

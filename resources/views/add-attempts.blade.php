@@ -26,6 +26,7 @@
 }
 .att-badge.ok { background: #dcfce7; color: #166534; }
 .att-badge.no { background: #fee2e2; color: #991b1b; }
+.att-badge.src { background: #e0e7ff; color: #3730a3; }
 .att-title { font-weight: 700; color: #1a202c; font-size: 1rem; }
 .att-meta { font-size: 0.78rem; color: #94a3b8; }
 .att-desc { color: #475569; font-size: 0.9rem; line-height: 1.5; margin-top: 4px; white-space: pre-wrap; word-break: break-word; }
@@ -64,6 +65,7 @@
                 @else
                     <span class="att-badge ok">Пропущено</span>
                 @endif
+                <span class="att-badge src">{{ ($e['source'] ?? 'add') === 'anketa' ? 'Анкета' : 'Объявление' }}</span>
                 <span class="att-title">{{ $e['title'] ?? '' }}</span>
                 <span class="att-meta">
                     {{ $e['at'] ?? '' }}
