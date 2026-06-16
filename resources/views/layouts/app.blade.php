@@ -335,10 +335,10 @@
         <a href="{{ route('for-sale') }}" class="sale-banner">
             <span class="sale-banner__pulse">🔥 ПРОДАЁТСЯ</span>
             <div class="sale-banner__text">
-                <span class="sale-banner__title">Готовый бизнес — сайт знакомств по Казахстану</span>
-                <span class="sale-banner__sub">Трафик · база объявлений · Telegram-бот · домен «под ключ»</span>
+                <span class="sale-banner__title">Продаётся готовый бизнес или доля в бизнесе</span>
+                <span class="sale-banner__sub">Сайт знакомств по Казахстану · трафик · база · Telegram-бот. Можно купить даже долю — от 10%</span>
             </div>
-            <span class="sale-banner__btn">Узнать цену →</span>
+            <span class="sale-banner__btn">Подробнее →</span>
         </a>
         <style>
             .sale-banner {
