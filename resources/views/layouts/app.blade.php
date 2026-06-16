@@ -218,31 +218,7 @@
 
 				<!-- ДЕСКТОПНАЯ ВЕРСИЯ - в главном меню -->
 				<div class="buttons">
-					@if(!$currentUser)
-						<!-- Гость - показываем кнопку "Купить статус" -->
-						<a href="/become-verified" class="btn btn-verified">
-							<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="width: 16px; height: 16px; fill: white; margin-right: 5px;">
-								<path d="M23,12L20.56,9.22L20.9,5.54L17.29,4.72L15.4,1.54L12,3L8.6,1.54L6.71,4.72L3.1,5.53L3.44,9.21L1,12L3.44,14.78L3.1,18.47L6.71,19.29L8.6,22.47L12,21L15.4,22.46L17.29,19.28L20.9,18.46L20.56,14.78L23,12M10,17L6,13L7.41,11.59L10,14.17L16.59,7.58L18,9L10,17Z"/>
-							</svg>
-							<span class="btn-verified-text">Купить статус проверенного пользователя</span>
-						</a>
-					@elseif(!$isVerified)
-						<!-- Авторизован, но НЕ проверен - показываем кнопку -->
-						<a href="/become-verified" class="btn btn-verified">
-							<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="width: 16px; height: 16px; fill: white; margin-right: 5px;">
-								<path d="M23,12L20.56,9.22L20.9,5.54L17.29,4.72L15.4,1.54L12,3L8.6,1.54L6.71,4.72L3.1,5.53L3.44,9.21L1,12L3.44,14.78L3.1,18.47L6.71,19.29L8.6,22.47L12,21L15.4,22.46L17.29,19.28L20.9,18.46L20.56,14.78L23,12M10,17L6,13L7.41,11.59L10,14.17L16.59,7.58L18,9L10,17Z"/>
-							</svg>
-							<span class="btn-verified-text">Купить статус проверенного пользователя</span>
-						</a>
-					@else
-						<!-- Авторизован И проверен - показываем бейдж -->
-						<div class="btn btn-verified-active">
-							<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="width: 18px; height: 18px; fill: white; margin-right: 6px;">
-								<path d="M23,12L20.56,9.22L20.9,5.54L17.29,4.72L15.4,1.54L12,3L8.6,1.54L6.71,4.72L3.1,5.53L3.44,9.21L1,12L3.44,14.78L3.1,18.47L6.71,19.29L8.6,22.47L12,21L15.4,22.46L17.29,19.28L20.9,18.46L20.56,14.78L23,12M10,17L6,13L7.41,11.59L10,14.17L16.59,7.58L18,9L10,17Z"/>
-							</svg>
-							<span class="btn-verified-text">Проверенный пользователь</span>
-						</div>
-					@endif
+					{{-- Кнопка «Купить статус» временно убрана --}}
 					
 										
 					@if($currentUser)
@@ -299,40 +275,7 @@
 	</div>
 
     <div class="container">
-        <!-- МОБИЛЬНАЯ ВЕРСИЯ - кнопка "Купить статус" -->
-        <div class="mobile-verified-btn-wrapper">
-            @if(!$currentUser)
-                <a href="/become-verified" class="mobile-verified-btn mobile-buy-btn">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                        <path d="M23,12L20.56,9.22L20.9,5.54L17.29,4.72L15.4,1.54L12,3L8.6,1.54L6.71,4.72L3.1,5.53L3.44,9.21L1,12L3.44,14.78L3.1,18.47L6.71,19.29L8.6,22.47L12,21L15.4,22.46L17.29,19.28L20.9,18.46L20.56,14.78L23,12M10,17L6,13L7.41,11.59L10,14.17L16.59,7.58L18,9L10,17Z"/>
-                    </svg>
-                    <span>Купить статус проверенного пользователя</span>
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="width: 18px; height: 18px; fill: white;">
-                        <path d="M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z"/>
-                    </svg>
-                </a>
-            @elseif(!$isVerified)
-                <a href="/become-verified" class="mobile-verified-btn mobile-buy-btn">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                        <path d="M23,12L20.56,9.22L20.9,5.54L17.29,4.72L15.4,1.54L12,3L8.6,1.54L6.71,4.72L3.1,5.53L3.44,9.21L1,12L3.44,14.78L3.1,18.47L6.71,19.29L8.6,22.47L12,21L15.4,22.46L17.29,19.28L20.9,18.46L20.56,14.78L23,12M10,17L6,13L7.41,11.59L10,14.17L16.59,7.58L18,9L10,17Z"/>
-                    </svg>
-                    <span>Купить статус проверенного пользователя</span>
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="width: 18px; height: 18px; fill: white;">
-                        <path d="M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z"/>
-                    </svg>
-                </a>
-            @else
-                <div class="mobile-verified-btn mobile-verified-active">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                        <path d="M23,12L20.56,9.22L20.9,5.54L17.29,4.72L15.4,1.54L12,3L8.6,1.54L6.71,4.72L3.1,5.53L3.44,9.21L1,12L3.44,14.78L3.1,18.47L6.71,19.29L8.6,22.47L12,21L15.4,22.46L17.29,19.28L20.9,18.46L20.56,14.78L23,12M10,17L6,13L7.41,11.59L10,14.17L16.59,7.58L18,9L10,17Z"/>
-                    </svg>
-                    <span>Вы - проверенный пользователь</span>
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="width: 20px; height: 20px; fill: white;">
-                        <path d="M9,20.42L2.79,14.21L5.62,11.38L9,14.77L18.88,4.88L21.71,7.71L9,20.42Z"/>
-                    </svg>
-                </div>
-            @endif
-        </div>
+        {{-- Мобильная кнопка «Купить статус» временно убрана --}}
 
         @yield('content')
     </div>

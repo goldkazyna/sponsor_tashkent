@@ -196,7 +196,11 @@ Route::get('/pricing', function () {
 Route::get('/contact', [ContactController::class, 'show'])->name('contact');
 Route::post('/contact/send', [ContactController::class, 'send'])->name('contact.send');
 
-Route::get('/become-verified', [ContactController::class, 'showVerified'])->name('become.verified');
+// Страница «Купить статус» временно отключена — редирект на главную.
+// Вернуть: заменить на Route::get('/become-verified', [ContactController::class, 'showVerified'])->name('become.verified');
+Route::get('/become-verified', function () {
+    return redirect()->route('home');
+})->name('become.verified');
 Route::post('/become-verified/send', [ContactController::class, 'sendVerified'])->name('become.verified.send');
 
 Route::get('/boost-top', [ContactController::class, 'showBoostTop'])->name('boost.top');
