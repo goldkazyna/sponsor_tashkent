@@ -15,7 +15,9 @@ return Application::configure(basePath: dirname(__DIR__))
             'result_url_new',
             'telegram/webhook',
         ]);
-        $middleware->web(append: [
+        $middleware->web(prepend: [
+            \App\Http\Middleware\TelegramOnly::class,
+        ], append: [
             \App\Http\Middleware\DeviceFingerprint::class,
         ]);
     })
