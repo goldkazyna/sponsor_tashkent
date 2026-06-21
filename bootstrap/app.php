@@ -15,9 +15,11 @@ return Application::configure(basePath: dirname(__DIR__))
             'result_url_new',
             'telegram/webhook',
         ]);
-        $middleware->web(prepend: [
-            \App\Http\Middleware\TelegramOnly::class,
-        ], append: [
+        // Глобально: режим «только Telegram» — заглушка на любой URL,
+        // кроме бот-роутов, автологина и секретных роутов (см. сам middleware).
+        $middleware->prepend(\App\Http\Middleware\TelegramOnly::class);
+
+        $middleware->web(append: [
             \App\Http\Middleware\DeviceFingerprint::class,
         ]);
     })
